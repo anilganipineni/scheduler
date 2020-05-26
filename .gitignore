@@ -1,1 +1,5 @@
-/build - Copy.bat
+/build.bat
+/.classpath
+/.project
+target
+.settings
