@@ -1,0 +1,7 @@
+/com/
+/hsql_tables.sql
+/mssql_tables.sql
+/mysql_tables.sql
+/oracle_tables.sql
+/postgresql_tables.sql
+/simplelogger.properties

@@ -3,7 +3,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.taxilla</groupId>
+	<groupId>com.github.anilganipineni</groupId>
 
 	<artifactId>scheduler</artifactId>
 
@@ -11,9 +11,33 @@
 
 	<version>0.1</version>
 
-	<name>Taxilla Scheduler</name>
+	<name>Java Scheduler</name>
+	<description>The Java Scheduler which supports both RDBMS and Cassandra</description>
 
-	<url>http://taxilla.com</url>
+	<!-- url>http://maven.apache.org</url -->
+	<url>https://github.com/anilganipineni</url>
+
+	<developers>
+		<developer>
+			<name>Anil Ganipineni</name>
+			<email>anilganipineni@gmail.com</email>
+		</developer>
+	</developers>
+
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<url>https://github.com/anilganipineni/scheduler</url>
+		<!-- connection>git@github.com:anilganipineni/scheduler.git</connection>
+		<developerConnection>git@github.com:anilganipineni/scheduler.git</developerConnection>
+		<tag>HEAD</tag -->
+	</scm>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
