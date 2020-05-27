@@ -1,5 +1,5 @@
 /**
- * Copyright (C) Gustav Karlsson
+ * Copyright (C) Anil Ganipineni
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +19,19 @@ import java.time.Instant;
 
 import com.github.anilganipineni.scheduler.task.ExecutionComplete;
 
+/**
+ * @author akganipineni
+ */
 public interface Schedule {
-
+    /**
+     * @param executionComplete
+     * @return
+     */
     Instant getNextExecutionTime(ExecutionComplete executionComplete);
-
     /**
      * Used to get the first execution-time for a schedule. Simulates an ExecutionComplete event.
      */
     default Instant getInitialExecutionTime(Instant now) {
         return getNextExecutionTime(ExecutionComplete.simulatedSuccess(now));
     }
-
 }

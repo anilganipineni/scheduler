@@ -1,5 +1,5 @@
 /**
- * Copyright (C) Gustav Karlsson
+ * Copyright (C) Anil Ganipineni
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ public class JdbcTaskRepository implements TaskRepository {
     @Override
     public boolean createIfNotExists(Execution execution) {
         try {
-            Optional<Execution> existingExecution = getExecution(execution.taskInstance);
+            Optional<Execution> existingExecution = getExecution(execution.getTaskInstance());
             if (existingExecution.isPresent()) {
                 LOG.debug("Execution not created, it already exists. Due: {}", existingExecution.get().executionTime);
                 return false;
@@ -81,9 +81,9 @@ public class JdbcTaskRepository implements TaskRepository {
             jdbcRunner.execute(
                     "insert into " + tableName + "(task_name, task_instance, task_data, execution_time, picked, version) values(?, ?, ?, ?, ?, ?)",
                     (PreparedStatement p) -> {
-                        p.setString(1, execution.taskInstance.getTaskName());
-                        p.setString(2, execution.taskInstance.getId());
-                        p.setObject(3, serializer.serialize(execution.taskInstance.getData()));
+                        p.setString(1, execution.getTaskInstance().getTaskName());
+                        p.setString(2, execution.getTaskInstance().getId());
+                        p.setObject(3, serializer.serialize(execution.getTaskInstance().getData()));
                         p.setTimestamp(4, Timestamp.from(execution.executionTime));
                         p.setBoolean(5, false);
                         p.setLong(6, 1L);
@@ -92,7 +92,7 @@ public class JdbcTaskRepository implements TaskRepository {
 
         } catch (SQLRuntimeException e) {
             LOG.debug("Exception when inserting execution. Assuming it to be a constraint violation.", e);
-            Optional<Execution> existingExecution = getExecution(execution.taskInstance);
+            Optional<Execution> existingExecution = getExecution(execution.getTaskInstance());
             if (!existingExecution.isPresent()) {
                 throw new RuntimeException("Failed to add new execution.", e);
             }
@@ -149,8 +149,8 @@ public class JdbcTaskRepository implements TaskRepository {
 
         final int removed = jdbcRunner.execute("delete from " + tableName + " where task_name = ? and task_instance = ? and version = ?",
                 ps -> {
-                    ps.setString(1, execution.taskInstance.getTaskName());
-                    ps.setString(2, execution.taskInstance.getId());
+                    ps.setString(1, execution.getTaskInstance().getTaskName());
+                    ps.setString(2, execution.getTaskInstance().getId());
                     ps.setLong(3, execution.version);
                 }
         );
@@ -198,8 +198,8 @@ public class JdbcTaskRepository implements TaskRepository {
                         // may cause datbase-specific problems, might have to use setNull instead
                         ps.setObject(index++, serializer.serialize(newData.data));
                     }
-                    ps.setString(index++, execution.taskInstance.getTaskName());
-                    ps.setString(index++, execution.taskInstance.getId());
+                    ps.setString(index++, execution.getTaskInstance().getTaskName());
+                    ps.setString(index++, execution.getTaskInstance().getId());
                     ps.setLong(index++, execution.version);
                 });
 
@@ -222,8 +222,8 @@ public class JdbcTaskRepository implements TaskRepository {
                     ps.setString(2, truncate(schedulerSchedulerName.getName(), 50));
                     ps.setTimestamp(3, Timestamp.from(timePicked));
                     ps.setBoolean(4, false);
-                    ps.setString(5, e.taskInstance.getTaskName());
-                    ps.setString(6, e.taskInstance.getId());
+                    ps.setString(5, e.getTaskInstance().getTaskName());
+                    ps.setString(6, e.getTaskInstance().getId());
                     ps.setLong(7, e.version);
                 });
 
@@ -231,7 +231,7 @@ public class JdbcTaskRepository implements TaskRepository {
             LOG.trace("Failed to pick execution. It must have been picked by another scheduler.", e);
             return Optional.empty();
         } else if (updated == 1) {
-            final Optional<Execution> pickedExecution = getExecution(e.taskInstance);
+            final Optional<Execution> pickedExecution = getExecution(e.getTaskInstance());
             if (!pickedExecution.isPresent()) {
                 throw new IllegalStateException("Unable to find picked execution. Must have been deleted by another thread. Indicates a bug.");
             } else if (!pickedExecution.get().isPicked()) {
@@ -268,8 +268,8 @@ public class JdbcTaskRepository implements TaskRepository {
                         "and version = ?",
                 ps -> {
                     ps.setTimestamp(1, Timestamp.from(newHeartbeat));
-                    ps.setString(2, e.taskInstance.getTaskName());
-                    ps.setString(3, e.taskInstance.getId());
+                    ps.setString(2, e.getTaskInstance().getTaskName());
+                    ps.setString(3, e.getTaskInstance().getId());
                     ps.setLong(4, e.version);
                 });
 

@@ -130,7 +130,7 @@ public class ClusterTest {
 
         @Override
         public void complete(ExecutionComplete executionComplete, ExecutionOperations<T> executionOperations) {
-            final String instanceId = executionComplete.getExecution().taskInstance.getId();
+            final String instanceId = executionComplete.getExecution().getTaskInstance().getId();
             if (executionComplete.getResult() == ExecutionComplete.Result.OK) {
                 ok.add(instanceId);
             } else {

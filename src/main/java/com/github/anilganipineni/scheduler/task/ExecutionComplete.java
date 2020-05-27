@@ -1,5 +1,5 @@
 /**
- * Copyright (C) Gustav Karlsson
+ * Copyright (C) Anil Ganipineni
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
+/**
+ * @author akganipineni
+ */
 public class ExecutionComplete {
     private final Execution execution;
     private final Instant timeStarted;

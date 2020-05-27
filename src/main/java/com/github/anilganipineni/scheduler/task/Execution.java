@@ -1,5 +1,5 @@
 /**
- * Copyright (C) Gustav Karlsson
+ * Copyright (C) Anil Ganipineni
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,11 @@ package com.github.anilganipineni.scheduler.task;
 import java.time.Instant;
 import java.util.Objects;
 
-@SuppressWarnings("rawtypes")
+/**
+ * @author akganipineni
+ */
 public final class Execution {
-    public final TaskInstance taskInstance;
+    private final TaskInstance taskInstance;
     public final Instant executionTime;
     public final boolean picked;
     public final String pickedBy;
@@ -46,8 +48,14 @@ public final class Execution {
         this.lastHeartbeat = lastHeartbeat;
         this.version = version;
     }
+    /**
+	 * @return the taskInstance
+	 */
+	public final TaskInstance getTaskInstance() {
+		return taskInstance;
+	}
 
-    public Instant getExecutionTime() {
+	public Instant getExecutionTime() {
         return executionTime;
     }
 

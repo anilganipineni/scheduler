@@ -1,5 +1,5 @@
 /**
- * Copyright (C) Gustav Karlsson
+ * Copyright (C) Anil Ganipineni
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,9 @@ import java.util.Objects;
 
 import com.github.anilganipineni.scheduler.task.ExecutionComplete;
 
+/**
+ * @author akganipineni
+ */
 public class FixedDelay implements Schedule {
 
     private final Duration duration;

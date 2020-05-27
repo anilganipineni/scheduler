@@ -150,7 +150,7 @@ public abstract class CompatibilityTest {
         assertThat(rescheduled.get().lastHeartbeat, nullValue());
         assertThat(rescheduled.get().isPicked(), is(false));
         assertThat(rescheduled.get().pickedBy, nullValue());
-        assertThat(rescheduled.get().taskInstance.getData(), is(data));
+        assertThat(rescheduled.get().getTaskInstance().getData(), is(data));
         jdbcTaskRepository.remove(rescheduled.get());
     }
 
@@ -169,15 +169,15 @@ public abstract class CompatibilityTest {
         jdbcTaskRepository.createIfNotExists(newExecution);
 
         Execution round1 = jdbcTaskRepository.getExecution(taskInstance).get();
-        assertEquals(round1.taskInstance.getData(), 1);
+        assertEquals(round1.getTaskInstance().getData(), 1);
         jdbcTaskRepository.reschedule(round1, now.plusSeconds(1), 2, now.minusSeconds(1), now.minusSeconds(1), 0);
 
         Execution round2 = jdbcTaskRepository.getExecution(taskInstance).get();
-        assertEquals(round2.taskInstance.getData(), 2);
+        assertEquals(round2.getTaskInstance().getData(), 2);
 
         jdbcTaskRepository.reschedule(round2, now.plusSeconds(2), null, now.minusSeconds(2), now.minusSeconds(2), 0);
         Execution round3 = jdbcTaskRepository.getExecution(taskInstance).get();
-        assertNull(round3.taskInstance.getData());
+        assertNull(round3.getTaskInstance().getData());
     }
 
 

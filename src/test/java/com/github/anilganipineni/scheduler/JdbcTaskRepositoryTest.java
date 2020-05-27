@@ -233,13 +233,13 @@ public class JdbcTaskRepositoryTest {
         taskRepository.createIfNotExists(new Execution(now, instance));
 
         Execution created = taskRepository.getExecution(instance).get();
-        assertEquals(created.taskInstance.getData(), 1);
+        assertEquals(created.getTaskInstance().getData(), 1);
 
         final Instant nextExecutionTime = now.plus(Duration.ofMinutes(1));
         taskRepository.reschedule(created, nextExecutionTime, 2, now, null, 0);
 
         final Execution rescheduled = taskRepository.getExecution(instance).get();
-        assertEquals(rescheduled.taskInstance.getData(), 2);
+        assertEquals(rescheduled.getTaskInstance().getData(), 2);
     }
 
     @Test

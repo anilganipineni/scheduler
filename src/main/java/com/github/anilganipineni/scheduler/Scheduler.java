@@ -1,5 +1,5 @@
 /**
- * Copyright (C) Gustav Karlsson
+ * Copyright (C) Anil Ganipineni
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -223,12 +223,12 @@ public class Scheduler implements SchedulerClient {
                 LOG.info("Found dead execution. Delegating handling to task. Execution: " + execution);
                 try {
 
-                    Optional<Task> task = taskResolver.resolve(execution.taskInstance.getTaskName());
+                    Optional<Task> task = taskResolver.resolve(execution.getTaskInstance().getTaskName());
                     if (task.isPresent()) {
                         statsRegistry.register(SchedulerStatsEvent.DEAD_EXECUTION);
                         task.get().getDeadExecutionHandler().deadExecution(execution, new ExecutionOperations(taskRepository, execution));
                     } else {
-                        LOG.error("Failed to find implementation for task with name '{}' for detected dead execution. Either delete the execution from the databaser, or add an implementation for it.", execution.taskInstance.getTaskName());
+                        LOG.error("Failed to find implementation for task with name '{}' for detected dead execution. Either delete the execution from the databaser, or add an implementation for it.", execution.getTaskInstance().getTaskName());
                     }
 
                 } catch (Throwable e) {
@@ -278,7 +278,7 @@ public class Scheduler implements SchedulerClient {
         @Override
         public void run() {
             if (schedulerState.isShuttingDown()) {
-                LOG.info("Scheduler has been shutdown. Skipping fetched due execution: " + candidate.taskInstance.getTaskAndInstance());
+                LOG.info("Scheduler has been shutdown. Skipping fetched due execution: " + candidate.getTaskInstance().getTaskAndInstance());
                 return;
             }
 
@@ -313,9 +313,9 @@ public class Scheduler implements SchedulerClient {
         }
 
         private void executePickedExecution(Execution execution) {
-            final Optional<Task> task = taskResolver.resolve(execution.taskInstance.getTaskName());
+            final Optional<Task> task = taskResolver.resolve(execution.getTaskInstance().getTaskName());
             if (!task.isPresent()) {
-                LOG.error("Failed to find implementation for task with name '{}'. Should have been excluded in JdbcRepository.", execution.taskInstance.getTaskName());
+                LOG.error("Failed to find implementation for task with name '{}'. Should have been excluded in JdbcRepository.", execution.getTaskInstance().getTaskName());
                 statsRegistry.register(SchedulerStatsEvent.UNEXPECTED_ERROR);
                 return;
             }
@@ -323,7 +323,7 @@ public class Scheduler implements SchedulerClient {
             Instant executionStarted = clock.now();
             try {
                 LOG.debug("Executing " + execution);
-                CompletionHandler completion = task.get().execute(execution.taskInstance, new ExecutionContext(schedulerState, execution, Scheduler.this));
+                CompletionHandler completion = task.get().execute(execution.getTaskInstance(), new ExecutionContext(schedulerState, execution, Scheduler.this));
                 LOG.debug("Execution done");
 
                 complete(completion, execution, executionStarted);

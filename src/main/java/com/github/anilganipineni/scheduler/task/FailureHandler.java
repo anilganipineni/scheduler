@@ -1,5 +1,5 @@
 /**
- * Copyright (C) Gustav Karlsson
+ * Copyright (C) Anil Ganipineni
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ public interface FailureHandler<T> {
         @Override
         public void onFailure(ExecutionComplete executionComplete, ExecutionOperations<T> executionOperations) {
             Instant nextTry = Instant.now().plus(sleepDuration);
-            LOG.debug("Execution failed. Retrying task {} at {}", executionComplete.getExecution().taskInstance, nextTry);
+            LOG.debug("Execution failed. Retrying task {} at {}", executionComplete.getExecution().getTaskInstance(), nextTry);
             executionOperations.reschedule(executionComplete, nextTry);
         }
     }
@@ -57,7 +57,7 @@ public interface FailureHandler<T> {
         @Override
         public void onFailure(ExecutionComplete executionComplete, ExecutionOperations<T> executionOperations) {
             Instant nextExecution = schedule.getNextExecutionTime(executionComplete);
-            LOG.debug("Execution failed. Rescheduling task {} to {}", executionComplete.getExecution().taskInstance, nextExecution);
+            LOG.debug("Execution failed. Rescheduling task {} to {}", executionComplete.getExecution().getTaskInstance(), nextExecution);
             executionOperations.reschedule(executionComplete, nextExecution);
         }
     }

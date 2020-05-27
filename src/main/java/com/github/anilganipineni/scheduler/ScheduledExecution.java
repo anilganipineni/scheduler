@@ -1,5 +1,5 @@
 /**
- * Copyright (C) Gustav Karlsson
+ * Copyright (C) Anil Ganipineni
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,15 +28,14 @@ public class ScheduledExecution<DATA_TYPE> {
         this.execution = execution;
     }
     public TaskInstanceId getTaskInstance() {
-        return execution.taskInstance;
+        return execution.getTaskInstance();
     }
     public Instant getExecutionTime() {
         return execution.getExecutionTime();
     }
-    @SuppressWarnings("unchecked")
     public DATA_TYPE getData() {
-        if (dataClass.isInstance(this.execution.taskInstance.getData())) {
-            return (DATA_TYPE) this.execution.taskInstance.getData();
+        if (dataClass.isInstance(this.execution.getTaskInstance().getData())) {
+            return (DATA_TYPE) this.execution.getTaskInstance().getData();
         }
         throw new DataClassMismatchException();
     }
