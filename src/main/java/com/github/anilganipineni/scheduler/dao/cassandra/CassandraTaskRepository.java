@@ -17,13 +17,22 @@ package com.github.anilganipineni.scheduler.dao.cassandra;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.exceptions.DriverException;
+import com.datastax.driver.mapping.Mapper;
+import com.datastax.driver.mapping.Result;
 import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.TaskResolver;
@@ -40,6 +49,11 @@ public class CassandraTaskRepository implements TaskRepository {
      * The <code>Logger</code> instance for this class.
      */
 	private static final Logger logger = LogManager.getLogger(DataSourceCassandra.class);
+	/**
+	 * The preparedStatementCache for GSP application
+	 */
+	private Map<String, PreparedStatement> preparedStatementCache = new HashMap<String, PreparedStatement>();
+	CassandraDataSource dataSource = null;
     private final TaskResolver taskResolver;
     private final SchedulerName schedulerSchedulerName;
     private final Serializer serializer;
@@ -66,6 +80,84 @@ public class CassandraTaskRepository implements TaskRepository {
         this.schedulerSchedulerName = schedulerSchedulerName;
         this.serializer = serializer;
     }
+	/**
+	 * @param entityType
+	 * @return
+	 */
+	private <E> Mapper<E> getMapper(Class<E> entityType) {
+		return dataSource.getMappingManager().mapper(entityType);
+	}
+	/**
+	 * @param entity
+	 * @param entityType
+	 * @param columnName
+	 * @param generateCurrentIndex
+	 */
+	private <E> void create(E entity, Class<E> entityType, String columnName, boolean generateCurrentIndex) {
+		getMapper(entityType).save(entity);
+	}
+	/**
+	 * @param sqlQuery
+	 * @param entityType
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	private <E> Result<E> getResult(String sqlQuery, Class<E> entityType, Object... params) throws Exception {
+		BoundStatement bs = getBoundStatement(sqlQuery, params);
+		return getResult(bs, entityType);
+	}
+	/**
+	 * @param cql
+	 * @param params
+	 * @return
+	 */
+	private BoundStatement getBoundStatement(String cql, Object... params) {
+        PreparedStatement ps = preparedStatementCache.get(cql);
+        // no statement cached, create one and cache it now.
+        if (ps == null) {
+            ps = dataSource.getSession().prepare(cql);
+           preparedStatementCache.put(cql, ps);
+        }
+        return ps.bind(params);
+	}
+	/**
+	 * @param bs
+	 * @param entityType
+	 * @return
+	 * @throws Exception
+	 */
+	private <E> Result<E> getResult(BoundStatement bs, Class<E> entityType) throws Exception {
+		return getMapper(entityType).map(getResultSet(bs));
+	}
+	/**
+	 * @param bs
+	 * @return
+	 * @throws Exception
+	 */
+	private ResultSet getResultSet(BoundStatement bs) throws Exception {
+		try {
+			return dataSource.getSession().execute(bs);
+		} catch (DriverException ex) {
+			// OperationTimedOutException is possible by datastax Driver
+			throw new Exception("Failed to fetch data from store", ex);
+		}
+	}
+	/**
+	 * @param cql
+	 * @param entityType
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	private <E> List<E> getResultList(String cql, Class<E> entityType, Object... params) throws Exception {
+		List<E> results = new ArrayList<E>();
+	    Result<E> result = getResult(cql, entityType, params);
+		for(E t : result) {
+			results.add(t);
+		}
+		return results;
+	}
 	/* (non-Javadoc)
 	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#createIfNotExists(com.github.anilganipineni.scheduler.task.Execution)
 	 */

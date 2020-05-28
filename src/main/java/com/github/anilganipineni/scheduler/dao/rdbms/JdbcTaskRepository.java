@@ -15,11 +15,6 @@
  */
 package com.github.anilganipineni.scheduler.dao.rdbms;
 
-import static com.github.anilganipineni.scheduler.StringUtils.truncate;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -31,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
@@ -39,8 +35,10 @@ import org.slf4j.LoggerFactory;
 
 import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.Serializer;
+import com.github.anilganipineni.scheduler.StringUtils;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.TaskResolver.UnresolvedTask;
+import com.github.anilganipineni.scheduler.dao.BaseTaskRepository;
 import com.github.anilganipineni.scheduler.dao.TaskRepository;
 import com.github.anilganipineni.scheduler.task.Execution;
 import com.github.anilganipineni.scheduler.task.Task;
@@ -49,22 +47,21 @@ import com.github.anilganipineni.scheduler.task.TaskInstance;
 /**
  * @author akganipineni
  */
-public class JdbcTaskRepository implements TaskRepository {
-
-    public static final String DEFAULT_TABLE_NAME = "scheduled_tasks";
+public class JdbcTaskRepository extends BaseTaskRepository implements TaskRepository {
+    private final String tableName;
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcTaskRepository.class);
     private final TaskResolver taskResolver;
     private final SchedulerName schedulerSchedulerName;
     private final JdbcRunner jdbcRunner;
     private final Serializer serializer;
-    private final String tableName;
 
     public JdbcTaskRepository(DataSource dataSource, String tableName, TaskResolver taskResolver, SchedulerName schedulerSchedulerName) {
         this(dataSource, tableName, taskResolver, schedulerSchedulerName, Serializer.DEFAULT_JAVA_SERIALIZER);
     }
 
     public JdbcTaskRepository(DataSource dataSource, String tableName, TaskResolver taskResolver, SchedulerName schedulerSchedulerName, Serializer serializer) {
+    	super(dataSource, tableName, taskResolver, schedulerSchedulerName, serializer);
         this.tableName = tableName;
         this.taskResolver = taskResolver;
         this.schedulerSchedulerName = schedulerSchedulerName;
@@ -193,8 +190,8 @@ public class JdbcTaskRepository implements TaskRepository {
                     ps.setBoolean(index++, false);
                     ps.setString(index++, null);
                     ps.setTimestamp(index++, null);
-                    ps.setTimestamp(index++, ofNullable(lastSuccess).map(Timestamp::from).orElse(null));
-                    ps.setTimestamp(index++, ofNullable(lastFailure).map(Timestamp::from).orElse(null));
+                    ps.setTimestamp(index++, Optional.ofNullable(lastSuccess).map(Timestamp::from).orElse(null));
+                    ps.setTimestamp(index++, Optional.ofNullable(lastFailure).map(Timestamp::from).orElse(null));
                     ps.setInt(index++, consecutiveFailures);
                     ps.setTimestamp(index++, Timestamp.from(nextExecutionTime));
                     if (newData != null) {
@@ -222,7 +219,7 @@ public class JdbcTaskRepository implements TaskRepository {
                         "and version = ?",
                 ps -> {
                     ps.setBoolean(1, true);
-                    ps.setString(2, truncate(schedulerSchedulerName.getName(), 50));
+                    ps.setString(2, StringUtils.truncate(schedulerSchedulerName.getName(), 50));
                     ps.setTimestamp(3, Timestamp.from(timePicked));
                     ps.setBoolean(4, false);
                     ps.setString(5, e.getTaskInstance().getTaskName());
@@ -303,26 +300,6 @@ public class JdbcTaskRepository implements TaskRepository {
         );
     }
 
-    public Optional<Execution> getExecution(TaskInstance taskInstance) {
-        return getExecution(taskInstance.getTaskName(), taskInstance.getId());
-    }
-
-    public Optional<Execution> getExecution(String taskName, String taskInstanceId) {
-        final List<Execution> executions = jdbcRunner.query(
-                "select * from " + tableName + " where task_name = ? and task_instance = ?",
-                (PreparedStatement p) -> {
-                    p.setString(1, taskName);
-                    p.setString(2, taskInstanceId);
-                },
-                new ExecutionResultSetMapper()
-        );
-        if (executions.size() > 1) {
-            throw new RuntimeException(String.format("Found more than one matching execution for task name/id combination: '%s'/'%s'", taskName, taskInstanceId));
-        }
-
-        return executions.size() == 1 ? ofNullable(executions.get(0)) : Optional.empty();
-    }
-
     @Override
     public int removeExecutions(String taskName) {
         return jdbcRunner.execute("delete from " + tableName + " where task_name = ?",
@@ -376,12 +353,12 @@ public class JdbcTaskRepository implements TaskRepository {
 
                 boolean picked = rs.getBoolean("picked");
                 final String pickedBy = rs.getString("picked_by");
-                Instant lastSuccess = ofNullable(rs.getTimestamp("last_success"))
+                Instant lastSuccess = Optional.ofNullable(rs.getTimestamp("last_success"))
                         .map(Timestamp::toInstant).orElse(null);
-                Instant lastFailure = ofNullable(rs.getTimestamp("last_failure"))
+                Instant lastFailure = Optional.ofNullable(rs.getTimestamp("last_failure"))
                         .map(Timestamp::toInstant).orElse(null);
                 int consecutiveFailures = rs.getInt("consecutive_failures"); // null-value is returned as 0 which is the preferred default
-                Instant lastHeartbeat = ofNullable(rs.getTimestamp("last_heartbeat"))
+                Instant lastHeartbeat = Optional.ofNullable(rs.getTimestamp("last_heartbeat"))
                         .map(Timestamp::toInstant).orElse(null);
                 long version = rs.getLong("version");
                 
@@ -428,11 +405,11 @@ public class JdbcTaskRepository implements TaskRepository {
 
         public String andCondition() {
             return unresolved.isEmpty() ? "" :
-                "and task_name not in (" + unresolved.stream().map(ignored -> "?").collect(joining(",")) + ")";
+                "and task_name not in (" + unresolved.stream().map(ignored -> "?").collect(Collectors.joining(",")) + ")";
         }
 
         public int setParameters(PreparedStatement p, int index) throws SQLException {
-            final List<String> unresolvedTasknames = unresolved.stream().map(UnresolvedTask::getTaskName).collect(toList());
+            final List<String> unresolvedTasknames = unresolved.stream().map(UnresolvedTask::getTaskName).collect(Collectors.toList());
             for (String taskName : unresolvedTasknames) {
                 p.setString(index++, taskName);
             }
