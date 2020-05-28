@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-final class CompositeParser implements Parser {
+public final class CompositeParser implements Parser {
     private final List<Parser> delegates;
 
     private CompositeParser(List<Parser> delegates) {
@@ -42,7 +42,7 @@ final class CompositeParser implements Parser {
             .collect(Collectors.toList());
     }
 
-    static CompositeParser of(Parser... parsers) {
+    public static CompositeParser of(Parser... parsers) {
         if (parsers == null || parsers.length == 0)
             throw new IllegalArgumentException("Unable to create CompositeParser");
         return new CompositeParser(Arrays.asList(parsers));

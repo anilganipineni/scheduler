@@ -21,8 +21,8 @@ import java.util.Objects;
 /**
  * @author akganipineni
  */
-public final class Execution {
-    private final TaskInstance taskInstance;
+public final class Execution<T> {
+    private final TaskInstance<T> taskInstance;
     public final Instant executionTime;
     public final boolean picked;
     public final String pickedBy;
@@ -32,11 +32,11 @@ public final class Execution {
     public final Instant lastFailure;
     public final Instant lastSuccess;
 
-    public Execution(Instant executionTime, TaskInstance taskInstance) {
+    public Execution(Instant executionTime, TaskInstance<T> taskInstance) {
         this(executionTime, taskInstance, false, null, null, null, 0, null, 1L);
     }
 
-    public Execution(Instant executionTime, TaskInstance taskInstance, boolean picked, String pickedBy,
+    public Execution(Instant executionTime, TaskInstance<T> taskInstance, boolean picked, String pickedBy,
                      Instant lastSuccess, Instant lastFailure, int consecutiveFailures, Instant lastHeartbeat, long version) {
         this.executionTime = executionTime;
         this.taskInstance = taskInstance;
@@ -51,34 +51,42 @@ public final class Execution {
     /**
 	 * @return the taskInstance
 	 */
-	public final TaskInstance getTaskInstance() {
+	public final TaskInstance<T> getTaskInstance() {
 		return taskInstance;
 	}
-
+	/**
+	 * @return
+	 */
 	public Instant getExecutionTime() {
         return executionTime;
     }
-
+    /**
+     * @return
+     */
     public boolean isPicked() {
         return picked;
     }
-
-    @Override
-    public boolean equals(Object o) {
+    /**
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Execution execution = (Execution) o;
+        Execution<T> execution = (Execution) o;
         return Objects.equals(executionTime, execution.executionTime) &&
                 Objects.equals(taskInstance, execution.taskInstance);
-    }
-
-
+	}
+    /**
+     * @see java.lang.Object#hashCode()
+     */
     @Override
     public int hashCode() {
         return Objects.hash(executionTime, taskInstance);
     }
-
-
+    /**
+     * @see java.lang.Object#toString()
+     */
     @Override
     public String toString() {
         return "Execution: " +

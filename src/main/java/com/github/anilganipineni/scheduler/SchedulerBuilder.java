@@ -163,9 +163,7 @@ public class SchedulerBuilder {
         if(DataSourceType.RDBMS.equals(dataSource.dataSourceType())) {
         	taskRepository = new JdbcTaskRepository(dataSource.rdbmsDataSource(), tableName, taskResolver, schedulerName, serializer);
         } else {
-        	// TODO FIXME
-        	System.err.println("\n\n ****************************** FIXME ****************************** \n\n");
-        	taskRepository = new CassandraTaskRepository(dataSource.rdbmsDataSource(), tableName, taskResolver, schedulerName, serializer);
+        	taskRepository = new CassandraTaskRepository(dataSource.cassandraDataSource(), tableName, taskResolver, schedulerName, serializer);
         }
 
         ExecutorService candidateExecutorService = executorService;

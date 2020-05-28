@@ -15,50 +15,51 @@
  */
 package com.github.anilganipineni.scheduler;
 
+import static java.util.function.Function.identity;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.task.Task;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import static java.util.function.Function.identity;
-
-@SuppressWarnings("rawtypes")
-public class TaskResolver {
+/**
+ * @author akganipineni
+ */
+public class TaskResolver<T> {
     private static final Logger LOG = LoggerFactory.getLogger(TaskResolver.class);
     private final StatsRegistry statsRegistry;
     private final Clock clock;
-    private final Map<String, Task> taskMap;
+    private final Map<String, Task<T>> taskMap;
     private final Map<String, UnresolvedTask> unresolvedTasks = new ConcurrentHashMap<>();
 
-    public TaskResolver(StatsRegistry statsRegistry, Task<?>... knownTasks) {
+    @SafeVarargs
+	public TaskResolver(StatsRegistry statsRegistry, Task<T>... knownTasks) {
         this(statsRegistry, Arrays.asList(knownTasks));
     }
 
-    public TaskResolver(StatsRegistry statsRegistry, List<Task<?>> knownTasks) {
+    public TaskResolver(StatsRegistry statsRegistry, List<Task<T>> knownTasks) {
         this(statsRegistry, new SystemClock(), knownTasks);
     }
 
-    public TaskResolver(StatsRegistry statsRegistry, Clock clock, List<Task<?>> knownTasks) {
+    public TaskResolver(StatsRegistry statsRegistry, Clock clock, List<Task<T>> knownTasks) {
         this.statsRegistry = statsRegistry;
         this.clock = clock;
         this.taskMap = knownTasks.stream().collect(Collectors.toMap(Task::getName, identity()));
     }
 
-    public Optional<Task> resolve(String taskName) {
-        Task task = taskMap.get(taskName);
+    public Optional<Task<T>> resolve(String taskName) {
+        Task<T> task = taskMap.get(taskName);
         if (task == null) {
             addUnresolved(taskName);
             statsRegistry.register(StatsRegistry.SchedulerStatsEvent.UNRESOLVED_TASK);
@@ -71,7 +72,7 @@ public class TaskResolver {
         unresolvedTasks.putIfAbsent(taskName, new UnresolvedTask(taskName));
     }
 
-    public void addTask(Task task) {
+    public void addTask(Task<T> task) {
         taskMap.put(task.getName(), task);
     }
 

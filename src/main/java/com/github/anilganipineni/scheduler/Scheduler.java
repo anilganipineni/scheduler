@@ -15,6 +15,22 @@
  */
 package com.github.anilganipineni.scheduler;
 
+import static com.github.anilganipineni.scheduler.ExecutorUtils.defaultThreadFactoryWithPrefix;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,19 +39,16 @@ import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 import com.github.anilganipineni.scheduler.dao.TaskRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry.SchedulerStatsEvent;
-import com.github.anilganipineni.scheduler.task.*;
-
-import javax.sql.DataSource;
-
-import static com.github.anilganipineni.scheduler.ExecutorUtils.defaultThreadFactoryWithPrefix;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
+import com.github.anilganipineni.scheduler.task.CompletionHandler;
+import com.github.anilganipineni.scheduler.task.Execution;
+import com.github.anilganipineni.scheduler.task.ExecutionComplete;
+import com.github.anilganipineni.scheduler.task.ExecutionContext;
+import com.github.anilganipineni.scheduler.task.ExecutionOperations;
+import com.github.anilganipineni.scheduler.task.FailureHandler;
+import com.github.anilganipineni.scheduler.task.OnStartup;
+import com.github.anilganipineni.scheduler.task.Task;
+import com.github.anilganipineni.scheduler.task.TaskInstance;
+import com.github.anilganipineni.scheduler.task.TaskInstanceId;
 
 public class Scheduler implements SchedulerClient {
 
@@ -64,7 +77,7 @@ public class Scheduler implements SchedulerClient {
     private final SettableSchedulerState schedulerState = new SettableSchedulerState();
     private int currentGenerationNumber = 1;
 
-    protected Scheduler(Clock clock, TaskRepository taskRepository, TaskResolver taskResolver, int threadpoolSize, ExecutorService executorService, SchedulerName schedulerName,
+    public Scheduler(Clock clock, TaskRepository taskRepository, TaskResolver taskResolver, int threadpoolSize, ExecutorService executorService, SchedulerName schedulerName,
               Waiter executeDueWaiter, Duration heartbeatInterval, boolean enableImmediateExecution, StatsRegistry statsRegistry, int pollingLimit, Duration deleteUnresolvedAfter, List<OnStartup> onStartup) {
         this.clock = clock;
         this.taskRepository = taskRepository;
@@ -188,7 +201,7 @@ public class Scheduler implements SchedulerClient {
         return new ArrayList<>(currentlyProcessing.values());
     }
 
-    protected void executeDue() {
+    public void executeDue() {
         Instant now = clock.now();
         List<Execution> dueExecutions = taskRepository.getDue(now, pollingLimit);
         LOG.trace("Found {} taskinstances due for execution", dueExecutions.size());
@@ -204,10 +217,10 @@ public class Scheduler implements SchedulerClient {
     }
 
     @SuppressWarnings({"rawtypes","unchecked"})
-    protected void detectDeadExecutions() {
+    public void detectDeadExecutions() {
         LOG.debug("Deleting executions with unresolved tasks.");
-        taskResolver.getUnresolvedTaskNames(deleteUnresolvedAfter)
-            .forEach(taskName -> {
+        List<String> taskNames = taskResolver.getUnresolvedTaskNames(deleteUnresolvedAfter);
+        taskNames.forEach(taskName -> {
                 LOG.warn("Deleting all executions for task with name '{}'. They have been unresolved for more than {}", taskName, deleteUnresolvedAfter);
                 int removed = taskRepository.removeExecutions(taskName);
                 LOG.info("Removed {} executions", removed);

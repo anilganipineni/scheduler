@@ -38,7 +38,7 @@ public class Waiter {
         this(duration, clock, new Object());
     }
 
-    Waiter(Duration duration, Clock clock, Object lock) {
+    public Waiter(Duration duration, Clock clock, Object lock) {
         this.duration = duration;
         this.clock = clock;
         this.lock = lock;

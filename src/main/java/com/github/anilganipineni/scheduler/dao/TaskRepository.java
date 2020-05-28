@@ -25,6 +25,8 @@ import com.github.anilganipineni.scheduler.task.Execution;
 
 public interface TaskRepository {
 
+    public static final String DEFAULT_TABLE_NAME = "scheduled_tasks";
+
     boolean createIfNotExists(Execution execution);
     List<Execution> getDue(Instant now, int limit);
     void getScheduledExecutions(Consumer<Execution> consumer);

@@ -51,7 +51,7 @@ public interface SchedulerClient {
 
     Optional<ScheduledExecution<Object>> getScheduledExecution(TaskInstanceId taskInstanceId);
 
-    class Builder {
+    public class Builder {
 
         private final SchedulerDataSource dataSource;
         private List<Task<?>> knownTasks;
@@ -86,9 +86,7 @@ public interface SchedulerClient {
             if(DataSourceType.RDBMS.equals(dataSource.dataSourceType())) {
             	taskRepository = new JdbcTaskRepository(dataSource.rdbmsDataSource(), tableName, new TaskResolver(StatsRegistry.NOOP, knownTasks), new SchedulerClientName(), serializer);
             } else {
-            	// TODO FIXME
-            	System.err.println("\n\n ****************************** FIXME ****************************** \n\n");
-            	taskRepository = new CassandraTaskRepository(dataSource.rdbmsDataSource(), tableName, new TaskResolver(StatsRegistry.NOOP, knownTasks), new SchedulerClientName(), serializer);
+            	taskRepository = new CassandraTaskRepository(dataSource.cassandraDataSource(), tableName, new TaskResolver(StatsRegistry.NOOP, knownTasks), new SchedulerClientName(), serializer);
             }
             return new StandardSchedulerClient(taskRepository);
         }

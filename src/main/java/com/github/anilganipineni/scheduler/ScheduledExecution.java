@@ -14,28 +14,48 @@
  * limitations under the License.
  */
 package com.github.anilganipineni.scheduler;
+
 import java.time.Instant;
 import java.util.Objects;
 
 import com.github.anilganipineni.scheduler.task.Execution;
-import com.github.anilganipineni.scheduler.task.TaskInstance;
 import com.github.anilganipineni.scheduler.task.TaskInstanceId;
-public class ScheduledExecution<DATA_TYPE> {
-    private final Class<DATA_TYPE> dataClass;
+
+/**
+ * @author akganipineni
+ */
+public class ScheduledExecution<T> {
+    /**
+     * the data class
+     */
+    private final Class<T> dataClass;
+    /**
+     * 
+     */
     private final Execution execution;
-    public ScheduledExecution(Class<DATA_TYPE> dataClass, Execution execution) {
+    /**
+     * @param dataClass
+     * @param execution
+     */
+    public ScheduledExecution(Class<T> dataClass, Execution execution) {
         this.dataClass = dataClass;
         this.execution = execution;
     }
+    /**
+     * @return
+     */
     public TaskInstanceId getTaskInstance() {
         return execution.getTaskInstance();
     }
+    /**
+     * @return
+     */
     public Instant getExecutionTime() {
         return execution.getExecutionTime();
     }
-    public DATA_TYPE getData() {
+    public T getData() {
         if (dataClass.isInstance(this.execution.getTaskInstance().getData())) {
-            return (DATA_TYPE) this.execution.getTaskInstance().getData();
+            return (T) this.execution.getTaskInstance().getData();
         }
         throw new DataClassMismatchException();
     }
@@ -51,5 +71,6 @@ public class ScheduledExecution<DATA_TYPE> {
         return Objects.hash(execution);
     }
     public static class DataClassMismatchException extends RuntimeException {
+    	
     }
 }

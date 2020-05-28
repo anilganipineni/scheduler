@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 
-class RunUntilShutdown implements Runnable {
+public class RunUntilShutdown implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(RunUntilShutdown.class);
     private final Runnable toRun;
     private final Waiter waitBetweenRuns;

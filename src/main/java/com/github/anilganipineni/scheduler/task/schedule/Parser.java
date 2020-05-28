@@ -18,7 +18,7 @@ package com.github.anilganipineni.scheduler.task.schedule;
 import java.util.List;
 import java.util.Optional;
 
-interface Parser {
+public interface Parser {
     Optional<Schedule> parse(String scheduleString);
 
     List<String> examples();

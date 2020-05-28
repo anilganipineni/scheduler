@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
-class DueExecutionsBatch {
+public class DueExecutionsBatch {
 
     private static final Logger LOG = LoggerFactory.getLogger(DueExecutionsBatch.class);
     private final int generationNumber;
