@@ -1,25 +1,24 @@
 package com.github.anilganipineni.scheduler.functional;
 
-import com.github.anilganipineni.scheduler.DbUtils;
-import com.github.anilganipineni.scheduler.EmbeddedPostgresqlExtension;
-import com.github.anilganipineni.scheduler.Scheduler;
-import com.github.anilganipineni.scheduler.StopSchedulerExtension;
-import com.github.anilganipineni.scheduler.helper.TestableRegistry;
-import com.github.anilganipineni.scheduler.task.CompletionHandler;
-import com.github.anilganipineni.scheduler.task.ExecutionComplete;
-import com.github.anilganipineni.scheduler.task.ExecutionOperations;
-import com.github.anilganipineni.scheduler.task.helper.CustomTask;
-import com.github.anilganipineni.scheduler.task.helper.Tasks;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.time.Duration;
+import java.time.Instant;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.time.Duration;
-import java.time.Instant;
-
-import static com.github.anilganipineni.scheduler.stats.StatsRegistry.SchedulerStatsEvent;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.github.anilganipineni.scheduler.EmbeddedPostgresqlExtension;
+import com.github.anilganipineni.scheduler.Scheduler;
+import com.github.anilganipineni.scheduler.StopSchedulerExtension;
+import com.github.anilganipineni.scheduler.helper.TestableRegistry;
+import com.github.anilganipineni.scheduler.stats.StatsRegistry.SchedulerStatsEvent;
+import com.github.anilganipineni.scheduler.task.CompletionHandler;
+import com.github.anilganipineni.scheduler.task.ExecutionComplete;
+import com.github.anilganipineni.scheduler.task.ExecutionOperations;
+import com.github.anilganipineni.scheduler.task.helper.CustomTask;
+import com.github.anilganipineni.scheduler.task.helper.Tasks;
 
 public class DeadExecutionTest {
 
@@ -43,7 +42,7 @@ public class DeadExecutionTest {
 
             TestableRegistry registry = TestableRegistry.create().waitConditions(completedCondition).build();
 
-            Scheduler scheduler = Scheduler.create(postgres.getDataSource(), customTask)
+            Scheduler scheduler = Scheduler.create(postgres, customTask)
                 .pollingInterval(Duration.ofMillis(100))
                 .heartbeatInterval(Duration.ofMillis(100))
                 .statsRegistry(registry)

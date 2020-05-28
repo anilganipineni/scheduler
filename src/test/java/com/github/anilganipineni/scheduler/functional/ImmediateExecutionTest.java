@@ -1,8 +1,18 @@
 package com.github.anilganipineni.scheduler.functional;
 
-import co.unruly.matchers.TimeMatchers;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.core.Is.is;
 
-import com.github.anilganipineni.scheduler.DbUtils;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
 import com.github.anilganipineni.scheduler.EmbeddedPostgresqlExtension;
 import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.StopSchedulerExtension;
@@ -12,18 +22,7 @@ import com.github.anilganipineni.scheduler.task.ExecutionComplete;
 import com.github.anilganipineni.scheduler.task.helper.OneTimeTask;
 import com.github.anilganipineni.scheduler.testhelper.SettableClock;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.core.Is.is;
+import co.unruly.matchers.TimeMatchers;
 
 
 public class ImmediateExecutionTest {
@@ -51,7 +50,7 @@ public class ImmediateExecutionTest {
 
             TestableRegistry registry = TestableRegistry.create().waitConditions(executeDueCondition, completedCondition).build();
 
-            Scheduler scheduler = Scheduler.create(postgres.getDataSource(), task)
+            Scheduler scheduler = Scheduler.create(postgres, task)
                 .pollingInterval(Duration.ofMinutes(1))
                 .enableImmediateExecution()
                 .statsRegistry(registry)

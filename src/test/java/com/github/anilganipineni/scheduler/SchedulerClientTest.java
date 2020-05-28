@@ -65,12 +65,12 @@ public class SchedulerClientTest {
         savingHandler = new SavingHandler<>();
         savingTask = TestTasks.oneTime("SavingTask", String.class, savingHandler);
 
-        scheduler = TestHelper.createManualScheduler(DB.getDataSource(), oneTimeTaskA, oneTimeTaskB, scheduleAnotherTask, savingTask).clock(settableClock).start();
+        scheduler = TestHelper.createManualScheduler(DB, oneTimeTaskA, oneTimeTaskB, scheduleAnotherTask, savingTask).clock(settableClock).start();
     }
 
     @Test
     public void client_should_be_able_to_schedule_executions() {
-        SchedulerClient client = SchedulerClient.Builder.create(DB.getDataSource()).build();
+        SchedulerClient client = SchedulerClient.Builder.create(DB).build();
         client.schedule(oneTimeTaskA.instance("1"), settableClock.now());
 
         scheduler.runAnyDueExecutions();
@@ -91,7 +91,7 @@ public class SchedulerClientTest {
 
     @Test
     public void client_should_be_able_to_fetch_executions_for_task() {
-        SchedulerClient client = SchedulerClient.Builder.create(DB.getDataSource(), oneTimeTaskA, oneTimeTaskB).build();
+        SchedulerClient client = SchedulerClient.Builder.create(DB, oneTimeTaskA, oneTimeTaskB).build();
         client.schedule(oneTimeTaskA.instance("1"), settableClock.now());
         client.schedule(oneTimeTaskA.instance("2"), settableClock.now());
         client.schedule(oneTimeTaskB.instance("10"), settableClock.now());
@@ -105,7 +105,7 @@ public class SchedulerClientTest {
 
     @Test
     public void client_should_be_able_to_fetch_single_scheduled_execution() {
-        SchedulerClient client = SchedulerClient.Builder.create(DB.getDataSource(), oneTimeTaskA).build();
+        SchedulerClient client = SchedulerClient.Builder.create(DB, oneTimeTaskA).build();
         client.schedule(oneTimeTaskA.instance("1"), settableClock.now());
 
         assertThat(client.getScheduledExecution(TaskInstanceId.of(oneTimeTaskA.getName(), "1")), not(OptionalMatchers.empty()));

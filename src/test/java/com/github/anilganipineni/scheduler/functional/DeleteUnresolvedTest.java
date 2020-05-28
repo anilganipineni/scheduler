@@ -49,7 +49,7 @@ public class DeleteUnresolvedTest {
 
         TestableRegistry testableRegistry = new TestableRegistry(false, Collections.emptyList());
         // Missing task with name 'onetime'
-        ManualScheduler scheduler = TestHelper.createManualScheduler(postgres.getDataSource())
+        ManualScheduler scheduler = TestHelper.createManualScheduler(postgres)
                 .clock(clock)
                 .statsRegistry(testableRegistry)
                 .build();

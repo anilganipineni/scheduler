@@ -1,10 +1,10 @@
 package com.github.anilganipineni.scheduler;
 
-import com.github.anilganipineni.scheduler.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.Waiter;
+import com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.task.CompletionHandler;
 import com.github.anilganipineni.scheduler.task.DeadExecutionHandler;
@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.github.anilganipineni.scheduler.JdbcTaskRepository.DEFAULT_TABLE_NAME;
+import static com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository.DEFAULT_TABLE_NAME;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;

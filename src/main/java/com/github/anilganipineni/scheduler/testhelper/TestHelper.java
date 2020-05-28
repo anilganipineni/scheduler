@@ -21,22 +21,21 @@ import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.sql.DataSource;
-
-import com.github.anilganipineni.scheduler.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.SchedulerBuilder;
 import com.github.anilganipineni.scheduler.TaskResolver;
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
+import com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.task.OnStartup;
 import com.github.anilganipineni.scheduler.task.Task;
 
 public class TestHelper {
 
-    public static ManualSchedulerBuilder createManualScheduler(DataSource dataSource, Task<?>... knownTasks) {
+    public static ManualSchedulerBuilder createManualScheduler(SchedulerDataSource dataSource, Task<?>... knownTasks) {
         return new ManualSchedulerBuilder(dataSource, Arrays.asList(knownTasks));
     }
 
-    public static ManualSchedulerBuilder createManualScheduler(DataSource dataSource, List<Task<?>> knownTasks) {
+    public static ManualSchedulerBuilder createManualScheduler(SchedulerDataSource dataSource, List<Task<?>> knownTasks) {
         return new ManualSchedulerBuilder(dataSource, knownTasks);
     }
 
@@ -44,7 +43,7 @@ public class TestHelper {
     public static class ManualSchedulerBuilder extends SchedulerBuilder {
         private SettableClock clock;
 
-        public ManualSchedulerBuilder(DataSource dataSource, List<Task<?>> knownTasks) {
+        public ManualSchedulerBuilder(SchedulerDataSource dataSource, List<Task<?>> knownTasks) {
             super(dataSource, knownTasks);
         }
 
@@ -65,7 +64,7 @@ public class TestHelper {
 
         public ManualScheduler build() {
             final TaskResolver taskResolver = new TaskResolver(statsRegistry, clock, knownTasks);
-            final JdbcTaskRepository taskRepository = new JdbcTaskRepository(dataSource, tableName, taskResolver, schedulerName, serializer);
+            final JdbcTaskRepository taskRepository = new JdbcTaskRepository(dataSource.rdbmsDataSource(), tableName, taskResolver, schedulerName, serializer);
 
             return new ManualScheduler(clock, taskRepository, taskResolver, executorThreads, new DirectExecutorService(), schedulerName, waiter, heartbeatInterval, enableImmediateExecution, statsRegistry, pollingLimit, deleteUnresolvedAfter, startTasks);
         }

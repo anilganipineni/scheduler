@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,14 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.jdbc;
+package com.github.anilganipineni.scheduler.dao;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.function.Function;
+import javax.sql.DataSource;
 
-public interface ResultSetMapper<T>{
-
-	T map(ResultSet resultSet) throws SQLException;
-
+/**
+ * @author akganipineni
+ */
+public interface SchedulerDataSource {
+    /**
+     * The Data base type flag RDBMS | CASSANDRA | BOTH
+     */
+    public DataSourceType dataSourceType();
+    /**
+     * @return
+     */
+    public DataSource rdbmsDataSource();
+    /**
+     * @return
+     */
+    public CassandraDataSource cassandraDataSource();
 }

@@ -1,23 +1,23 @@
 package com.github.anilganipineni.scheduler.example;
 
+import java.time.Duration;
+import java.time.Instant;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.anilganipineni.scheduler.HsqlTestDatabaseExtension;
 import com.github.anilganipineni.scheduler.Scheduler;
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 import com.github.anilganipineni.scheduler.task.helper.RecurringTask;
 import com.github.anilganipineni.scheduler.task.helper.Tasks;
 import com.github.anilganipineni.scheduler.task.schedule.Schedule;
 import com.github.anilganipineni.scheduler.task.schedule.Schedules;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
-import java.time.Duration;
-import java.time.Instant;
-
 public class CronMain {
     private static final Logger LOG = LoggerFactory.getLogger(CronMain.class);
 
-    private static void example(DataSource dataSource) {
+    private static void example(SchedulerDataSource dataSource) {
 
         Schedule cron = Schedules.cron("*/10 * * * * ?");
         RecurringTask<Void> cronTask = Tasks.recurring("cron-task", cron)
@@ -44,9 +44,8 @@ public class CronMain {
             final HsqlTestDatabaseExtension hsqlRule = new HsqlTestDatabaseExtension();
             hsqlRule.beforeEach(null);
 
-            final DataSource dataSource = hsqlRule.getDataSource();
 
-            example(dataSource);
+            example(hsqlRule);
         } catch (Exception e) {
             LOG.error("Error", e);
         }

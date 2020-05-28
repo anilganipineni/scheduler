@@ -1,5 +1,8 @@
 package com.github.anilganipineni.scheduler;
 
+import com.github.anilganipineni.scheduler.dao.CassandraDataSource;
+import com.github.anilganipineni.scheduler.dao.DataSourceType;
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 import com.google.common.io.CharStreams;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -17,7 +20,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.function.Consumer;
 
-public class HsqlTestDatabaseExtension implements BeforeEachCallback, AfterEachCallback {
+public class HsqlTestDatabaseExtension implements BeforeEachCallback, AfterEachCallback, SchedulerDataSource {
 
     private DataSource dataSource;
     @Override
@@ -61,4 +64,25 @@ public class HsqlTestDatabaseExtension implements BeforeEachCallback, AfterEachC
             throw new RuntimeException("Error getting connection from datasource.", e);
         }
     }
+	/**
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerDataSource#dataSourceType()
+	 */
+	@Override
+	public DataSourceType dataSourceType() {
+		return DataSourceType.RDBMS;
+	}
+	/**
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerDataSource#rdbmsDataSource()
+	 */
+	@Override
+	public DataSource rdbmsDataSource() {
+		return getDataSource();
+	}
+	/**
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerDataSource#cassandraDataSource()
+	 */
+	@Override
+	public CassandraDataSource cassandraDataSource() {
+		return null;
+	}
 }

@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
 
 import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.SchedulerName;
-import com.github.anilganipineni.scheduler.TaskRepository;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.Waiter;
+import com.github.anilganipineni.scheduler.dao.TaskRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.task.OnStartup;
 

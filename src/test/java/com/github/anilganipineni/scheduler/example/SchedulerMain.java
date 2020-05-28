@@ -1,7 +1,14 @@
 package com.github.anilganipineni.scheduler.example;
 
+import java.time.Duration;
+import java.time.Instant;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.anilganipineni.scheduler.HsqlTestDatabaseExtension;
 import com.github.anilganipineni.scheduler.Scheduler;
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 import com.github.anilganipineni.scheduler.task.ExecutionContext;
 import com.github.anilganipineni.scheduler.task.TaskInstance;
 import com.github.anilganipineni.scheduler.task.helper.CustomTask;
@@ -11,17 +18,10 @@ import com.github.anilganipineni.scheduler.task.helper.Tasks;
 import com.github.anilganipineni.scheduler.task.schedule.FixedDelay;
 import com.github.anilganipineni.scheduler.task.schedule.Schedule;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
-import java.time.Duration;
-import java.time.Instant;
-
 public class SchedulerMain {
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerMain.class);
 
-    private static void example(DataSource dataSource) {
+    private static void example(SchedulerDataSource dataSource) {
 
         // recurring with no data
         RecurringTask<Void> recurring1 = Tasks.recurring("recurring_no_data", FixedDelay.of(Duration.ofSeconds(5)))
@@ -113,9 +113,7 @@ public class SchedulerMain {
             final HsqlTestDatabaseExtension hsqlRule = new HsqlTestDatabaseExtension();
             hsqlRule.beforeEach(null);
 
-            final DataSource dataSource = hsqlRule.getDataSource();
-
-            example(dataSource);
+            example(hsqlRule);
         } catch (Exception e) {
             LOG.error("Error", e);
         }

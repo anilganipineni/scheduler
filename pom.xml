@@ -9,7 +9,7 @@
 
 	<packaging>jar</packaging>
 
-	<version>0.1</version>
+	<version>0.2</version>
 
 	<name>Java Scheduler</name>
 	<description>The Java Scheduler which supports both RDBMS and Cassandra</description>
@@ -54,6 +54,9 @@
         <micro-jdbc.version>0.1</micro-jdbc.version>
         <otj-pg-embedded.version>0.11.4</otj-pg-embedded.version>
         <postgresql.version>9.4.1207</postgresql.version>
+
+		<spring.version>4.3.2.RELEASE</spring.version>
+		<datastax.version>3.3.0</datastax.version>
 	</properties>
 
 	<dependencies>
@@ -73,9 +76,53 @@
 			<version>2.6</version>
 		</dependency>
 
-
-
-		
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ GSP Data Base(s) related -->	
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.40</version>
+		</dependency>
+		<dependency>
+			<groupId>com.datastax.cassandra</groupId>
+			<artifactId>cassandra-driver-core</artifactId>
+			<version>${datastax.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.datastax.cassandra</groupId>
+			<artifactId>cassandra-driver-mapping</artifactId>
+			<version>${datastax.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.datastax.cassandra</groupId>
+			<artifactId>cassandra-driver-extras</artifactId>
+			<version>${datastax.version}</version>
+		</dependency>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Spring -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-beans</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<!-- dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.2</version>
+		</dependency -->
         
         <dependency>
             <groupId>com.cronutils</groupId>

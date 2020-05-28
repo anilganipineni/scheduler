@@ -1,6 +1,20 @@
 package com.github.anilganipineni.scheduler.functional;
 
-import com.github.anilganipineni.scheduler.DbUtils;
+import static co.unruly.matchers.OptionalMatchers.contains;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Arrays;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
 import com.github.anilganipineni.scheduler.EmbeddedPostgresqlExtension;
 import com.github.anilganipineni.scheduler.ScheduledExecution;
 import com.github.anilganipineni.scheduler.TestTasks;
@@ -11,21 +25,6 @@ import com.github.anilganipineni.scheduler.task.schedule.Schedules;
 import com.github.anilganipineni.scheduler.testhelper.ManualScheduler;
 import com.github.anilganipineni.scheduler.testhelper.SettableClock;
 import com.github.anilganipineni.scheduler.testhelper.TestHelper;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.Optional;
-
-import static co.unruly.matchers.OptionalMatchers.contains;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 public class RecurringTaskTest {
 
@@ -50,7 +49,7 @@ public class RecurringTaskTest {
         RecurringTask<Void> recurringTask = Tasks.recurring("recurring-a", Schedules.daily(LocalTime.of(23, 59)))
                 .execute(TestTasks.DO_NOTHING);
 
-        ManualScheduler scheduler = TestHelper.createManualScheduler(postgres.getDataSource())
+        ManualScheduler scheduler = TestHelper.createManualScheduler(postgres)
                 .clock(clock)
                 .startTasks(Arrays.asList(recurringTask))
                 .build();
@@ -68,7 +67,7 @@ public class RecurringTaskTest {
         RecurringTask<Void> recurringTask = Tasks.recurring("recurring-a", Schedules.fixedDelay(Duration.ofHours(1)))
                 .execute(TestTasks.DO_NOTHING);
 
-        ManualScheduler scheduler = TestHelper.createManualScheduler(postgres.getDataSource())
+        ManualScheduler scheduler = TestHelper.createManualScheduler(postgres)
                 .clock(clock)
                 .startTasks(Arrays.asList(recurringTask))
                 .build();

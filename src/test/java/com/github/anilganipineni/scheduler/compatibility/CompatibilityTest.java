@@ -1,25 +1,36 @@
 package com.github.anilganipineni.scheduler.compatibility;
 
-import static com.github.anilganipineni.scheduler.JdbcTaskRepository.DEFAULT_TABLE_NAME;
+import static com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository.DEFAULT_TABLE_NAME;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.LoggerFactory;
 
 import com.github.anilganipineni.scheduler.DbUtils;
-import com.github.anilganipineni.scheduler.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.StopSchedulerExtension;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.TestTasks;
 import com.github.anilganipineni.scheduler.TestTasks.DoNothingHandler;
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
+import com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.task.Execution;
 import com.github.anilganipineni.scheduler.task.TaskInstance;
@@ -27,17 +38,6 @@ import com.github.anilganipineni.scheduler.task.helper.OneTimeTask;
 import com.github.anilganipineni.scheduler.task.helper.RecurringTask;
 import com.github.anilganipineni.scheduler.task.schedule.FixedDelay;
 import com.google.common.collect.Lists;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import javax.sql.DataSource;
-
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.slf4j.LoggerFactory;
 
 
 @SuppressWarnings("ConstantConditions")
@@ -56,7 +56,7 @@ public abstract class CompatibilityTest {
     private TestTasks.SimpleStatsRegistry statsRegistry;
     private Scheduler scheduler;
 
-    public abstract DataSource getDataSource();
+    public abstract SchedulerDataSource getDataSource();
 
     @BeforeEach
     public void setUp() {
@@ -79,7 +79,7 @@ public abstract class CompatibilityTest {
     @AfterEach
     public void clearTables() {
         assertTimeout(Duration.ofSeconds(20), () ->
-            DbUtils.clearTables(getDataSource())
+            DbUtils.clearTables(getDataSource().rdbmsDataSource())
         );
     }
 
@@ -122,7 +122,7 @@ public abstract class CompatibilityTest {
         TaskResolver taskResolver = new TaskResolver(StatsRegistry.NOOP, new ArrayList<>());
         taskResolver.addTask(oneTime);
 
-        final JdbcTaskRepository jdbcTaskRepository = new JdbcTaskRepository(getDataSource(), DEFAULT_TABLE_NAME, taskResolver, new SchedulerName.Fixed("scheduler1"));
+        final JdbcTaskRepository jdbcTaskRepository = (JdbcTaskRepository) DbUtils.getRepository(getDataSource(), DEFAULT_TABLE_NAME, taskResolver, new SchedulerName.Fixed("scheduler1"));
 
         final Instant now = Instant.now();
 
@@ -159,7 +159,7 @@ public abstract class CompatibilityTest {
         TaskResolver taskResolver = new TaskResolver(StatsRegistry.NOOP, new ArrayList<>());
         taskResolver.addTask(recurringWithData);
 
-        final JdbcTaskRepository jdbcTaskRepository = new JdbcTaskRepository(getDataSource(), DEFAULT_TABLE_NAME, taskResolver, new SchedulerName.Fixed("scheduler1"));
+        final JdbcTaskRepository jdbcTaskRepository = (JdbcTaskRepository) DbUtils.getRepository(getDataSource(), DEFAULT_TABLE_NAME, taskResolver, new SchedulerName.Fixed("scheduler1"));
 
         final Instant now = Instant.now();
 

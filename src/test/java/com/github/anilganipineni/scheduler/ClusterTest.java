@@ -1,20 +1,9 @@
 package com.github.anilganipineni.scheduler;
 
-import com.github.anilganipineni.scheduler.Scheduler;
-import com.github.anilganipineni.scheduler.SchedulerName;
-import com.github.anilganipineni.scheduler.task.CompletionHandler;
-import com.github.anilganipineni.scheduler.task.ExecutionComplete;
-import com.github.anilganipineni.scheduler.task.ExecutionOperations;
-import com.github.anilganipineni.scheduler.task.Task;
-import com.github.anilganipineni.scheduler.task.helper.ComposableTask;
-import com.github.anilganipineni.scheduler.task.helper.RecurringTask;
-import com.github.anilganipineni.scheduler.task.helper.Tasks;
-import com.github.anilganipineni.scheduler.task.schedule.Schedules;
-import com.google.common.collect.Lists;
-
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import static java.util.stream.Collectors.toList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -26,10 +15,19 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
-import static java.util.stream.Collectors.toList;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.github.anilganipineni.scheduler.task.CompletionHandler;
+import com.github.anilganipineni.scheduler.task.ExecutionComplete;
+import com.github.anilganipineni.scheduler.task.ExecutionOperations;
+import com.github.anilganipineni.scheduler.task.Task;
+import com.github.anilganipineni.scheduler.task.helper.ComposableTask;
+import com.github.anilganipineni.scheduler.task.helper.RecurringTask;
+import com.github.anilganipineni.scheduler.task.helper.Tasks;
+import com.github.anilganipineni.scheduler.task.schedule.Schedules;
+import com.google.common.collect.Lists;
 
 
 public class ClusterTest {
@@ -104,13 +102,13 @@ public class ClusterTest {
     }
 
     private Scheduler createScheduler(String name, Task<?> task, TestTasks.SimpleStatsRegistry stats) {
-        return Scheduler.create(DB.getDataSource(), Lists.newArrayList(task))
+        return Scheduler.create(DB, Lists.newArrayList(task))
                 .schedulerName(new SchedulerName.Fixed(name)).pollingInterval(Duration.ofMillis(0))
                 .heartbeatInterval(Duration.ofMillis(100)).statsRegistry(stats).build();
     }
 
     private Scheduler createSchedulerRecurring(String name, RecurringTask<?> task, TestTasks.SimpleStatsRegistry stats) {
-        return Scheduler.create(DB.getDataSource())
+        return Scheduler.create(DB)
             .startTasks(task)
             .schedulerName(new SchedulerName.Fixed(name))
             .pollingInterval(Duration.ofMillis(0))

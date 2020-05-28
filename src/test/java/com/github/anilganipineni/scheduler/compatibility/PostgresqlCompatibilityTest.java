@@ -1,12 +1,9 @@
 package com.github.anilganipineni.scheduler.compatibility;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.anilganipineni.scheduler.DbUtils;
 import com.github.anilganipineni.scheduler.EmbeddedPostgresqlExtension;
-
-import javax.sql.DataSource;
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 
 public class PostgresqlCompatibilityTest extends CompatibilityTest {
 
@@ -14,8 +11,8 @@ public class PostgresqlCompatibilityTest extends CompatibilityTest {
     public EmbeddedPostgresqlExtension postgres = new EmbeddedPostgresqlExtension();
 
     @Override
-    public DataSource getDataSource() {
-        return postgres.getDataSource();
+    public SchedulerDataSource getDataSource() {
+        return postgres;
     }
 
 }

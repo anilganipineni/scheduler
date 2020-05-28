@@ -1,5 +1,6 @@
 package com.github.anilganipineni.scheduler.compatibility;
 
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.util.DriverDataSource;
@@ -16,11 +17,13 @@ public class OracleCompatibilityTest extends CompatibilityTest {
     public static final String JDBC_PASSWORD = "dummy";
 
     @Override
-    public DataSource getDataSource() {
-        final DriverDataSource datasource = new DriverDataSource(JDBC_URL, "oracle.jdbc.OracleDriver", new Properties(), JDBC_USER, JDBC_PASSWORD);
+    public SchedulerDataSource getDataSource() {
+        /*final DriverDataSource datasource = new DriverDataSource(JDBC_URL, "oracle.jdbc.OracleDriver", new Properties(), JDBC_USER, JDBC_PASSWORD);
         final HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setDataSource(datasource);
-        return new HikariDataSource(hikariConfig);
+        return new HikariDataSource(hikariConfig);*/
+    	
+    	return null;
     }
 
 }

@@ -1,18 +1,18 @@
 package com.github.anilganipineni.scheduler.example;
 
-import com.github.anilganipineni.scheduler.HsqlTestDatabaseExtension;
-import com.github.anilganipineni.scheduler.Scheduler;
-import com.github.anilganipineni.scheduler.task.helper.OneTimeTask;
-import com.github.anilganipineni.scheduler.task.helper.RecurringTask;
-import com.github.anilganipineni.scheduler.task.helper.Tasks;
-import com.github.anilganipineni.scheduler.task.schedule.FixedDelay;
+import java.io.Serializable;
+import java.time.Instant;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
-import java.io.Serializable;
-import java.time.Instant;
+import com.github.anilganipineni.scheduler.HsqlTestDatabaseExtension;
+import com.github.anilganipineni.scheduler.Scheduler;
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
+import com.github.anilganipineni.scheduler.task.helper.OneTimeTask;
+import com.github.anilganipineni.scheduler.task.helper.RecurringTask;
+import com.github.anilganipineni.scheduler.task.helper.Tasks;
+import com.github.anilganipineni.scheduler.task.schedule.FixedDelay;
 
 public class TasksMain {
     private static final Logger LOG = LoggerFactory.getLogger(TasksMain.class);
@@ -21,17 +21,14 @@ public class TasksMain {
         try {
             final HsqlTestDatabaseExtension hsqlRule = new HsqlTestDatabaseExtension();
             hsqlRule.beforeEach(null);
-
-            final DataSource dataSource = hsqlRule.getDataSource();
-
-//            recurringTask(dataSource);
-            adhocTask(dataSource);
+            // recurringTask(dataSource);
+            adhocTask(hsqlRule);
         } catch (Exception e) {
             LOG.error("Error", e);
         }
     }
 
-    private static void recurringTask(DataSource dataSource) {
+    private static void recurringTask(SchedulerDataSource dataSource) {
 
         RecurringTask<Void> hourlyTask = Tasks.recurring("my-hourly-task", FixedDelay.ofHours(1))
                 .execute((inst, ctx) -> {
@@ -48,7 +45,7 @@ public class TasksMain {
         scheduler.start();
     }
 
-    private static void adhocTask(DataSource dataSource) {
+    private static void adhocTask(SchedulerDataSource dataSource) {
 
         OneTimeTask<MyTaskData> myAdhocTask = Tasks.oneTime("my-typed-adhoc-task", MyTaskData.class)
                 .execute((inst, ctx) -> {

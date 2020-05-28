@@ -22,13 +22,17 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.anilganipineni.scheduler.dao.DataSourceType;
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
+import com.github.anilganipineni.scheduler.dao.TaskRepository;
+import com.github.anilganipineni.scheduler.dao.cassandra.CassandraTaskRepository;
+import com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.task.OnStartup;
 import com.github.anilganipineni.scheduler.task.Task;
@@ -39,7 +43,8 @@ public class SchedulerBuilder {
 
     protected Clock clock = new SystemClock(); // if this is set, waiter-clocks must be updated
 
-    protected final DataSource dataSource;
+    // protected final DataSource dataSource;
+    protected final SchedulerDataSource dataSource;
     protected SchedulerName schedulerName = new SchedulerName.Hostname();
     protected int executorThreads = 10;
     protected final List<Task<?>> knownTasks = new ArrayList<>();
@@ -55,12 +60,20 @@ public class SchedulerBuilder {
     protected ExecutorService executorService;
     protected Duration deleteUnresolvedAfter = Duration.ofDays(14);
 
-    public SchedulerBuilder(DataSource dataSource, List<Task<?>> knownTasks) {
+    public SchedulerBuilder(SchedulerDataSource dataSource, List<Task<?>> knownTasks) {
+        // this.dataSource = dataSource.dataSource();
         this.dataSource = dataSource;
         this.knownTasks.addAll(knownTasks);
         this.pollingLimit = calculatePollingLimit();
         this.useDefaultPollingLimit = true;
     }
+
+    /*public SchedulerBuilder(DataSource dataSource, List<Task<?>> knownTasks) {
+        this.dataSource = dataSource;
+        this.knownTasks.addAll(knownTasks);
+        this.pollingLimit = calculatePollingLimit();
+        this.useDefaultPollingLimit = true;
+    }*/
 
     @SafeVarargs
     public final <T extends Task<?> & OnStartup> SchedulerBuilder startTasks(T... startTasks) {
@@ -144,7 +157,16 @@ public class SchedulerBuilder {
             LOG.warn("Polling-limit is less than number of threads. Should be equal or higher.");
         }
         final TaskResolver taskResolver = new TaskResolver(statsRegistry, clock, knownTasks);
-        final JdbcTaskRepository taskRepository = new JdbcTaskRepository(dataSource, tableName, taskResolver, schedulerName, serializer);
+        /*final TaskRepository taskRepository = DbUtils.getRepository(dataSource, tableName, taskResolver, schedulerName, serializer); FIXME*/
+
+        final TaskRepository taskRepository;
+        if(DataSourceType.RDBMS.equals(dataSource.dataSourceType())) {
+        	taskRepository = new JdbcTaskRepository(dataSource.rdbmsDataSource(), tableName, taskResolver, schedulerName, serializer);
+        } else {
+        	// TODO FIXME
+        	System.err.println("\n\n ****************************** FIXME ****************************** \n\n");
+        	taskRepository = new CassandraTaskRepository(dataSource.rdbmsDataSource(), tableName, taskResolver, schedulerName, serializer);
+        }
 
         ExecutorService candidateExecutorService = executorService;
         if (candidateExecutorService == null) {

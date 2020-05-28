@@ -17,7 +17,7 @@ package com.github.anilganipineni.scheduler.task;
 
 import java.time.Instant;
 
-import com.github.anilganipineni.scheduler.TaskRepository;
+import com.github.anilganipineni.scheduler.dao.TaskRepository;
 
 public class ExecutionOperations<T> {
 

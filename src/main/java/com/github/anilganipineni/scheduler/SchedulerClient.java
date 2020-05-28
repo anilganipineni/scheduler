@@ -15,22 +15,25 @@
  */
 package com.github.anilganipineni.scheduler;
 
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.anilganipineni.scheduler.dao.DataSourceType;
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
+import com.github.anilganipineni.scheduler.dao.TaskRepository;
+import com.github.anilganipineni.scheduler.dao.cassandra.CassandraTaskRepository;
+import com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.task.Execution;
 import com.github.anilganipineni.scheduler.task.Task;
 import com.github.anilganipineni.scheduler.task.TaskInstance;
 import com.github.anilganipineni.scheduler.task.TaskInstanceId;
-
-import javax.sql.DataSource;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
 
 public interface SchedulerClient {
 
@@ -50,21 +53,21 @@ public interface SchedulerClient {
 
     class Builder {
 
-        private final DataSource dataSource;
+        private final SchedulerDataSource dataSource;
         private List<Task<?>> knownTasks;
         private final Serializer serializer = Serializer.DEFAULT_JAVA_SERIALIZER;
         private String tableName = JdbcTaskRepository.DEFAULT_TABLE_NAME;
 
-        private Builder(DataSource dataSource, List<Task<?>> knownTasks) {
+        private Builder(SchedulerDataSource dataSource, List<Task<?>> knownTasks) {
             this.dataSource = dataSource;
             this.knownTasks = knownTasks;
         }
 
-        public static Builder create(DataSource dataSource, Task<?> ... knownTasks) {
+        public static Builder create(SchedulerDataSource dataSource, Task<?> ... knownTasks) {
             return new Builder(dataSource, Arrays.asList(knownTasks));
         }
 
-        public static Builder create(DataSource dataSource, List<Task<?>> knownTasks) {
+        public static Builder create(SchedulerDataSource dataSource, List<Task<?>> knownTasks) {
             return new Builder(dataSource, knownTasks);
         }
 
@@ -73,10 +76,20 @@ public interface SchedulerClient {
             return this;
         }
 
+        /**
+         * @return
+         */
         public SchedulerClient build() {
-            TaskResolver taskResolver = new TaskResolver(StatsRegistry.NOOP, knownTasks);
-            TaskRepository taskRepository = new JdbcTaskRepository(dataSource, tableName, taskResolver, new SchedulerClientName(), serializer);
+        	/*final TaskRepository r = DbUtils.getRepository(dataSource, tableName, new TaskResolver(StatsRegistry.NOOP, knownTasks), new SchedulerClientName(), serializer); FIXME*/
 
+            final TaskRepository taskRepository;
+            if(DataSourceType.RDBMS.equals(dataSource.dataSourceType())) {
+            	taskRepository = new JdbcTaskRepository(dataSource.rdbmsDataSource(), tableName, new TaskResolver(StatsRegistry.NOOP, knownTasks), new SchedulerClientName(), serializer);
+            } else {
+            	// TODO FIXME
+            	System.err.println("\n\n ****************************** FIXME ****************************** \n\n");
+            	taskRepository = new CassandraTaskRepository(dataSource.rdbmsDataSource(), tableName, new TaskResolver(StatsRegistry.NOOP, knownTasks), new SchedulerClientName(), serializer);
+            }
             return new StandardSchedulerClient(taskRepository);
         }
     }

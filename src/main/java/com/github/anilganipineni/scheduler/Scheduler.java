@@ -19,6 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.anilganipineni.scheduler.SchedulerState.SettableSchedulerState;
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
+import com.github.anilganipineni.scheduler.dao.TaskRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry.SchedulerStatsEvent;
 import com.github.anilganipineni.scheduler.task.*;
@@ -369,11 +371,11 @@ public class Scheduler implements SchedulerClient {
 
     }
 
-    public static SchedulerBuilder create(DataSource dataSource, Task<?> ... knownTasks) {
+    public static SchedulerBuilder create(SchedulerDataSource dataSource, Task<?> ... knownTasks) {
         return create(dataSource, Arrays.asList(knownTasks));
     }
 
-    public static SchedulerBuilder create(DataSource dataSource, List<Task<?>> knownTasks) {
+    public static SchedulerBuilder create(SchedulerDataSource dataSource, List<Task<?>> knownTasks) {
         return new SchedulerBuilder(dataSource, knownTasks);
     }
 

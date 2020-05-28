@@ -1,21 +1,21 @@
 package com.github.anilganipineni.scheduler.example;
 
-import com.github.anilganipineni.scheduler.HsqlTestDatabaseExtension;
-import com.github.anilganipineni.scheduler.Scheduler;
-import com.github.anilganipineni.scheduler.task.helper.OneTimeTask;
-import com.github.anilganipineni.scheduler.task.helper.Tasks;
+import java.time.Duration;
+import java.time.Instant;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
-import java.time.Duration;
-import java.time.Instant;
+import com.github.anilganipineni.scheduler.HsqlTestDatabaseExtension;
+import com.github.anilganipineni.scheduler.Scheduler;
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
+import com.github.anilganipineni.scheduler.task.helper.OneTimeTask;
+import com.github.anilganipineni.scheduler.task.helper.Tasks;
 
 public class EnableImmediateExecutionMain {
     private static final Logger LOG = LoggerFactory.getLogger(EnableImmediateExecutionMain.class);
 
-    private static void example(DataSource dataSource) {
+    private static void example(SchedulerDataSource dataSource) {
 
         OneTimeTask<Void> onetimeTask = Tasks.oneTime("my_task")
                 .execute((taskInstance, executionContext) -> {
@@ -54,9 +54,8 @@ public class EnableImmediateExecutionMain {
         try {
             final HsqlTestDatabaseExtension hsqlRule = new HsqlTestDatabaseExtension();
             hsqlRule.beforeEach(null);
-            final DataSource dataSource = hsqlRule.getDataSource();
 
-            example(dataSource);
+            example(hsqlRule);
         } catch (Exception e) {
             LOG.error("Error", e);
         }

@@ -5,18 +5,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.anilganipineni.scheduler.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.TaskResolver;
-import com.github.anilganipineni.scheduler.jdbc.JdbcRunner;
-import com.github.anilganipineni.scheduler.jdbc.RowMapper;
+import com.github.anilganipineni.scheduler.dao.rdbms.JdbcRunner;
+import com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository;
+import com.github.anilganipineni.scheduler.dao.rdbms.RowMapper;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.task.Execution;
 import com.github.anilganipineni.scheduler.task.Task;
 import com.github.anilganipineni.scheduler.task.TaskInstance;
 import com.github.anilganipineni.scheduler.task.helper.OneTimeTask;
 
-import static com.github.anilganipineni.scheduler.jdbc.PreparedStatementSetter.NOOP;
+import static com.github.anilganipineni.scheduler.dao.rdbms.PreparedStatementSetter.NOOP;
 
 import java.time.Instant;
 import java.util.ArrayList;

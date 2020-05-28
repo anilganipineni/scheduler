@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler;
+package com.github.anilganipineni.scheduler.dao.rdbms;
 
 import static com.github.anilganipineni.scheduler.StringUtils.truncate;
 import static java.util.Optional.ofNullable;
@@ -37,15 +37,18 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.anilganipineni.scheduler.SchedulerName;
+import com.github.anilganipineni.scheduler.Serializer;
+import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.TaskResolver.UnresolvedTask;
-import com.github.anilganipineni.scheduler.jdbc.JdbcRunner;
-import com.github.anilganipineni.scheduler.jdbc.ResultSetMapper;
-import com.github.anilganipineni.scheduler.jdbc.SQLRuntimeException;
+import com.github.anilganipineni.scheduler.dao.TaskRepository;
 import com.github.anilganipineni.scheduler.task.Execution;
 import com.github.anilganipineni.scheduler.task.Task;
 import com.github.anilganipineni.scheduler.task.TaskInstance;
 
-@SuppressWarnings("rawtypes")
+/**
+ * @author akganipineni
+ */
 public class JdbcTaskRepository implements TaskRepository {
 
     public static final String DEFAULT_TABLE_NAME = "scheduled_tasks";

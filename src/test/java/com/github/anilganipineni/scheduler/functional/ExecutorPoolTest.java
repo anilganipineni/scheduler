@@ -1,6 +1,19 @@
 package com.github.anilganipineni.scheduler.functional;
 
-import co.unruly.matchers.TimeMatchers;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.core.Is.is;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.IntStream;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.anilganipineni.scheduler.EmbeddedPostgresqlExtension;
 import com.github.anilganipineni.scheduler.Scheduler;
@@ -11,20 +24,7 @@ import com.github.anilganipineni.scheduler.task.ExecutionComplete;
 import com.github.anilganipineni.scheduler.task.helper.OneTimeTask;
 import com.github.anilganipineni.scheduler.testhelper.SettableClock;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-import java.util.stream.IntStream;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.core.Is.is;
+import co.unruly.matchers.TimeMatchers;
 
 
 public class ExecutorPoolTest {
@@ -67,7 +67,7 @@ public class ExecutorPoolTest {
             TestableRegistry.Condition condition = TestableRegistry.Conditions.completed(executionsToRun);
             TestableRegistry registry = TestableRegistry.create().waitConditions(condition).build();
 
-            Scheduler scheduler = Scheduler.create(postgres.getDataSource(), task)
+            Scheduler scheduler = Scheduler.create(postgres, task)
                 .pollingLimit(pollingLimit)
                 .threads(threads)
                 .pollingInterval(Duration.ofMinutes(1))

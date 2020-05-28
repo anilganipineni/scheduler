@@ -1,21 +1,25 @@
 package com.github.anilganipineni.scheduler;
 
-import com.github.anilganipineni.scheduler.jdbc.JdbcRunner;
-import com.github.anilganipineni.scheduler.jdbc.Mappers;
-import com.opentable.db.postgres.embedded.EmbeddedPostgres;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
-
-import javax.sql.DataSource;
-
-import static com.github.anilganipineni.scheduler.jdbc.PreparedStatementSetter.NOOP;
+import static com.github.anilganipineni.scheduler.dao.rdbms.PreparedStatementSetter.NOOP;
 
 import java.io.IOException;
 import java.util.function.Consumer;
 
-public class EmbeddedPostgresqlExtension implements AfterEachCallback {
+import javax.sql.DataSource;
+
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+
+import com.github.anilganipineni.scheduler.dao.CassandraDataSource;
+import com.github.anilganipineni.scheduler.dao.DataSourceType;
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
+import com.github.anilganipineni.scheduler.dao.rdbms.JdbcRunner;
+import com.github.anilganipineni.scheduler.dao.rdbms.Mappers;
+import com.opentable.db.postgres.embedded.EmbeddedPostgres;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+public class EmbeddedPostgresqlExtension implements AfterEachCallback, SchedulerDataSource {
 
     private static EmbeddedPostgres embeddedPostgresql;
     private static DataSource dataSource;
@@ -74,4 +78,25 @@ public class EmbeddedPostgresqlExtension implements AfterEachCallback {
         cleanupAfter.accept(getDataSource());
 
     }
+	/**
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerDataSource#dataSourceType()
+	 */
+	@Override
+	public DataSourceType dataSourceType() {
+		return DataSourceType.RDBMS;
+	}
+	/**
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerDataSource#rdbmsDataSource()
+	 */
+	@Override
+	public DataSource rdbmsDataSource() {
+		return getDataSource();
+	}
+	/**
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerDataSource#cassandraDataSource()
+	 */
+	@Override
+	public CassandraDataSource cassandraDataSource() {
+		return null;
+	}
 }

@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.jdbc;
+package com.github.anilganipineni.scheduler.dao.rdbms;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.function.Function;
 
-public interface RowMapper<T> {
+public interface ResultSetMapper<T>{
 
-	T map(ResultSet rs) throws SQLException;
+	T map(ResultSet resultSet) throws SQLException;
 
 }

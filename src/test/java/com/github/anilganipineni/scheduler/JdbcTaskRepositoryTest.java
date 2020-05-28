@@ -1,8 +1,8 @@
 package com.github.anilganipineni.scheduler;
 
-import com.github.anilganipineni.scheduler.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.TaskResolver;
+import com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.helper.TestableRegistry;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry.SchedulerStatsEvent;
@@ -20,7 +20,7 @@ import java.util.stream.IntStream;
 
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static com.github.anilganipineni.scheduler.JdbcTaskRepository.DEFAULT_TABLE_NAME;
+import static com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository.DEFAULT_TABLE_NAME;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

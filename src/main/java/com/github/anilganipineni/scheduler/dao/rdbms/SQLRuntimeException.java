@@ -13,20 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.jdbc;
+package com.github.anilganipineni.scheduler.dao.rdbms;
 
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public interface PreparedStatementSetter {
+public class SQLRuntimeException extends RuntimeException {
 
-	void setParameters(PreparedStatement preparedStatement) throws SQLException;
+	public SQLRuntimeException() {
+		super();
+	}
 
+	public SQLRuntimeException(String message) {
+		super(message);
+	}
 
-	PreparedStatementSetter NOOP = new PreparedStatementSetter() {
-		@Override
-		public void setParameters(PreparedStatement preparedStatement) throws SQLException {
-		}
-	};
+	public SQLRuntimeException(Throwable ex) {
+		super(ex);
+	}
 
+	public SQLRuntimeException(String message, SQLException cause) {
+		super(message, cause);
+	}
 }

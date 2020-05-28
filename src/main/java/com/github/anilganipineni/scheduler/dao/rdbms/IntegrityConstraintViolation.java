@@ -13,25 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.jdbc;
+package com.github.anilganipineni.scheduler.dao.rdbms;
 
 import java.sql.SQLException;
 
-public class SQLRuntimeException extends RuntimeException {
-
-	public SQLRuntimeException() {
-		super();
-	}
-
-	public SQLRuntimeException(String message) {
-		super(message);
-	}
-
-	public SQLRuntimeException(Throwable ex) {
+public class IntegrityConstraintViolation extends SQLRuntimeException {
+	public IntegrityConstraintViolation(SQLException ex) {
 		super(ex);
-	}
-
-	public SQLRuntimeException(String message, SQLException cause) {
-		super(message, cause);
 	}
 }
