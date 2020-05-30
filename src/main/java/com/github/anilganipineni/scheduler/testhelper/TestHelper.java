@@ -52,7 +52,7 @@ public class TestHelper {
             return this;
         }
 
-        public <T extends Task<?> & OnStartup> ManualSchedulerBuilder startTasks(List<T> startTasks) {
+        public <T> ManualSchedulerBuilder startTasks(List<Task<T>> startTasks) {
             super.startTasks(startTasks);
             return this;
         }

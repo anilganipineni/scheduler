@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.anilganipineni.scheduler.dao.DataSourceType;
 import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
-import com.github.anilganipineni.scheduler.dao.TaskRepository;
+import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.dao.cassandra.CassandraTaskRepository;
 import com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
@@ -48,7 +48,7 @@ public class SchedulerBuilder {
     protected SchedulerName schedulerName = new SchedulerName.Hostname();
     protected int executorThreads = 10;
     protected final List<Task<?>> knownTasks = new ArrayList<>();
-    protected final List<OnStartup> startTasks = new ArrayList<>();
+    protected final List<Task<?>> startTasks = new ArrayList<>();
     protected Waiter waiter = new Waiter(Duration.ofSeconds(10), clock);
     protected int pollingLimit;
     protected boolean useDefaultPollingLimit;
@@ -59,38 +59,28 @@ public class SchedulerBuilder {
     protected boolean enableImmediateExecution = false;
     protected ExecutorService executorService;
     protected Duration deleteUnresolvedAfter = Duration.ofDays(14);
-
+    /**
+     * @param dataSource
+     * @param knownTasks
+     */
     public SchedulerBuilder(SchedulerDataSource dataSource, List<Task<?>> knownTasks) {
-        // this.dataSource = dataSource.dataSource();
         this.dataSource = dataSource;
         this.knownTasks.addAll(knownTasks);
         this.pollingLimit = calculatePollingLimit();
         this.useDefaultPollingLimit = true;
     }
-
-    /*public SchedulerBuilder(DataSource dataSource, List<Task<?>> knownTasks) {
-        this.dataSource = dataSource;
-        this.knownTasks.addAll(knownTasks);
-        this.pollingLimit = calculatePollingLimit();
-        this.useDefaultPollingLimit = true;
-    }*/
-
-    @SafeVarargs
-    public final <T extends Task<?> & OnStartup> SchedulerBuilder startTasks(T... startTasks) {
-        return startTasks(Arrays.asList(startTasks));
-    }
-
-    public <T extends Task<?> & OnStartup> SchedulerBuilder startTasks(List<T> startTasks) {
-        knownTasks.addAll(startTasks);
-        this.startTasks.addAll(startTasks);
-        return this;
-    }
-
+    /**
+     * @param pollingInterval
+     * @return
+     */
     public SchedulerBuilder pollingInterval(Duration pollingInterval) {
         waiter = new Waiter(pollingInterval, clock);
         return this;
     }
-
+    /**
+     * @param pollingLimit
+     * @return
+     */
     public SchedulerBuilder pollingLimit(int pollingLimit) {
         if(pollingLimit <= 0) {
             throw new IllegalArgumentException("pollingLimit must be a positive integer");
@@ -99,16 +89,10 @@ public class SchedulerBuilder {
         this.useDefaultPollingLimit = false;
         return this;
     }
-
-    private int calculatePollingLimit() {
-        return executorThreads * POLLING_CONCURRENCY_MULTIPLIER;
-    }
-
-    public SchedulerBuilder heartbeatInterval(Duration duration) {
-        this.heartbeatInterval = duration;
-        return this;
-    }
-
+    /**
+     * @param numberOfThreads
+     * @return
+     */
     public SchedulerBuilder threads(int numberOfThreads) {
         this.executorThreads = numberOfThreads;
         if(useDefaultPollingLimit) {
@@ -116,50 +100,86 @@ public class SchedulerBuilder {
         }
         return this;
     }
-
+    /**
+     * @param duration
+     * @return
+     */
+    public SchedulerBuilder heartbeatInterval(Duration duration) {
+        this.heartbeatInterval = duration;
+        return this;
+    }
+    /**
+     * @param executorService
+     * @return
+     */
     public SchedulerBuilder executorService(ExecutorService executorService) {
         this.executorService = executorService;
         return this;
     }
-
+    /**
+     * @param statsRegistry
+     * @return
+     */
     public SchedulerBuilder statsRegistry(StatsRegistry statsRegistry) {
         this.statsRegistry = statsRegistry;
         return this;
     }
-
+    /**
+     * @param schedulerName
+     * @return
+     */
     public SchedulerBuilder schedulerName(SchedulerName schedulerName) {
         this.schedulerName = schedulerName;
         return this;
     }
-
+    /**
+     * @param serializer
+     * @return
+     */
     public SchedulerBuilder serializer(Serializer serializer) {
         this.serializer = serializer;
         return this;
     }
-
+    /**
+     * @param tableName
+     * @return
+     */
     public SchedulerBuilder tableName(String tableName) {
         this.tableName = tableName;
         return this;
     }
-
+    /**
+     * @return
+     */
     public SchedulerBuilder enableImmediateExecution() {
         this.enableImmediateExecution = true;
         return this;
     }
-
+    /**
+     * @param deleteAfter
+     * @return
+     */
     public SchedulerBuilder deleteUnresolvedAfter(Duration deleteAfter) {
         this.deleteUnresolvedAfter = deleteAfter;
         return this;
     }
-
+    /**
+     * @return
+     */
+    private int calculatePollingLimit() {
+        return executorThreads * POLLING_CONCURRENCY_MULTIPLIER;
+    }
+    /**
+     * @return
+     */
     public Scheduler build() {
         if (pollingLimit < executorThreads) {
             LOG.warn("Polling-limit is less than number of threads. Should be equal or higher.");
         }
         final TaskResolver taskResolver = new TaskResolver(statsRegistry, clock, knownTasks);
-        /*final TaskRepository taskRepository = DbUtils.getRepository(dataSource, tableName, taskResolver, schedulerName, serializer); FIXME*/
+        /*final SchedulerRepository taskRepository = DbUtils.getRepository(dataSource, tableName, taskResolver, schedulerName, serializer); FIXME*/
 
-        final TaskRepository taskRepository;
+        final SchedulerRepository taskRepository;
         if(DataSourceType.RDBMS.equals(dataSource.dataSourceType())) {
         	taskRepository = new JdbcTaskRepository(dataSource.rdbmsDataSource(), tableName, taskResolver, schedulerName, serializer);
         } else {
@@ -181,5 +201,22 @@ public class SchedulerBuilder {
         return new Scheduler(clock, taskRepository, taskResolver, executorThreads, candidateExecutorService,
                 schedulerName, waiter, heartbeatInterval, enableImmediateExecution, statsRegistry, pollingLimit,
             deleteUnresolvedAfter, startTasks);
+    }
+    
+    /**
+     * @param startTasks
+     * @return
+     */
+    public final <T> SchedulerBuilder startTasks(Task<T>... startTasks) {
+        return startTasks(Arrays.asList(startTasks));
+    }
+    /**
+     * @param startTasks
+     * @return
+     */
+    public <T> SchedulerBuilder startTasks(List<Task<T>> startTasks) {
+        knownTasks.addAll(startTasks);
+        this.startTasks.addAll(startTasks);
+        return this;
     }
 }

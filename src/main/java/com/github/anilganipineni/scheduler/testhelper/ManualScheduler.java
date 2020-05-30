@@ -27,15 +27,16 @@ import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.Waiter;
-import com.github.anilganipineni.scheduler.dao.TaskRepository;
+import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.task.OnStartup;
+import com.github.anilganipineni.scheduler.task.Task;
 
 public class ManualScheduler extends Scheduler {
     private static final Logger LOG = LoggerFactory.getLogger(ManualScheduler.class);
     private final SettableClock clock;
 
-    ManualScheduler(SettableClock clock, TaskRepository taskRepository, TaskResolver taskResolver, int maxThreads, ExecutorService executorService, SchedulerName schedulerName, Waiter waiter, Duration heartbeatInterval, boolean executeImmediately, StatsRegistry statsRegistry, int pollingLimit, Duration deleteUnresolvedAfter, List<OnStartup> onStartup) {
+    ManualScheduler(SettableClock clock, SchedulerRepository taskRepository, TaskResolver taskResolver, int maxThreads, ExecutorService executorService, SchedulerName schedulerName, Waiter waiter, Duration heartbeatInterval, boolean executeImmediately, StatsRegistry statsRegistry, int pollingLimit, Duration deleteUnresolvedAfter, List<Task<?>> onStartup) {
         super(clock, taskRepository, taskResolver, maxThreads, executorService, schedulerName, waiter, heartbeatInterval, executeImmediately, statsRegistry, pollingLimit, deleteUnresolvedAfter, onStartup);
         this.clock = clock;
     }

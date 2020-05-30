@@ -28,14 +28,12 @@ import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.dao.rdbms.JdbcRunner;
-import com.github.anilganipineni.scheduler.task.Execution;
-import com.github.anilganipineni.scheduler.task.TaskInstance;
 import com.github.anilganipineni.scheduler.testhelper.DataSourceCassandra;
 
 /**
  * @author akganipineni
  */
-public abstract class BaseTaskRepository {
+public abstract class BaseTaskRepository<T> {
     /**
      * The <code>Logger</code> instance for this class.
      */
@@ -58,12 +56,12 @@ public abstract class BaseTaskRepository {
     }
     private final String tableName;
 
-    public Optional<Execution> getExecution(TaskInstance taskInstance) {
+    public Optional<ScheduledTasks> getExecution(ScheduledTasks taskInstance) {
         return getExecution(taskInstance.getTaskName(), taskInstance.getId());
     }
 
-    public Optional<Execution> getExecution(String taskName, String taskInstanceId) {
-        final List<Execution> executions = jdbcRunner.query("select * from " + tableName + " where task_name = ? and task_instance = ?",
+    public Optional<ScheduledTasks> getExecution(String taskName, String taskInstanceId) {
+        final List<ScheduledTasks> executions = jdbcRunner.query("select * from " + tableName + " where task_name = ? and task_instance = ?",
                 (PreparedStatement p) -> {
                     p.setString(1, taskName);
                     p.setString(2, taskInstanceId);

@@ -30,8 +30,8 @@ import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.Serializer;
@@ -39,18 +39,20 @@ import com.github.anilganipineni.scheduler.StringUtils;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.TaskResolver.UnresolvedTask;
 import com.github.anilganipineni.scheduler.dao.BaseTaskRepository;
-import com.github.anilganipineni.scheduler.dao.TaskRepository;
-import com.github.anilganipineni.scheduler.task.Execution;
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.task.Task;
-import com.github.anilganipineni.scheduler.task.TaskInstance;
+import com.github.anilganipineni.scheduler.testhelper.DataSourceCassandra;
 
 /**
  * @author akganipineni
  */
-public class JdbcTaskRepository extends BaseTaskRepository implements TaskRepository {
+public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> implements SchedulerRepository<ScheduledTasks> {
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(DataSourceCassandra.class);
     private final String tableName;
-
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcTaskRepository.class);
     private final TaskResolver taskResolver;
     private final SchedulerName schedulerSchedulerName;
     private final JdbcRunner jdbcRunner;
@@ -70,20 +72,20 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
     }
 
     @Override
-    public boolean createIfNotExists(Execution execution) {
+    public boolean createIfNotExists(ScheduledTasks execution) {
         try {
-            Optional<Execution> existingExecution = getExecution(execution.getTaskInstance());
+            Optional<ScheduledTasks> existingExecution = getExecution(execution);
             if (existingExecution.isPresent()) {
-                LOG.debug("Execution not created, it already exists. Due: {}", existingExecution.get().executionTime);
+                logger.debug("ScheduledTasks not created, it already exists. Due: {}", existingExecution.get().executionTime);
                 return false;
             }
 
             jdbcRunner.execute(
                     "insert into " + tableName + "(task_name, task_instance, task_data, execution_time, picked, version) values(?, ?, ?, ?, ?, ?)",
                     (PreparedStatement p) -> {
-                        p.setString(1, execution.getTaskInstance().getTaskName());
-                        p.setString(2, execution.getTaskInstance().getId());
-                        p.setObject(3, serializer.serialize(execution.getTaskInstance().getData()));
+                        p.setString(1, execution.getTaskName());
+                        p.setString(2, execution.getId());
+                        p.setObject(3, serializer.serialize(execution.getTaskData()));
                         p.setTimestamp(4, Timestamp.from(execution.executionTime));
                         p.setBoolean(5, false);
                         p.setLong(6, 1L);
@@ -91,18 +93,18 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
             return true;
 
         } catch (SQLRuntimeException e) {
-            LOG.debug("Exception when inserting execution. Assuming it to be a constraint violation.", e);
-            Optional<Execution> existingExecution = getExecution(execution.getTaskInstance());
+            logger.debug("Exception when inserting execution. Assuming it to be a constraint violation.", e);
+            Optional<ScheduledTasks> existingExecution = getExecution(execution);
             if (!existingExecution.isPresent()) {
                 throw new RuntimeException("Failed to add new execution.", e);
             }
-            LOG.debug("Execution not created, another thread created it.");
+            logger.debug("ScheduledTasks not created, another thread created it.");
             return false;
         }
     }
 
     @Override
-    public void getScheduledExecutions(Consumer<Execution> consumer) {
+    public void getScheduledExecutions(Consumer<ScheduledTasks> consumer) {
         UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
         jdbcRunner.query(
                 "select * from " + tableName + " where picked = ? " + unresolvedFilter.andCondition() + " order by execution_time asc",
@@ -116,7 +118,7 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
     }
 
     @Override
-    public void getScheduledExecutions(String taskName, Consumer<Execution> consumer) {
+    public void getScheduledExecutions(String taskName, Consumer<ScheduledTasks> consumer) {
         jdbcRunner.query(
                 "select * from " + tableName + " where picked = ? and task_name = ? order by execution_time asc",
                 (PreparedStatement p) -> {
@@ -128,7 +130,7 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
     }
 
     @Override
-    public List<Execution> getDue(Instant now, int limit) {
+    public List<ScheduledTasks> getDue(Instant now, int limit) {
         final UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
 
         return jdbcRunner.query(
@@ -145,12 +147,12 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
     }
 
     @Override
-    public void remove(Execution execution) {
+    public void remove(ScheduledTasks execution) {
 
         final int removed = jdbcRunner.execute("delete from " + tableName + " where task_name = ? and task_instance = ? and version = ?",
                 ps -> {
-                    ps.setString(1, execution.getTaskInstance().getTaskName());
-                    ps.setString(2, execution.getTaskInstance().getId());
+                    ps.setString(1, execution.getTaskName());
+                    ps.setString(2, execution.getId());
                     ps.setLong(3, execution.version);
                 }
         );
@@ -161,16 +163,16 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
     }
 
     @Override
-    public boolean reschedule(Execution execution, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures) {
+    public boolean reschedule(ScheduledTasks execution, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures) {
         return rescheduleInternal(execution, nextExecutionTime, null, lastSuccess, lastFailure, consecutiveFailures);
     }
 
     @Override
-    public boolean reschedule(Execution execution, Instant nextExecutionTime, Object newData, Instant lastSuccess, Instant lastFailure, int consecutiveFailures) {
+    public boolean reschedule(ScheduledTasks execution, Instant nextExecutionTime, Object newData, Instant lastSuccess, Instant lastFailure, int consecutiveFailures) {
         return rescheduleInternal(execution, nextExecutionTime, new NewData(newData), lastSuccess, lastFailure, consecutiveFailures);
     }
 
-    private boolean rescheduleInternal(Execution execution, Instant nextExecutionTime, NewData newData, Instant lastSuccess, Instant lastFailure, int consecutiveFailures) {
+    private boolean rescheduleInternal(ScheduledTasks execution, Instant nextExecutionTime, NewData newData, Instant lastSuccess, Instant lastFailure, int consecutiveFailures) {
         final int updated = jdbcRunner.execute(
                 "update " + tableName + " set " +
                         "picked = ?, " +
@@ -198,8 +200,8 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
                         // may cause datbase-specific problems, might have to use setNull instead
                         ps.setObject(index++, serializer.serialize(newData.data));
                     }
-                    ps.setString(index++, execution.getTaskInstance().getTaskName());
-                    ps.setString(index++, execution.getTaskInstance().getId());
+                    ps.setString(index++, execution.getTaskName());
+                    ps.setString(index++, execution.getId());
                     ps.setLong(index++, execution.version);
                 });
 
@@ -210,7 +212,7 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
     }
 
     @Override
-    public Optional<Execution> pick(Execution e, Instant timePicked) {
+    public Optional<ScheduledTasks> pick(ScheduledTasks e, Instant timePicked) {
         final int updated = jdbcRunner.execute(
                 "update " + tableName + " set picked = ?, picked_by = ?, last_heartbeat = ?, version = version + 1 " +
                         "where picked = ? " +
@@ -222,16 +224,16 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
                     ps.setString(2, StringUtils.truncate(schedulerSchedulerName.getName(), 50));
                     ps.setTimestamp(3, Timestamp.from(timePicked));
                     ps.setBoolean(4, false);
-                    ps.setString(5, e.getTaskInstance().getTaskName());
-                    ps.setString(6, e.getTaskInstance().getId());
+                    ps.setString(5, e.getTaskName());
+                    ps.setString(6, e.getId());
                     ps.setLong(7, e.version);
                 });
 
         if (updated == 0) {
-            LOG.trace("Failed to pick execution. It must have been picked by another scheduler.", e);
+            logger.trace("Failed to pick execution. It must have been picked by another scheduler.", e);
             return Optional.empty();
         } else if (updated == 1) {
-            final Optional<Execution> pickedExecution = getExecution(e.getTaskInstance());
+            final Optional<ScheduledTasks> pickedExecution = getExecution(e);
             if (!pickedExecution.isPresent()) {
                 throw new IllegalStateException("Unable to find picked execution. Must have been deleted by another thread. Indicates a bug.");
             } else if (!pickedExecution.get().isPicked()) {
@@ -239,12 +241,12 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
             }
             return pickedExecution;
         } else {
-            throw new IllegalStateException("Updated multiple rows when picking single execution. Should never happen since name and id is primary key. Execution: " + e);
+            throw new IllegalStateException("Updated multiple rows when picking single execution. Should never happen since name and id is primary key. ScheduledTasks: " + e);
         }
     }
 
     @Override
-    public List<Execution> getDeadExecutions(Instant olderThan) {
+    public List<ScheduledTasks> getDeadExecutions(Instant olderThan) {
         final UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
         return jdbcRunner.query(
                 "select * from " + tableName + " where picked = ? and last_heartbeat <= ? " + unresolvedFilter.andCondition() + " order by last_heartbeat asc",
@@ -259,7 +261,7 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
     }
 
     @Override
-    public void updateHeartbeat(Execution e, Instant newHeartbeat) {
+    public void updateHeartbeat(ScheduledTasks e, Instant newHeartbeat) {
 
         final int updated = jdbcRunner.execute(
                 "update " + tableName + " set last_heartbeat = ? " +
@@ -268,23 +270,23 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
                         "and version = ?",
                 ps -> {
                     ps.setTimestamp(1, Timestamp.from(newHeartbeat));
-                    ps.setString(2, e.getTaskInstance().getTaskName());
-                    ps.setString(3, e.getTaskInstance().getId());
+                    ps.setString(2, e.getTaskName());
+                    ps.setString(3, e.getId());
                     ps.setLong(4, e.version);
                 });
 
         if (updated == 0) {
-            LOG.trace("Did not update heartbeat. Execution must have been removed or rescheduled.", e);
+            logger.trace("Did not update heartbeat. ScheduledTasks must have been removed or rescheduled.", e);
         } else {
             if (updated > 1) {
-                throw new IllegalStateException("Updated multiple rows updating heartbeat for execution. Should never happen since name and id is primary key. Execution: " + e);
+                throw new IllegalStateException("Updated multiple rows updating heartbeat for execution. Should never happen since name and id is primary key. ScheduledTasks: " + e);
             }
-            LOG.debug("Updated heartbeat for execution: " + e);
+            logger.debug("Updated heartbeat for execution: " + e);
         }
     }
 
     @Override
-    public List<Execution> getExecutionsFailingLongerThan(Duration interval) {
+    public List<ScheduledTasks> getExecutionsFailingLongerThan(Duration interval) {
         UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
         return jdbcRunner.query(
                 "select * from " + tableName + " where " +
@@ -308,9 +310,9 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
             });
     }
 
-    private class ExecutionResultSetMapper implements ResultSetMapper<List<Execution>> {
+    private class ExecutionResultSetMapper implements ResultSetMapper<List<ScheduledTasks>> {
 
-        private final ArrayList<Execution> executions;
+        private final ArrayList<ScheduledTasks> executions;
 
         private final ExecutionResultSetConsumer delegate;
 
@@ -320,7 +322,7 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
         }
 
         @Override
-        public List<Execution> map(ResultSet resultSet) throws SQLException {
+        public List<ScheduledTasks> map(ResultSet resultSet) throws SQLException {
             this.delegate.map(resultSet);
             return this.executions;
         }
@@ -328,9 +330,9 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
 
     private class ExecutionResultSetConsumer implements ResultSetMapper<Void> {
 
-        private final Consumer<Execution> consumer;
+        private final Consumer<ScheduledTasks> consumer;
 
-        private ExecutionResultSetConsumer(Consumer<Execution> consumer) {
+        private ExecutionResultSetConsumer(Consumer<ScheduledTasks> consumer) {
             this.consumer = consumer;
         }
 
@@ -342,7 +344,7 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
                 Optional<Task> task = taskResolver.resolve(taskName);
 
                 if (!task.isPresent()) {
-                    LOG.warn("Failed to find implementation for task with name '{}'. Execution will be excluded from due. Either delete the execution from the database, or add an implementation for it. The scheduler may be configured to automatically delete unresolved tasks after a certain period of time.", taskName);
+                    logger.warn("Failed to find implementation for task with name '{}'. ScheduledTasks will be excluded from due. Either delete the execution from the database, or add an implementation for it. The scheduler may be configured to automatically delete unresolved tasks after a certain period of time.", taskName);
                     continue;
                 }
 
@@ -364,7 +366,7 @@ public class JdbcTaskRepository extends BaseTaskRepository implements TaskReposi
                 
                 Class<Task> tclz = task.get().getDataClass();
                 Supplier dataSupplier = memoize(() -> serializer.deserialize(tclz, data));
-                this.consumer.accept(new Execution(executionTime, new TaskInstance(taskName, instanceId, dataSupplier), picked, pickedBy, lastSuccess, lastFailure, consecutiveFailures, lastHeartbeat, version));
+                this.consumer.accept(new ScheduledTasks(executionTime, taskName, instanceId, dataSupplier, picked, pickedBy, lastSuccess, lastFailure, consecutiveFailures, lastHeartbeat, version));
             }
 
             return null;

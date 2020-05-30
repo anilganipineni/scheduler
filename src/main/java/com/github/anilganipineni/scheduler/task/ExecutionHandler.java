@@ -15,6 +15,8 @@
  */
 package com.github.anilganipineni.scheduler.task;
 
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+
 public interface ExecutionHandler<T> {
-    CompletionHandler<T> execute(TaskInstance<T> taskInstance, ExecutionContext executionContext);
+    CompletionHandler<T> execute(ScheduledTasks taskInstance, ExecutionContext executionContext);
 }

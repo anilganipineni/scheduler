@@ -37,14 +37,14 @@ import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.dao.CassandraDataSource;
-import com.github.anilganipineni.scheduler.dao.TaskRepository;
-import com.github.anilganipineni.scheduler.task.Execution;
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.testhelper.DataSourceCassandra;
 
 /**
  * @author akganipineni
  */
-public class CassandraTaskRepository implements TaskRepository {
+public class CassandraTaskRepository implements SchedulerRepository<ScheduledTasks> {
     /**
      * The <code>Logger</code> instance for this class.
      */
@@ -159,111 +159,135 @@ public class CassandraTaskRepository implements TaskRepository {
 		return results;
 	}
 	/* (non-Javadoc)
-	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#createIfNotExists(com.github.anilganipineni.scheduler.task.Execution)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#createIfNotExists(com.github.anilganipineni.scheduler.task.Execution)
+	 */
+	/*@Override
+	public boolean createIfNotExists(ScheduledTasks execution) {
+		try {
+			String taskName		= execution.getTaskName();
+			String taskId		= execution.getId();
+			String cql			= "select * from " + tableName + " where task_name = ? and task_instance = ?";
+			List<ScheduledTasks> executions = getResultList(cql, ScheduledTasks.class, taskName, taskId);
+	        if (executions.size() > 1) {
+	            throw new RuntimeException(String.format("Found more than one matching execution for task name/id combination: '%s'/'%s'", taskName, taskId));
+	        }
+	        ScheduledTasks existingExecution = executions.size() == 1 ? executions.get(0) : null;
+		} catch (Exception ex) {
+			// TODO Auto-generated catch block
+			ex.printStackTrace();
+		}
+		// TODO Auto-generated method stub
+		return false;
+	}*/
+	/* (non-Javadoc)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#createIfNotExists(java.lang.Object)
 	 */
 	@Override
-	public boolean createIfNotExists(Execution execution) {
+	public boolean createIfNotExists(ScheduledTasks execution) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 	/* (non-Javadoc)
-	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#getDue(java.time.Instant, int)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#getDue(java.time.Instant, int)
 	 */
 	@Override
-	public List<Execution> getDue(Instant now, int limit) {
+	public List<ScheduledTasks> getDue(Instant now, int limit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	/* (non-Javadoc)
-	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#getScheduledExecutions(java.util.function.Consumer)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#getScheduledExecutions(java.util.function.Consumer)
 	 */
 	@Override
-	public void getScheduledExecutions(Consumer<Execution> consumer) {
+	public void getScheduledExecutions(Consumer<ScheduledTasks> consumer) {
 		// TODO Auto-generated method stub
 		
 	}
 	/* (non-Javadoc)
-	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#getScheduledExecutions(java.lang.String, java.util.function.Consumer)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#getScheduledExecutions(java.lang.String, java.util.function.Consumer)
 	 */
 	@Override
-	public void getScheduledExecutions(String taskName, Consumer<Execution> consumer) {
+	public void getScheduledExecutions(String taskName, Consumer<ScheduledTasks> consumer) {
 		// TODO Auto-generated method stub
 		
 	}
 	/* (non-Javadoc)
-	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#remove(com.github.anilganipineni.scheduler.task.Execution)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#remove(java.lang.Object)
 	 */
 	@Override
-	public void remove(Execution execution) {
+	public void remove(ScheduledTasks execution) {
 		// TODO Auto-generated method stub
 		
 	}
 	/* (non-Javadoc)
-	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#reschedule(com.github.anilganipineni.scheduler.task.Execution, java.time.Instant, java.time.Instant, java.time.Instant, int)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#reschedule(java.lang.Object, java.time.Instant, java.time.Instant, java.time.Instant, int)
 	 */
 	@Override
-	public boolean reschedule(Execution execution, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure,
-			int consecutiveFailures) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-	/* (non-Javadoc)
-	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#reschedule(com.github.anilganipineni.scheduler.task.Execution, java.time.Instant, java.lang.Object, java.time.Instant, java.time.Instant, int)
-	 */
-	@Override
-	public boolean reschedule(Execution execution, Instant nextExecutionTime, Object newData, Instant lastSuccess,
+	public boolean reschedule(ScheduledTasks execution, Instant nextExecutionTime, Instant lastSuccess,
 			Instant lastFailure, int consecutiveFailures) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 	/* (non-Javadoc)
-	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#pick(com.github.anilganipineni.scheduler.task.Execution, java.time.Instant)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#reschedule(java.lang.Object, java.time.Instant, java.lang.Object, java.time.Instant, java.time.Instant, int)
 	 */
 	@Override
-	public Optional<Execution> pick(Execution e, Instant timePicked) {
+	public boolean reschedule(ScheduledTasks execution, Instant nextExecutionTime, Object newData, Instant lastSuccess,
+			Instant lastFailure, int consecutiveFailures) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	/* (non-Javadoc)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#pick(java.lang.Object, java.time.Instant)
+	 */
+	@Override
+	public Optional<ScheduledTasks> pick(ScheduledTasks e, Instant timePicked) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	/* (non-Javadoc)
-	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#getDeadExecutions(java.time.Instant)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#getDeadExecutions(java.time.Instant)
 	 */
 	@Override
-	public List<Execution> getDeadExecutions(Instant olderThan) {
+	public List<ScheduledTasks> getDeadExecutions(Instant olderThan) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	/* (non-Javadoc)
-	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#updateHeartbeat(com.github.anilganipineni.scheduler.task.Execution, java.time.Instant)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#updateHeartbeat(java.lang.Object, java.time.Instant)
 	 */
 	@Override
-	public void updateHeartbeat(Execution execution, Instant heartbeatTime) {
+	public void updateHeartbeat(ScheduledTasks execution, Instant heartbeatTime) {
 		// TODO Auto-generated method stub
 		
 	}
 	/* (non-Javadoc)
-	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#getExecutionsFailingLongerThan(java.time.Duration)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#getExecutionsFailingLongerThan(java.time.Duration)
 	 */
 	@Override
-	public List<Execution> getExecutionsFailingLongerThan(Duration interval) {
+	public List<ScheduledTasks> getExecutionsFailingLongerThan(Duration interval) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	/* (non-Javadoc)
-	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#getExecution(java.lang.String, java.lang.String)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#getExecution(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public Optional<Execution> getExecution(String taskName, String taskInstanceId) {
+	public Optional<ScheduledTasks> getExecution(String taskName, String taskInstanceId) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	/* (non-Javadoc)
-	 * @see com.github.anilganipineni.scheduler.dao.TaskRepository#removeExecutions(java.lang.String)
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#removeExecutions(java.lang.String)
 	 */
 	@Override
 	public int removeExecutions(String taskName) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+	
+	
+	
 
 
 

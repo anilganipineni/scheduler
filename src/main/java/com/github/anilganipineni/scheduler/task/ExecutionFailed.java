@@ -18,18 +18,20 @@ package com.github.anilganipineni.scheduler.task;
 import java.time.Instant;
 import java.util.Optional;
 
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+
 public class ExecutionFailed {
-    private final Execution execution;
+    private final ScheduledTasks execution;
     private final Instant timeDone;
     private final Throwable cause;
 
-    public ExecutionFailed(Execution execution, Instant timeDone, Throwable cause) {
+    public ExecutionFailed(ScheduledTasks execution, Instant timeDone, Throwable cause) {
         this.cause = cause;
         this.execution = execution;
         this.timeDone = timeDone;
     }
 
-    public Execution getExecution() {
+    public ScheduledTasks getExecution() {
         return execution;
     }
 

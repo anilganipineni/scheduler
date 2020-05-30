@@ -15,13 +15,13 @@
  */
 package com.github.anilganipineni.scheduler.task;
 
+import java.time.Duration;
+import java.time.Instant;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.anilganipineni.scheduler.task.schedule.Schedule;
-
-import java.time.Duration;
-import java.time.Instant;
 
 public interface FailureHandler<T> {
 
@@ -40,7 +40,7 @@ public interface FailureHandler<T> {
         @Override
         public void onFailure(ExecutionComplete executionComplete, ExecutionOperations<T> executionOperations) {
             Instant nextTry = Instant.now().plus(sleepDuration);
-            LOG.debug("Execution failed. Retrying task {} at {}", executionComplete.getExecution().getTaskInstance(), nextTry);
+            LOG.debug("ScheduledTasks failed. Retrying task {} at {}", executionComplete.getExecution(), nextTry);
             executionOperations.reschedule(executionComplete, nextTry);
         }
     }
@@ -57,7 +57,7 @@ public interface FailureHandler<T> {
         @Override
         public void onFailure(ExecutionComplete executionComplete, ExecutionOperations<T> executionOperations) {
             Instant nextExecution = schedule.getNextExecutionTime(executionComplete);
-            LOG.debug("Execution failed. Rescheduling task {} to {}", executionComplete.getExecution().getTaskInstance(), nextExecution);
+            LOG.debug("ScheduledTasks failed. Rescheduling task {} to {}", executionComplete.getExecution(), nextExecution);
             executionOperations.reschedule(executionComplete, nextExecution);
         }
     }

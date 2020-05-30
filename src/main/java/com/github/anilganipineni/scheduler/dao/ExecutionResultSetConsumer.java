@@ -14,9 +14,7 @@ import org.apache.logging.log4j.Logger;
 import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.dao.rdbms.ResultSetMapper;
-import com.github.anilganipineni.scheduler.task.Execution;
 import com.github.anilganipineni.scheduler.task.Task;
-import com.github.anilganipineni.scheduler.task.TaskInstance;
 import com.github.anilganipineni.scheduler.testhelper.DataSourceCassandra;
 
 public class ExecutionResultSetConsumer implements ResultSetMapper<Void> {
@@ -25,7 +23,7 @@ public class ExecutionResultSetConsumer implements ResultSetMapper<Void> {
      */
 	private static final Logger logger = LogManager.getLogger(DataSourceCassandra.class);
 
-    private final Consumer<Execution> consumer;
+    private final Consumer<ScheduledTasks> consumer;
     private final TaskResolver taskResolver;
     private final Serializer serializer;
 	/**
@@ -33,7 +31,7 @@ public class ExecutionResultSetConsumer implements ResultSetMapper<Void> {
 	 * @param taskResolver
 	 * @param serializer
 	 */
-	public ExecutionResultSetConsumer(Consumer<Execution> consumer, TaskResolver taskResolver, Serializer serializer) {
+	public ExecutionResultSetConsumer(Consumer<ScheduledTasks> consumer, TaskResolver taskResolver, Serializer serializer) {
 		this.consumer = consumer;
 		this.taskResolver = taskResolver;
 		this.serializer = serializer;
@@ -47,7 +45,7 @@ public class ExecutionResultSetConsumer implements ResultSetMapper<Void> {
             Optional<Task> task = taskResolver.resolve(taskName);
 
             if (!task.isPresent()) {
-            	logger.warn("Failed to find implementation for task with name '{}'. Execution will be excluded from due. Either delete the execution from the database, or add an implementation for it. The scheduler may be configured to automatically delete unresolved tasks after a certain period of time.", taskName);
+            	logger.warn("Failed to find implementation for task with name '{}'. ScheduledTasks will be excluded from due. Either delete the execution from the database, or add an implementation for it. The scheduler may be configured to automatically delete unresolved tasks after a certain period of time.", taskName);
                 continue;
             }
 
@@ -69,7 +67,7 @@ public class ExecutionResultSetConsumer implements ResultSetMapper<Void> {
             
             Class<Task> tclz = task.get().getDataClass();
             Supplier dataSupplier = memoize(() -> serializer.deserialize(tclz, data));
-            this.consumer.accept(new Execution(executionTime, new TaskInstance(taskName, instanceId, dataSupplier), picked, pickedBy, lastSuccess, lastFailure, consecutiveFailures, lastHeartbeat, version));
+            this.consumer.accept(new ScheduledTasks(executionTime, taskName, instanceId, dataSupplier, picked, pickedBy, lastSuccess, lastFailure, consecutiveFailures, lastHeartbeat, version));
         }
 
         return null;

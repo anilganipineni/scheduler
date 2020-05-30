@@ -17,6 +17,7 @@ package com.github.anilganipineni.scheduler.task.helper;
 
 import java.time.Duration;
 
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.task.*;
 import com.github.anilganipineni.scheduler.task.CompletionHandler.OnCompleteRemove;
 import com.github.anilganipineni.scheduler.task.DeadExecutionHandler.ReviveDeadExecution;
@@ -29,15 +30,15 @@ public abstract class OneTimeTask<T> extends Task<T> {
     }
 
     public OneTimeTask(String name, Class<T> dataClass, FailureHandler<T> failureHandler, DeadExecutionHandler<T> deadExecutionHandler) {
-        super(name, dataClass, failureHandler, deadExecutionHandler);
+        super(name, dataClass, null, failureHandler, deadExecutionHandler);
     }
 
     @Override
-    public CompletionHandler<T> execute(TaskInstance<T> taskInstance, ExecutionContext executionContext) {
+    public CompletionHandler<T> execute(ScheduledTasks taskInstance, ExecutionContext executionContext) {
         executeOnce(taskInstance, executionContext);
         return new OnCompleteRemove<>();
     }
 
-    public abstract void executeOnce(TaskInstance<T> taskInstance, ExecutionContext executionContext);
+    public abstract void executeOnce(ScheduledTasks taskInstance, ExecutionContext executionContext);
 
 }

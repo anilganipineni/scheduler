@@ -18,18 +18,15 @@ package com.github.anilganipineni.scheduler;
 import java.time.Duration;
 import java.time.Instant;
 
-import com.github.anilganipineni.scheduler.task.Execution;
-import com.github.anilganipineni.scheduler.task.TaskInstance;
-
-@SuppressWarnings("rawtypes")
+/**
+ * @author akganipineni
+ */
 public class CurrentlyExecuting {
 
-    private final Execution execution;
     private final Clock clock;
     private final Instant startTime;
 
-    public CurrentlyExecuting(Execution execution, Clock clock) {
-        this.execution = execution;
+    public CurrentlyExecuting(Clock clock) {
         this.clock = clock;
         this.startTime = clock.now();
     }
@@ -37,9 +34,4 @@ public class CurrentlyExecuting {
     public Duration getDuration() {
         return Duration.between(startTime, clock.now());
     }
-
-    public TaskInstance getTaskInstance() {
-        return execution.getTaskInstance();
-    }
-
 }

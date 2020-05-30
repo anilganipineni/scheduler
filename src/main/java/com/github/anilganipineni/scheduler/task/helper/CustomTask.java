@@ -15,25 +15,13 @@
  */
 package com.github.anilganipineni.scheduler.task.helper;
 
-import com.github.anilganipineni.scheduler.Clock;
-import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.task.DeadExecutionHandler;
 import com.github.anilganipineni.scheduler.task.FailureHandler;
-import com.github.anilganipineni.scheduler.task.OnStartup;
 import com.github.anilganipineni.scheduler.task.Task;
 
-public abstract class CustomTask<T> extends Task<T> implements OnStartup {
-    private ScheduleOnStartup<T> scheduleOnStartup;
+public abstract class CustomTask<T> extends Task<T> {
 
     public CustomTask(String name, Class<T> dataClass, ScheduleOnStartup<T> scheduleOnStartup, FailureHandler<T> failureHandler, DeadExecutionHandler<T> deadExecutionHandler) {
-        super(name, dataClass, failureHandler, deadExecutionHandler);
-        this.scheduleOnStartup = scheduleOnStartup;
-    }
-
-    @Override
-    public void onStartup(Scheduler scheduler, Clock clock) {
-        if (scheduleOnStartup != null) {
-                scheduleOnStartup.apply(scheduler, clock, this);
-        }
+        super(name, dataClass, scheduleOnStartup, failureHandler, deadExecutionHandler);
     }
 }

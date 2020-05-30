@@ -22,7 +22,7 @@ import com.github.anilganipineni.scheduler.Clock;
 import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.task.Task;
 
-class ScheduleOnStartup<T> {
+public class ScheduleOnStartup<T> {
     String instance;
     T data;
     Function<Instant, Instant> firstExecutionTime;
@@ -43,7 +43,7 @@ class ScheduleOnStartup<T> {
 
     public void apply(Scheduler scheduler, Clock clock, Task<T> task) {
         if (data == null) {
-            scheduler.schedule(task.instance(instance), firstExecutionTime.apply(clock.now()));
+            scheduler.schedule(task.instance(instance, null), firstExecutionTime.apply(clock.now()));
         } else {
             scheduler.schedule(task.instance(instance, data), firstExecutionTime.apply(clock.now()));
         }

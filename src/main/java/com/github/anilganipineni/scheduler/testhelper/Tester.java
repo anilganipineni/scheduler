@@ -4,6 +4,7 @@ import java.util.Date;
 
 import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
+import com.github.anilganipineni.scheduler.task.Task;
 import com.github.anilganipineni.scheduler.task.helper.RecurringTask;
 import com.github.anilganipineni.scheduler.task.helper.Tasks;
 import com.github.anilganipineni.scheduler.task.schedule.FixedDelay;
@@ -22,11 +23,11 @@ public class Tester {
 	 * 
 	 */
 	private static void startScheduler(SchedulerDataSource dataSource) {
-		RecurringTask<Void> hourlyTask = Tasks.recurring("my-hourly-task", FixedDelay.ofHours(1))
+		Task<Void> hourlyTask = Tasks.recurring("my-hourly-task", Void.class, FixedDelay.ofHours(1))
 		        .execute((inst, ctx) -> {
 		        	System.out.println(new Date() + " - Anil Scheduler Executed..........");
 		        });
-		RecurringTask<Void> minutesTask = Tasks.recurring("my-minutes-task", FixedDelay.ofMinutes(5))
+		Task<Void> minutesTask = Tasks.recurring("my-minutes-task", Void.class, FixedDelay.ofMinutes(5))
 		        .execute((inst, ctx) -> {
 		        	System.out.println(new Date() + " - Anil minutes Scheduler Executed..........");
 		        });

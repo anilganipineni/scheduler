@@ -15,8 +15,6 @@
  */
 package com.github.anilganipineni.scheduler;
 
-import static java.util.function.Function.identity;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -25,10 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.task.Task;
@@ -37,7 +36,10 @@ import com.github.anilganipineni.scheduler.task.Task;
  * @author akganipineni
  */
 public class TaskResolver<T> {
-    private static final Logger LOG = LoggerFactory.getLogger(TaskResolver.class);
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(TaskResolver.class);
     private final StatsRegistry statsRegistry;
     private final Clock clock;
     private final Map<String, Task<T>> taskMap;
@@ -55,7 +57,7 @@ public class TaskResolver<T> {
     public TaskResolver(StatsRegistry statsRegistry, Clock clock, List<Task<T>> knownTasks) {
         this.statsRegistry = statsRegistry;
         this.clock = clock;
-        this.taskMap = knownTasks.stream().collect(Collectors.toMap(Task::getName, identity()));
+        this.taskMap = knownTasks.stream().collect(Collectors.toMap(Task::getName, Function.identity()));
     }
 
     public Optional<Task<T>> resolve(String taskName) {
@@ -63,7 +65,7 @@ public class TaskResolver<T> {
         if (task == null) {
             addUnresolved(taskName);
             statsRegistry.register(StatsRegistry.SchedulerStatsEvent.UNRESOLVED_TASK);
-            LOG.info("Found execution with unknown task-name '{}'. Adding it to the list of known unresolved task-names.", taskName);
+            logger.info("Found execution with unknown task-name '{}'. Adding it to the list of known unresolved task-names.", taskName);
         }
         return Optional.ofNullable(task);
     }

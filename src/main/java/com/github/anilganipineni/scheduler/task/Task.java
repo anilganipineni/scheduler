@@ -15,17 +15,24 @@
  */
 package com.github.anilganipineni.scheduler.task;
 
-public abstract class Task<T> implements ExecutionHandler<T> {
+import com.github.anilganipineni.scheduler.Clock;
+import com.github.anilganipineni.scheduler.Scheduler;
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+import com.github.anilganipineni.scheduler.task.helper.ScheduleOnStartup;
+
+public abstract class Task<T> implements ExecutionHandler<T>, OnStartup {
     protected final String name;
     private final FailureHandler<T> failureHandler;
     private final DeadExecutionHandler<T> deadExecutionHandler;
     private final Class<T> dataClass;
+    private ScheduleOnStartup<T> scheduleOnStartup;
 
-    public Task(String name, Class<T> dataClass, FailureHandler<T> failureHandler, DeadExecutionHandler<T> deadExecutionHandler) {
+    public Task(String name, Class<T> dataClass, ScheduleOnStartup<T> scheduleOnStartup, FailureHandler<T> failureHandler, DeadExecutionHandler<T> deadExecutionHandler) {
         this.name = name;
         this.dataClass = dataClass;
         this.failureHandler = failureHandler;
         this.deadExecutionHandler = deadExecutionHandler;
+        this.scheduleOnStartup = scheduleOnStartup;
     }
 
     public String getName() {
@@ -36,15 +43,11 @@ public abstract class Task<T> implements ExecutionHandler<T> {
         return dataClass;
     }
 
-    public TaskInstance<T> instance(String id) {
-        return new TaskInstance<>(this.name, id);
+    public ScheduledTasks instance(String id, T data) {
+        return new ScheduledTasks(null, this.name, id, data);
     }
 
-    public TaskInstance<T> instance(String id, T data) {
-        return new TaskInstance<>(this.name, id, data);
-    }
-
-    public abstract CompletionHandler<T> execute(TaskInstance<T> taskInstance, ExecutionContext executionContext);
+    public abstract CompletionHandler<T> execute(ScheduledTasks taskInstance, ExecutionContext executionContext);
 
     public FailureHandler<T> getFailureHandler() {
         return failureHandler;
@@ -57,6 +60,13 @@ public abstract class Task<T> implements ExecutionHandler<T> {
     @Override
     public String toString() {
         return "Task " + "task=" + getName();
+    }
+
+    @Override
+    public void onStartup(Scheduler scheduler, Clock clock) {
+        if (scheduleOnStartup != null) {
+                scheduleOnStartup.apply(scheduler, clock, this);
+        }
     }
 
 }

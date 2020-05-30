@@ -17,6 +17,7 @@ package com.github.anilganipineni.scheduler.task.helper;
 
 import java.time.Duration;
 
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.task.*;
 import com.github.anilganipineni.scheduler.task.schedule.Schedule;
 
@@ -26,7 +27,7 @@ public class ComposableTask {
     public static RecurringTask<Void> recurringTask(String name, Schedule schedule, VoidExecutionHandler<Void> executionHandler) {
         return new RecurringTask<Void>(name, schedule, Void.class) {
             @Override
-            public void executeRecurringly(TaskInstance<Void> taskInstance, ExecutionContext executionContext) {
+            public void executeRecurringly(ScheduledTasks taskInstance, ExecutionContext executionContext) {
                 executionHandler.execute(taskInstance, executionContext);
             }
         };
@@ -35,16 +36,16 @@ public class ComposableTask {
     public static <T> OneTimeTask<T> onetimeTask(String name, Class<T> dataClass, VoidExecutionHandler<T> executionHandler) {
         return new OneTimeTask<T>(name, dataClass) {
             @Override
-            public void executeOnce(TaskInstance<T> taskInstance, ExecutionContext executionContext) {
+            public void executeOnce(ScheduledTasks taskInstance, ExecutionContext executionContext) {
                 executionHandler.execute(taskInstance, executionContext);
             }
         };
     }
 
     public static <T> Task<T> customTask(String name, Class<T> dataClass, CompletionHandler<T> completionHandler, VoidExecutionHandler<T> executionHandler) {
-        return new Task<T>(name, dataClass, new FailureHandler.OnFailureRetryLater<>(Duration.ofMinutes(5)), new DeadExecutionHandler.ReviveDeadExecution<>()) {
+        return new Task<T>(name, dataClass, null, new FailureHandler.OnFailureRetryLater<>(Duration.ofMinutes(5)), new DeadExecutionHandler.ReviveDeadExecution<>()) {
             @Override
-            public CompletionHandler<T> execute(TaskInstance<T> taskInstance, ExecutionContext executionContext) {
+            public CompletionHandler<T> execute(ScheduledTasks taskInstance, ExecutionContext executionContext) {
                 executionHandler.execute(taskInstance, executionContext);
                 return completionHandler;
             }
@@ -52,9 +53,9 @@ public class ComposableTask {
     }
 
     public static <T> Task<T> customTask(String name, Class<T> dataClass, CompletionHandler<T> completionHandler, FailureHandler<T> failureHandler, VoidExecutionHandler<T> executionHandler) {
-        return new Task<T>(name, dataClass, failureHandler, new DeadExecutionHandler.ReviveDeadExecution<>()) {
+        return new Task<T>(name, dataClass, null, failureHandler, new DeadExecutionHandler.ReviveDeadExecution<>()) {
             @Override
-            public CompletionHandler<T> execute(TaskInstance<T> taskInstance, ExecutionContext executionContext) {
+            public CompletionHandler<T> execute(ScheduledTasks taskInstance, ExecutionContext executionContext) {
                 executionHandler.execute(taskInstance, executionContext);
                 return completionHandler;
             }

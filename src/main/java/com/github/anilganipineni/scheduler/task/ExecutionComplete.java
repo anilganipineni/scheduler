@@ -19,17 +19,19 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+
 /**
  * @author akganipineni
  */
 public class ExecutionComplete {
-    private final Execution execution;
+    private final ScheduledTasks execution;
     private final Instant timeStarted;
     private final Instant timeDone;
     private final Result result;
     private final Throwable cause;
 
-    ExecutionComplete(Execution execution, Instant timeStarted, Instant timeDone, Result result, Throwable cause) {
+    ExecutionComplete(ScheduledTasks execution, Instant timeStarted, Instant timeDone, Result result, Throwable cause) {
         this.timeStarted = timeStarted;
         this.cause = cause;
         if (result == Result.OK && cause != null) {
@@ -40,11 +42,11 @@ public class ExecutionComplete {
         this.result = result;
     }
 
-    public static ExecutionComplete success(Execution execution, Instant timeStarted, Instant timeDone) {
+    public static ExecutionComplete success(ScheduledTasks execution, Instant timeStarted, Instant timeDone) {
         return new ExecutionComplete(execution, timeStarted, timeDone, Result.OK, null);
     }
 
-    public static ExecutionComplete failure(Execution execution, Instant timeStarted, Instant timeDone, Throwable cause) {
+    public static ExecutionComplete failure(ScheduledTasks execution, Instant timeStarted, Instant timeDone, Throwable cause) {
         return new ExecutionComplete(execution, timeStarted, timeDone, Result.FAILED, cause);
     }
 
@@ -52,12 +54,11 @@ public class ExecutionComplete {
      * Simulated ExecutionComplete used to generate first execution-time from a Schedule.
      */
     public static ExecutionComplete simulatedSuccess(Instant timeDone) {
-        TaskInstance nonExistingTaskInstance = new TaskInstance("non-existing-task", "non-existing-id");
-        Execution nonExistingExecution = new Execution(timeDone, nonExistingTaskInstance, false, "simulated-picked-by", timeDone, null, 0, null, 1);
+        ScheduledTasks nonExistingExecution = new ScheduledTasks(timeDone, "non-existing-task", "non-existing-id", null, false, "simulated-picked-by", timeDone, null, 0, null, 1);
         return new ExecutionComplete(nonExistingExecution, timeDone.minus(Duration.ofSeconds(1)), timeDone, Result.OK, null);
     }
 
-    public Execution getExecution() {
+    public ScheduledTasks getExecution() {
         return execution;
     }
 

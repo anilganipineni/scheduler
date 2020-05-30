@@ -17,14 +17,15 @@ package com.github.anilganipineni.scheduler.task;
 
 import java.time.Instant;
 
-import com.github.anilganipineni.scheduler.dao.TaskRepository;
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 
 public class ExecutionOperations<T> {
 
-    private final TaskRepository taskRepository;
-    private final Execution execution;
+    private final SchedulerRepository taskRepository;
+    private final ScheduledTasks execution;
 
-    public ExecutionOperations(TaskRepository taskRepository, Execution execution) {
+    public ExecutionOperations(SchedulerRepository taskRepository, ScheduledTasks execution) {
         this.taskRepository = taskRepository;
         this.execution = execution;
     }

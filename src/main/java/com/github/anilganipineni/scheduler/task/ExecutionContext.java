@@ -17,14 +17,15 @@ package com.github.anilganipineni.scheduler.task;
 
 import com.github.anilganipineni.scheduler.SchedulerClient;
 import com.github.anilganipineni.scheduler.SchedulerState;
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 
 public class ExecutionContext {
 
     private final SchedulerState schedulerState;
-    private final Execution execution;
+    private final ScheduledTasks execution;
     private final SchedulerClient schedulerClient;
 
-    public ExecutionContext(SchedulerState schedulerState, Execution execution, SchedulerClient schedulerClient) {
+    public ExecutionContext(SchedulerState schedulerState, ScheduledTasks execution, SchedulerClient schedulerClient) {
         this.schedulerState = schedulerState;
         this.execution = execution;
         this.schedulerClient = schedulerClient;
@@ -41,7 +42,7 @@ public class ExecutionContext {
         return schedulerClient;
     }
 
-    public Execution getExecution() {
+    public ScheduledTasks getExecution() {
         return execution;
     }
 }

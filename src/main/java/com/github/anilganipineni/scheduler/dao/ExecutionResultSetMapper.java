@@ -8,13 +8,12 @@ import java.util.List;
 import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.dao.rdbms.ResultSetMapper;
-import com.github.anilganipineni.scheduler.task.Execution;
 
 /**
  * @author akganipineni
  */
-public class ExecutionResultSetMapper implements ResultSetMapper<List<Execution>> {
-    private final ArrayList<Execution> executions;
+public class ExecutionResultSetMapper implements ResultSetMapper<List<ScheduledTasks>> {
+    private final ArrayList<ScheduledTasks> executions;
     private final ExecutionResultSetConsumer delegate;
     /**
      * @param taskResolver
@@ -28,7 +27,7 @@ public class ExecutionResultSetMapper implements ResultSetMapper<List<Execution>
      * @see com.github.anilganipineni.scheduler.dao.rdbms.ResultSetMapper#map(java.sql.ResultSet)
      */
     @Override
-    public List<Execution> map(ResultSet resultSet) throws SQLException {
+    public List<ScheduledTasks> map(ResultSet resultSet) throws SQLException {
         this.delegate.map(resultSet);
         return this.executions;
     }

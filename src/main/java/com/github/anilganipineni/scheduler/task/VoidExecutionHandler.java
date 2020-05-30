@@ -15,6 +15,8 @@
  */
 package com.github.anilganipineni.scheduler.task;
 
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+
 public interface VoidExecutionHandler<T> {
-    void execute(TaskInstance<T> taskInstance, ExecutionContext executionContext);
+    void execute(ScheduledTasks taskInstance, ExecutionContext executionContext);
 }

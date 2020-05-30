@@ -25,31 +25,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.anilganipineni.scheduler.dao.DataSourceType;
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
-import com.github.anilganipineni.scheduler.dao.TaskRepository;
+import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.dao.cassandra.CassandraTaskRepository;
 import com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
-import com.github.anilganipineni.scheduler.task.Execution;
 import com.github.anilganipineni.scheduler.task.Task;
-import com.github.anilganipineni.scheduler.task.TaskInstance;
-import com.github.anilganipineni.scheduler.task.TaskInstanceId;
 
 public interface SchedulerClient {
 
-    <T> void schedule(TaskInstance<T> taskInstance, Instant executionTime);
+    <T> void schedule(ScheduledTasks taskInstance, Instant executionTime);
 
-    void reschedule(TaskInstanceId taskInstanceId, Instant newExecutionTime);
+    void reschedule(ScheduledTasks taskInstanceId, Instant newExecutionTime);
 
-    <T> void reschedule(TaskInstanceId taskInstanceId, Instant newExecutionTime, T newData);
+    <T> void reschedule(ScheduledTasks taskInstanceId, Instant newExecutionTime, T newData);
 
-    void cancel(TaskInstanceId taskInstanceId);
+    void cancel(ScheduledTasks taskInstanceId);
 
     void getScheduledExecutions(Consumer<ScheduledExecution<Object>> consumer);
 
     <T> void getScheduledExecutionsForTask(String taskName, Class<T> dataClass, Consumer<ScheduledExecution<T>> consumer);
 
-    Optional<ScheduledExecution<Object>> getScheduledExecution(TaskInstanceId taskInstanceId);
+    Optional<ScheduledExecution<Object>> getScheduledExecution(ScheduledTasks taskInstanceId);
 
     public class Builder {
 
@@ -80,9 +78,9 @@ public interface SchedulerClient {
          * @return
          */
         public SchedulerClient build() {
-        	/*final TaskRepository r = DbUtils.getRepository(dataSource, tableName, new TaskResolver(StatsRegistry.NOOP, knownTasks), new SchedulerClientName(), serializer); FIXME*/
+        	/*final SchedulerRepository r = DbUtils.getRepository(dataSource, tableName, new TaskResolver(StatsRegistry.NOOP, knownTasks), new SchedulerClientName(), serializer); FIXME*/
 
-            final TaskRepository taskRepository;
+            final SchedulerRepository<ScheduledTasks> taskRepository;
             if(DataSourceType.RDBMS.equals(dataSource.dataSourceType())) {
             	taskRepository = new JdbcTaskRepository(dataSource.rdbmsDataSource(), tableName, new TaskResolver(StatsRegistry.NOOP, knownTasks), new SchedulerClientName(), serializer);
             } else {
@@ -95,36 +93,36 @@ public interface SchedulerClient {
     class StandardSchedulerClient implements SchedulerClient {
 
         private static final Logger LOG = LoggerFactory.getLogger(StandardSchedulerClient.class);
-        protected final TaskRepository taskRepository;
+        protected final SchedulerRepository<ScheduledTasks> taskRepository;
         private SchedulerClientEventListener schedulerClientEventListener;
 
-        StandardSchedulerClient(TaskRepository taskRepository) {
+        StandardSchedulerClient(SchedulerRepository<ScheduledTasks> taskRepository) {
             this(taskRepository, SchedulerClientEventListener.NOOP);
         }
 
-        StandardSchedulerClient(TaskRepository taskRepository, SchedulerClientEventListener schedulerClientEventListener) {
+        StandardSchedulerClient(SchedulerRepository<ScheduledTasks> taskRepository, SchedulerClientEventListener schedulerClientEventListener) {
             this.taskRepository = taskRepository;
             this.schedulerClientEventListener = schedulerClientEventListener;
         }
 
         @Override
-        public <T> void schedule(TaskInstance<T> taskInstance, Instant executionTime) {
-            boolean success = taskRepository.createIfNotExists(new Execution(executionTime, taskInstance));
+        public <T> void schedule(ScheduledTasks taskInstance, Instant executionTime) {
+            boolean success = taskRepository.createIfNotExists(new ScheduledTasks(executionTime, taskInstance.getTaskName(), taskInstance.getId(), taskInstance.getTaskData()));
             if (success) {
                 notifyListeners(ClientEvent.EventType.SCHEDULE, taskInstance, executionTime);
             }
         }
 
         @Override
-        public void reschedule(TaskInstanceId taskInstanceId, Instant newExecutionTime) {
+        public void reschedule(ScheduledTasks taskInstanceId, Instant newExecutionTime) {
             reschedule(taskInstanceId, newExecutionTime, null);
         }
 
         @Override
-        public <T> void reschedule(TaskInstanceId taskInstanceId, Instant newExecutionTime, T newData) {
+        public <T> void reschedule(ScheduledTasks taskInstanceId, Instant newExecutionTime, T newData) {
             String taskName = taskInstanceId.getTaskName();
             String instanceId = taskInstanceId.getId();
-            Optional<Execution> execution = taskRepository.getExecution(taskName, instanceId);
+            Optional<ScheduledTasks> execution = taskRepository.getExecution(taskName, instanceId);
             if(execution.isPresent()) {
                 if(execution.get().isPicked()) {
                     throw new RuntimeException(String.format("Could not reschedule, the execution with name '%s' and id '%s' is currently executing", taskName, instanceId));
@@ -146,10 +144,10 @@ public interface SchedulerClient {
         }
 
         @Override
-        public void cancel(TaskInstanceId taskInstanceId) {
+        public void cancel(ScheduledTasks taskInstanceId) {
             String taskName = taskInstanceId.getTaskName();
             String instanceId = taskInstanceId.getId();
-            Optional<Execution> execution = taskRepository.getExecution(taskName, instanceId);
+            Optional<ScheduledTasks> execution = taskRepository.getExecution(taskName, instanceId);
             if(execution.isPresent()) {
                 if(execution.get().isPicked()) {
                     throw new RuntimeException(String.format("Could not cancel schedule, the execution with name '%s' and id '%s' is currently executing", taskName, instanceId));
@@ -173,14 +171,14 @@ public interface SchedulerClient {
         }
 
         @Override
-        public Optional<ScheduledExecution<Object>> getScheduledExecution(TaskInstanceId taskInstanceId) {
-            Optional<Execution> e = taskRepository.getExecution(taskInstanceId.getTaskName(), taskInstanceId.getId());
+        public Optional<ScheduledExecution<Object>> getScheduledExecution(ScheduledTasks taskInstanceId) {
+            Optional<ScheduledTasks> e = taskRepository.getExecution(taskInstanceId.getTaskName(), taskInstanceId.getId());
             return e.map(oe -> new ScheduledExecution<>(Object.class, oe));
         }
 
-        private void notifyListeners(ClientEvent.EventType eventType, TaskInstanceId taskInstanceId, Instant executionTime) {
+        private void notifyListeners(ClientEvent.EventType eventType, ScheduledTasks taskInstanceId, Instant executionTime) {
             try {
-                schedulerClientEventListener.newEvent(new ClientEvent(new ClientEvent.ClientEventContext(eventType, taskInstanceId, executionTime)));
+                schedulerClientEventListener.newEvent(new ClientEvent(new ClientEvent.ClientEventContext(eventType, taskInstanceId.getTaskName(), taskInstanceId.getId(), taskInstanceId.getTaskData(), executionTime)));
             } catch (Exception e) {
                 LOG.error("Error when notifying SchedulerClientEventListener.", e);
             }

@@ -18,8 +18,7 @@ package com.github.anilganipineni.scheduler;
 import java.time.Instant;
 import java.util.Objects;
 
-import com.github.anilganipineni.scheduler.task.Execution;
-import com.github.anilganipineni.scheduler.task.TaskInstanceId;
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 
 /**
  * @author akganipineni
@@ -32,20 +31,14 @@ public class ScheduledExecution<T> {
     /**
      * 
      */
-    private final Execution execution;
+    private final ScheduledTasks execution;
     /**
      * @param dataClass
      * @param execution
      */
-    public ScheduledExecution(Class<T> dataClass, Execution execution) {
+    public ScheduledExecution(Class<T> dataClass, ScheduledTasks execution) {
         this.dataClass = dataClass;
         this.execution = execution;
-    }
-    /**
-     * @return
-     */
-    public TaskInstanceId getTaskInstance() {
-        return execution.getTaskInstance();
     }
     /**
      * @return
@@ -54,8 +47,8 @@ public class ScheduledExecution<T> {
         return execution.getExecutionTime();
     }
     public T getData() {
-        if (dataClass.isInstance(this.execution.getTaskInstance().getData())) {
-            return (T) this.execution.getTaskInstance().getData();
+        if (dataClass.isInstance(this.execution.getTaskData())) {
+            return (T) this.execution.getTaskData();
         }
         throw new DataClassMismatchException();
     }
