@@ -15,43 +15,16 @@
  */
 package com.github.anilganipineni.scheduler.task;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
+import com.github.anilganipineni.scheduler.task.helper.ExecutionOperations;
 
-import com.github.anilganipineni.scheduler.task.schedule.Schedule;
-
-import java.time.Instant;
-
-public interface CompletionHandler<T> {
-
-    void complete(ExecutionComplete executionComplete, ExecutionOperations<T> executionOperations);
-
-
-    class OnCompleteRemove<T> implements CompletionHandler<T> {
-
-        @Override
-        public void complete(ExecutionComplete executionComplete, ExecutionOperations<T> executionOperations) {
-            executionOperations.stop();
-        }
-    }
-
-    class OnCompleteReschedule<T> implements CompletionHandler<T> {
-
-        private static final Logger LOG = LoggerFactory.getLogger(OnCompleteReschedule.class);
-        private final Schedule schedule;
-
-        public OnCompleteReschedule(Schedule schedule) {
-            this.schedule = schedule;
-        }
-
-        @Override
-        public void complete(ExecutionComplete executionComplete, ExecutionOperations<T> executionOperations) {
-            Instant nextExecution = schedule.getNextExecutionTime(executionComplete);
-            LOG.debug("Rescheduling task {} to {}", executionComplete.getExecution(), nextExecution);
-            executionOperations.reschedule(executionComplete, nextExecution);
-        }
-    }
-
-
-
+/**
+ * @author akganipineni
+ */
+public interface CompletionHandler {
+	/**
+	 * @param executionComplete
+	 * @param executionOperations
+	 */
+	public void complete(ExecutionComplete executionComplete, ExecutionOperations executionOperations);
 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task;
+package com.github.anilganipineni.scheduler.task.handler;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -21,16 +21,18 @@ import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
+import com.github.anilganipineni.scheduler.task.helper.ExecutionOperations;
 import com.github.anilganipineni.scheduler.task.schedule.Schedule;
 
-public interface FailureHandler<T> {
+public interface FailureHandler {
 
-    void onFailure(ExecutionComplete executionComplete, ExecutionOperations<T> executionOperations);
+    void onFailure(ExecutionComplete executionComplete, ExecutionOperations executionOperations);
 
     // TODO: Failure handler with backoff: if (isFailing(.)) then nextTry = 2* duration_from_first_failure (minimum 1m, max 1d)
-    class OnFailureRetryLater<T> implements FailureHandler<T> {
+    class OnFailureRetryLater implements FailureHandler {
 
-        private static final Logger LOG = LoggerFactory.getLogger(CompletionHandler.OnCompleteReschedule.class);
+        private static final Logger LOG = LoggerFactory.getLogger(FailureHandler.class);
         private final Duration sleepDuration;
 
         public OnFailureRetryLater(Duration sleepDuration) {
@@ -38,16 +40,16 @@ public interface FailureHandler<T> {
         }
 
         @Override
-        public void onFailure(ExecutionComplete executionComplete, ExecutionOperations<T> executionOperations) {
+        public void onFailure(ExecutionComplete executionComplete, ExecutionOperations executionOperations) {
             Instant nextTry = Instant.now().plus(sleepDuration);
             LOG.debug("ScheduledTasks failed. Retrying task {} at {}", executionComplete.getExecution(), nextTry);
             executionOperations.reschedule(executionComplete, nextTry);
         }
     }
 
-    class OnFailureReschedule<T> implements FailureHandler<T> {
+    class OnFailureReschedule implements FailureHandler {
 
-        private static final Logger LOG = LoggerFactory.getLogger(CompletionHandler.OnCompleteReschedule.class);
+        private static final Logger LOG = LoggerFactory.getLogger(FailureHandler.class);
         private final Schedule schedule;
 
         public OnFailureReschedule(Schedule schedule) {
@@ -55,7 +57,7 @@ public interface FailureHandler<T> {
         }
 
         @Override
-        public void onFailure(ExecutionComplete executionComplete, ExecutionOperations<T> executionOperations) {
+        public void onFailure(ExecutionComplete executionComplete, ExecutionOperations executionOperations) {
             Instant nextExecution = schedule.getNextExecutionTime(executionComplete);
             LOG.debug("ScheduledTasks failed. Rescheduling task {} to {}", executionComplete.getExecution(), nextExecution);
             executionOperations.reschedule(executionComplete, nextExecution);

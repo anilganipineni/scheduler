@@ -25,20 +25,23 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.github.anilganipineni.scheduler.dao.DataSourceType;
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.dao.cassandra.CassandraTaskRepository;
 import com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
-import com.github.anilganipineni.scheduler.task.OnStartup;
 import com.github.anilganipineni.scheduler.task.Task;
 
 public class SchedulerBuilder {
-    private static final Logger LOG = LoggerFactory.getLogger(SchedulerBuilder.class);
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(CassandraTaskRepository.class);
     private static final int POLLING_CONCURRENCY_MULTIPLIER = 3;
 
     protected Clock clock = new SystemClock(); // if this is set, waiter-clocks must be updated
@@ -47,8 +50,6 @@ public class SchedulerBuilder {
     protected final SchedulerDataSource dataSource;
     protected SchedulerName schedulerName = new SchedulerName.Hostname();
     protected int executorThreads = 10;
-    protected final List<Task<?>> knownTasks = new ArrayList<>();
-    protected final List<Task<?>> startTasks = new ArrayList<>();
     protected Waiter waiter = new Waiter(Duration.ofSeconds(10), clock);
     protected int pollingLimit;
     protected boolean useDefaultPollingLimit;
@@ -59,11 +60,14 @@ public class SchedulerBuilder {
     protected boolean enableImmediateExecution = false;
     protected ExecutorService executorService;
     protected Duration deleteUnresolvedAfter = Duration.ofDays(14);
+
+    protected final List<Task> knownTasks = new ArrayList<Task>();
+    protected final List<Task> startTasks = new ArrayList<Task>();
     /**
      * @param dataSource
      * @param knownTasks
      */
-    public SchedulerBuilder(SchedulerDataSource dataSource, List<Task<?>> knownTasks) {
+    public SchedulerBuilder(SchedulerDataSource dataSource, List<Task> knownTasks) {
         this.dataSource = dataSource;
         this.knownTasks.addAll(knownTasks);
         this.pollingLimit = calculatePollingLimit();
@@ -173,13 +177,13 @@ public class SchedulerBuilder {
      * @return
      */
     public Scheduler build() {
-        if (pollingLimit < executorThreads) {
-            LOG.warn("Polling-limit is less than number of threads. Should be equal or higher.");
+        if(pollingLimit < executorThreads) {
+            logger.warn("Polling-limit is less than number of threads. Should be equal or higher.");
         }
         final TaskResolver taskResolver = new TaskResolver(statsRegistry, clock, knownTasks);
+        
         /*final SchedulerRepository taskRepository = DbUtils.getRepository(dataSource, tableName, taskResolver, schedulerName, serializer); FIXME*/
-
-        final SchedulerRepository taskRepository;
+        final SchedulerRepository<ScheduledTasks> taskRepository;
         if(DataSourceType.RDBMS.equals(dataSource.dataSourceType())) {
         	taskRepository = new JdbcTaskRepository(dataSource.rdbmsDataSource(), tableName, taskResolver, schedulerName, serializer);
         } else {
@@ -190,33 +194,55 @@ public class SchedulerBuilder {
         if (candidateExecutorService == null) {
             candidateExecutorService = Executors.newFixedThreadPool(executorThreads, defaultThreadFactoryWithPrefix(THREAD_PREFIX + "-"));
         }
-
-        LOG.info("Creating scheduler with configuration: threads={}, pollInterval={}s, heartbeat={}s enable-immediate-execution={}, table-name={}, name={}",
-            executorThreads,
-            waiter.getWaitDuration().getSeconds(),
-            heartbeatInterval.getSeconds(),
-            enableImmediateExecution,
-            tableName,
-            schedulerName.getName());
-        return new Scheduler(clock, taskRepository, taskResolver, executorThreads, candidateExecutorService,
-                schedulerName, waiter, heartbeatInterval, enableImmediateExecution, statsRegistry, pollingLimit,
-            deleteUnresolvedAfter, startTasks);
+		logger.info(
+				"Creating scheduler with configuration: threads={}, pollInterval={}s, heartbeat={}s enable-immediate-execution={}, table-name={}, name={}",
+				executorThreads, waiter.getWaitDuration().getSeconds(), heartbeatInterval.getSeconds(),
+				enableImmediateExecution, tableName, schedulerName.getName());
+        
+		return new Scheduler(clock,
+							 taskRepository,
+							 taskResolver,
+							 executorThreads,
+							 candidateExecutorService,
+							 schedulerName,
+							 waiter,
+							 heartbeatInterval,
+							 enableImmediateExecution,
+							 statsRegistry,
+							 pollingLimit,
+							 deleteUnresolvedAfter,
+							 startTasks);
     }
-    
     /**
      * @param startTasks
      * @return
      */
-    public final <T> SchedulerBuilder startTasks(Task<T>... startTasks) {
-        return startTasks(Arrays.asList(startTasks));
+    public final SchedulerBuilder startTasks(Task startTask) {
+        return startTasks(Arrays.asList(startTask));
     }
     /**
      * @param startTasks
      * @return
      */
-    public <T> SchedulerBuilder startTasks(List<Task<T>> startTasks) {
+    public SchedulerBuilder startTasks(List<Task> startTasks) {
         knownTasks.addAll(startTasks);
         this.startTasks.addAll(startTasks);
         return this;
+    }
+    /**
+     * @param dataSource
+     * @param knownTasks
+     * @return
+     */
+    public static SchedulerBuilder create(SchedulerDataSource dataSource, Task ... knownTasks) {
+        return create(dataSource, Arrays.asList(knownTasks));
+    }
+    /**
+     * @param dataSource
+     * @param knownTasks
+     * @return
+     */
+    public static SchedulerBuilder create(SchedulerDataSource dataSource, List<Task> knownTasks) {
+        return new SchedulerBuilder(dataSource, knownTasks);
     }
 }

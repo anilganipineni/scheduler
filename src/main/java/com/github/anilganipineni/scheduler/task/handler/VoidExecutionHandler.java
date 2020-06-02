@@ -13,15 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task.helper;
+package com.github.anilganipineni.scheduler.task.handler;
 
-import com.github.anilganipineni.scheduler.task.DeadExecutionHandler;
-import com.github.anilganipineni.scheduler.task.FailureHandler;
-import com.github.anilganipineni.scheduler.task.Task;
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
 
-public abstract class CustomTask<T> extends Task<T> {
-
-    public CustomTask(String name, Class<T> dataClass, ScheduleOnStartup<T> scheduleOnStartup, FailureHandler<T> failureHandler, DeadExecutionHandler<T> deadExecutionHandler) {
-        super(name, dataClass, scheduleOnStartup, failureHandler, deadExecutionHandler);
-    }
+public interface VoidExecutionHandler {
+    void execute(ScheduledTasks taskInstance, ExecutionContext executionContext);
 }

@@ -13,37 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task.helper;
+package com.github.anilganipineni.scheduler.task;
 
 import com.github.anilganipineni.scheduler.task.schedule.Schedule;
 
 /**
  * @author akganipineni
  */
-public class Tasks {
+public class TaskFactory {
     /**
      * @param name
      * @param schedule
      * @param dataClass
      * @return
      */
-    public static <T> RecurringTaskBuilder<T> recurring(String name, Class<T> dataClass, Schedule schedule) {
-        return new RecurringTaskBuilder<T>(name, schedule, dataClass);
+    public static RecurringTaskBuilder recurring(String name, Schedule schedule) {
+        return new RecurringTaskBuilder(name, schedule);
     }
     /**
      * @param name
      * @param dataClass
      * @return
      */
-    public static <T> OneTimeTaskBuilder<T> oneTime(String name, Class<T> dataClass) {
-        return new OneTimeTaskBuilder<>(name, dataClass);
+    public static  OneTimeTaskBuilder oneTime(String name) {
+        return new OneTimeTaskBuilder(name);
     }
     /**
      * @param name
      * @param dataClass
      * @return
      */
-    public static <T> TaskBuilder<T> custom(String name, Class<T> dataClass) {
-        return new TaskBuilder<>(name, dataClass);
+    public static  CustomTaskBuilder custom(String name) {
+        return new CustomTaskBuilder(name);
     }
 }

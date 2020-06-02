@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task;
+package com.github.anilganipineni.scheduler.task.helper;
 
 import com.github.anilganipineni.scheduler.SchedulerClient;
 import com.github.anilganipineni.scheduler.SchedulerState;

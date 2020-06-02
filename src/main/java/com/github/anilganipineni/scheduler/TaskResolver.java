@@ -16,7 +16,6 @@
 package com.github.anilganipineni.scheduler;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,33 +34,33 @@ import com.github.anilganipineni.scheduler.task.Task;
 /**
  * @author akganipineni
  */
-public class TaskResolver<T> {
+public class TaskResolver {
     /**
      * The <code>Logger</code> instance for this class.
      */
 	private static final Logger logger = LogManager.getLogger(TaskResolver.class);
     private final StatsRegistry statsRegistry;
     private final Clock clock;
-    private final Map<String, Task<T>> taskMap;
+    private final Map<String, Task> taskMap;
     private final Map<String, UnresolvedTask> unresolvedTasks = new ConcurrentHashMap<>();
 
     @SafeVarargs
-	public TaskResolver(StatsRegistry statsRegistry, Task<T>... knownTasks) {
+	public TaskResolver(StatsRegistry statsRegistry, Task... knownTasks) {
         this(statsRegistry, Arrays.asList(knownTasks));
     }
 
-    public TaskResolver(StatsRegistry statsRegistry, List<Task<T>> knownTasks) {
+    public TaskResolver(StatsRegistry statsRegistry, List<Task> knownTasks) {
         this(statsRegistry, new SystemClock(), knownTasks);
     }
 
-    public TaskResolver(StatsRegistry statsRegistry, Clock clock, List<Task<T>> knownTasks) {
+    public TaskResolver(StatsRegistry statsRegistry, Clock clock, List<Task> knownTasks) {
         this.statsRegistry = statsRegistry;
         this.clock = clock;
         this.taskMap = knownTasks.stream().collect(Collectors.toMap(Task::getName, Function.identity()));
     }
 
-    public Optional<Task<T>> resolve(String taskName) {
-        Task<T> task = taskMap.get(taskName);
+    public Optional<Task> resolve(String taskName) {
+        Task task = taskMap.get(taskName);
         if (task == null) {
             addUnresolved(taskName);
             statsRegistry.register(StatsRegistry.SchedulerStatsEvent.UNRESOLVED_TASK);
@@ -71,39 +70,25 @@ public class TaskResolver<T> {
     }
 
     private void addUnresolved(String taskName) {
-        unresolvedTasks.putIfAbsent(taskName, new UnresolvedTask(taskName));
+        unresolvedTasks.putIfAbsent(taskName, new UnresolvedTask(taskName, clock));
     }
 
-    public void addTask(Task<T> task) {
+    public void addTask(Task task) {
         taskMap.put(task.getName(), task);
     }
 
     public List<UnresolvedTask> getUnresolved() {
-        return new ArrayList<>(unresolvedTasks.values());
+        return new ArrayList<UnresolvedTask>(unresolvedTasks.values());
     }
 
     public List<String> getUnresolvedTaskNames(Duration unresolvedFor) {
         return unresolvedTasks.values().stream()
-            .filter(unresolved -> Duration.between(unresolved.firstUnresolved, clock.now()).toMillis() > unresolvedFor.toMillis())
+            .filter(unresolved -> Duration.between(unresolved.getFirstUnresolved(), clock.now()).toMillis() > unresolvedFor.toMillis())
             .map(UnresolvedTask::getTaskName)
             .collect(Collectors.toList());
     }
 
     public void clearUnresolved(String taskName) {
         unresolvedTasks.remove(taskName);
-    }
-
-    public class UnresolvedTask {
-        private final String taskName;
-        private final Instant firstUnresolved;
-
-        public UnresolvedTask(String taskName) {
-            this.taskName = taskName;
-            firstUnresolved = clock.now();
-        }
-
-        public String getTaskName() {
-            return taskName;
-        }
     }
 }

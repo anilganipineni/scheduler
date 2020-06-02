@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task;
+package com.github.anilganipineni.scheduler.task.helper;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -31,7 +31,7 @@ public class ExecutionComplete {
     private final Result result;
     private final Throwable cause;
 
-    ExecutionComplete(ScheduledTasks execution, Instant timeStarted, Instant timeDone, Result result, Throwable cause) {
+    public ExecutionComplete(ScheduledTasks execution, Instant timeStarted, Instant timeDone, Result result, Throwable cause) {
         this.timeStarted = timeStarted;
         this.cause = cause;
         if (result == Result.OK && cause != null) {

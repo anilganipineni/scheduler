@@ -39,7 +39,6 @@ import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.dao.CassandraDataSource;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
-import com.github.anilganipineni.scheduler.testhelper.DataSourceCassandra;
 
 /**
  * @author akganipineni
@@ -48,16 +47,12 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
     /**
      * The <code>Logger</code> instance for this class.
      */
-	private static final Logger logger = LogManager.getLogger(DataSourceCassandra.class);
+	public static final Logger logger = LogManager.getLogger(CassandraTaskRepository.class);
 	/**
 	 * The preparedStatementCache for GSP application
 	 */
 	private Map<String, PreparedStatement> preparedStatementCache = new HashMap<String, PreparedStatement>();
 	CassandraDataSource dataSource = null;
-    private final TaskResolver taskResolver;
-    private final SchedulerName schedulerSchedulerName;
-    private final Serializer serializer;
-    private final String tableName;
     /**
      * @param dataSource
      * @param tableName
@@ -75,10 +70,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
      * @param serializer
      */
     public CassandraTaskRepository(CassandraDataSource dataSource, String tableName, TaskResolver taskResolver, SchedulerName schedulerSchedulerName, Serializer serializer) {
-        this.tableName = tableName;
-        this.taskResolver = taskResolver;
-        this.schedulerSchedulerName = schedulerSchedulerName;
-        this.serializer = serializer;
+    	
     }
 	/**
 	 * @param entityType
@@ -93,7 +85,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	 * @param columnName
 	 * @param generateCurrentIndex
 	 */
-	private <E> void create(E entity, Class<E> entityType, String columnName, boolean generateCurrentIndex) {
+	public <E> void create(E entity, Class<E> entityType, String columnName, boolean generateCurrentIndex) {
 		getMapper(entityType).save(entity);
 	}
 	/**
@@ -149,8 +141,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	 * @param params
 	 * @return
 	 * @throws Exception
-	 */
-	private <E> List<E> getResultList(String cql, Class<E> entityType, Object... params) throws Exception {
+	 */public <E> List<E> getResultList(String cql, Class<E> entityType, Object... params) throws Exception {
 		List<E> results = new ArrayList<E>();
 	    Result<E> result = getResult(cql, entityType, params);
 		for(E t : result) {

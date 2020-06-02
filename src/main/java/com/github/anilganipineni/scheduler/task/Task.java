@@ -18,55 +18,106 @@ package com.github.anilganipineni.scheduler.task;
 import com.github.anilganipineni.scheduler.Clock;
 import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
-import com.github.anilganipineni.scheduler.task.helper.ScheduleOnStartup;
+import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler;
+import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
+import com.github.anilganipineni.scheduler.task.schedule.Schedule;
 
-public abstract class Task<T> implements ExecutionHandler<T>, OnStartup {
-    protected final String name;
-    private final FailureHandler<T> failureHandler;
-    private final DeadExecutionHandler<T> deadExecutionHandler;
-    private final Class<T> dataClass;
-    private ScheduleOnStartup<T> scheduleOnStartup;
-
-    public Task(String name, Class<T> dataClass, ScheduleOnStartup<T> scheduleOnStartup, FailureHandler<T> failureHandler, DeadExecutionHandler<T> deadExecutionHandler) {
+/**
+ * @author akganipineni
+ */
+public abstract class Task implements ExecutionHandler {
+	private String name;
+    private String instance;
+    private Object data;
+    private Schedule schedule;
+    private FailureHandler failureHandler;
+    private DeadExecutionHandler deadExecutionHandler;
+    /**
+     * @param name
+     * @param failureHandler
+     * @param deadExecutionHandler
+     */
+    public Task(String name, FailureHandler failureHandler, DeadExecutionHandler deadExecutionHandler) {
         this.name = name;
-        this.dataClass = dataClass;
         this.failureHandler = failureHandler;
         this.deadExecutionHandler = deadExecutionHandler;
-        this.scheduleOnStartup = scheduleOnStartup;
     }
-
-    public String getName() {
-        return name;
+    /**
+     * @param name
+     * @param failureHandler
+     * @param deadExecutionHandler
+     * @param schedule
+     * @param instance
+     * @param data
+     */
+    public Task(String name, FailureHandler failureHandler, DeadExecutionHandler deadExecutionHandler, Schedule schedule, String instance, Object data) {
+        this.name = name;
+        this.failureHandler = failureHandler;
+        this.deadExecutionHandler = deadExecutionHandler;
+        
+        this.schedule = schedule;
+        this.instance = instance;
+        this.data = data;
     }
-
-    public Class<T> getDataClass() {
-        return dataClass;
-    }
-
-    public ScheduledTasks instance(String id, T data) {
+    /**
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+	/**
+	 * @return the instance
+	 */
+	public String getInstance() {
+		return instance;
+	}
+	/**
+	 * @return the data
+	 */
+	public Object getData() {
+		return data;
+	}
+	/**
+	 * @return the schedule
+	 */
+	public Schedule getSchedule() {
+		return schedule;
+	}
+	/**
+	 * @return the failureHandler
+	 */
+	public FailureHandler getFailureHandler() {
+		return failureHandler;
+	}
+	/**
+	 * @return the deadExecutionHandler
+	 */
+	public DeadExecutionHandler getDeadExecutionHandler() {
+		return deadExecutionHandler;
+	}
+	/**
+	 * @param id
+	 * @param data
+	 * @return
+	 */
+	public ScheduledTasks instance(String id, Object data) {
         return new ScheduledTasks(null, this.name, id, data);
     }
-
-    public abstract CompletionHandler<T> execute(ScheduledTasks taskInstance, ExecutionContext executionContext);
-
-    public FailureHandler<T> getFailureHandler() {
-        return failureHandler;
-    }
-
-    public DeadExecutionHandler<T> getDeadExecutionHandler() {
-        return deadExecutionHandler;
-    }
-
+	/**
+     * @see java.lang.Object#toString()
+     */
     @Override
     public String toString() {
-        return "Task " + "task=" + getName();
+        return "Task = " + getName();
     }
-
-    @Override
-    public void onStartup(Scheduler scheduler, Clock clock) {
-        if (scheduleOnStartup != null) {
-                scheduleOnStartup.apply(scheduler, clock, this);
-        }
+	/**
+	 * @see com.github.anilganipineni.scheduler.task.ExecutionHandler#onStartup(com.github.anilganipineni.scheduler.Scheduler,
+	 *      com.github.anilganipineni.scheduler.Clock)
+	 */
+	@Override
+	public void onStartup(Scheduler scheduler, Clock clock) {
+    	if(schedule != null) {
+    		scheduler.schedule(instance(instance, this.data), schedule.getInitialExecutionTime(clock.now()));
+    	}
     }
-
 }

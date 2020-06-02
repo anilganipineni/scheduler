@@ -22,26 +22,18 @@ import com.github.anilganipineni.scheduler.Clock;
 import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.task.Task;
 
-public class ScheduleOnStartup<T> {
+public class ScheduleOnStartup {
     String instance;
-    T data;
+    Object data;
     Function<Instant, Instant> firstExecutionTime;
 
-    ScheduleOnStartup(String instance) {
-        this(instance, null);
-    }
-
-    ScheduleOnStartup(String instance, T data) {
-        this(instance, data, Function.identity());
-    }
-
-    ScheduleOnStartup(String instance, T data, Function<Instant, Instant> firstExecutionTime) {
+    public ScheduleOnStartup(String instance, Object data, Function<Instant, Instant> firstExecutionTime) {
         this.firstExecutionTime = firstExecutionTime;
         this.instance = instance;
         this.data = data;
     }
 
-    public void apply(Scheduler scheduler, Clock clock, Task<T> task) {
+    public void apply(Scheduler scheduler, Clock clock, Task task) {
         if (data == null) {
             scheduler.schedule(task.instance(instance, null), firstExecutionTime.apply(clock.now()));
         } else {

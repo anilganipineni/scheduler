@@ -16,16 +16,13 @@
 package com.github.anilganipineni.scheduler.dao.rdbms;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
@@ -37,11 +34,10 @@ import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.StringUtils;
 import com.github.anilganipineni.scheduler.TaskResolver;
-import com.github.anilganipineni.scheduler.TaskResolver.UnresolvedTask;
+import com.github.anilganipineni.scheduler.UnresolvedTask;
 import com.github.anilganipineni.scheduler.dao.BaseTaskRepository;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
-import com.github.anilganipineni.scheduler.task.Task;
 import com.github.anilganipineni.scheduler.testhelper.DataSourceCassandra;
 
 /**
@@ -113,7 +109,7 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
                     p.setBoolean(index++, false);
                     unresolvedFilter.setParameters(p, index);
                 },
-                new ExecutionResultSetConsumer(consumer)
+                new com.github.anilganipineni.scheduler.dao.ExecutionResultSetConsumer(consumer, taskResolver, serializer)
         );
     }
 
@@ -125,7 +121,7 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
                     p.setBoolean(1, false);
                     p.setString(2, taskName);
                 },
-                new ExecutionResultSetConsumer(consumer)
+                new com.github.anilganipineni.scheduler.dao.ExecutionResultSetConsumer(consumer, taskResolver, serializer)
         );
     }
 
@@ -142,7 +138,7 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
                     unresolvedFilter.setParameters(p, index);
                     p.setMaxRows(limit);
                 },
-                new ExecutionResultSetMapper()
+                new com.github.anilganipineni.scheduler.dao.ExecutionResultSetMapper(taskResolver, serializer)
         );
     }
 
@@ -256,7 +252,7 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
                     p.setTimestamp(index++, Timestamp.from(olderThan));
                     unresolvedFilter.setParameters(p, index);
                 },
-                new ExecutionResultSetMapper()
+                new com.github.anilganipineni.scheduler.dao.ExecutionResultSetMapper(taskResolver, serializer)
         );
     }
 
@@ -298,7 +294,7 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
                     p.setTimestamp(index++, Timestamp.from(Instant.now().minus(interval)));
                     unresolvedFilter.setParameters(p, index);
                 },
-                new ExecutionResultSetMapper()
+                new com.github.anilganipineni.scheduler.dao.ExecutionResultSetMapper(taskResolver, serializer)
         );
     }
 
@@ -310,86 +306,7 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
             });
     }
 
-    private class ExecutionResultSetMapper implements ResultSetMapper<List<ScheduledTasks>> {
 
-        private final ArrayList<ScheduledTasks> executions;
-
-        private final ExecutionResultSetConsumer delegate;
-
-        private ExecutionResultSetMapper() {
-            this.executions = new ArrayList<>();
-            this.delegate = new ExecutionResultSetConsumer(executions::add);
-        }
-
-        @Override
-        public List<ScheduledTasks> map(ResultSet resultSet) throws SQLException {
-            this.delegate.map(resultSet);
-            return this.executions;
-        }
-    }
-
-    private class ExecutionResultSetConsumer implements ResultSetMapper<Void> {
-
-        private final Consumer<ScheduledTasks> consumer;
-
-        private ExecutionResultSetConsumer(Consumer<ScheduledTasks> consumer) {
-            this.consumer = consumer;
-        }
-
-        @Override
-        public Void map(ResultSet rs) throws SQLException {
-
-            while (rs.next()) {
-                String taskName = rs.getString("task_name");
-                Optional<Task> task = taskResolver.resolve(taskName);
-
-                if (!task.isPresent()) {
-                    logger.warn("Failed to find implementation for task with name '{}'. ScheduledTasks will be excluded from due. Either delete the execution from the database, or add an implementation for it. The scheduler may be configured to automatically delete unresolved tasks after a certain period of time.", taskName);
-                    continue;
-                }
-
-                String instanceId = rs.getString("task_instance");
-                byte[] data = rs.getBytes("task_data");
-
-                Instant executionTime = rs.getTimestamp("execution_time").toInstant();
-
-                boolean picked = rs.getBoolean("picked");
-                final String pickedBy = rs.getString("picked_by");
-                Instant lastSuccess = Optional.ofNullable(rs.getTimestamp("last_success"))
-                        .map(Timestamp::toInstant).orElse(null);
-                Instant lastFailure = Optional.ofNullable(rs.getTimestamp("last_failure"))
-                        .map(Timestamp::toInstant).orElse(null);
-                int consecutiveFailures = rs.getInt("consecutive_failures"); // null-value is returned as 0 which is the preferred default
-                Instant lastHeartbeat = Optional.ofNullable(rs.getTimestamp("last_heartbeat"))
-                        .map(Timestamp::toInstant).orElse(null);
-                long version = rs.getLong("version");
-                
-                Class<Task> tclz = task.get().getDataClass();
-                Supplier dataSupplier = memoize(() -> serializer.deserialize(tclz, data));
-                this.consumer.accept(new ScheduledTasks(executionTime, taskName, instanceId, dataSupplier, picked, pickedBy, lastSuccess, lastFailure, consecutiveFailures, lastHeartbeat, version));
-            }
-
-            return null;
-        }
-    }
-
-    private static <T> Supplier<T> memoize(Supplier<T> original) {
-        return new Supplier<T>() {
-            Supplier<T> delegate = this::firstTime;
-            boolean initialized;
-            public T get() {
-                return delegate.get();
-            }
-            private synchronized T firstTime() {
-                if(!initialized) {
-                    T value = original.get();
-                    delegate = () -> value;
-                    initialized = true;
-                }
-                return delegate.get();
-            }
-        };
-    }
 
     private static class NewData {
         private final Object data;

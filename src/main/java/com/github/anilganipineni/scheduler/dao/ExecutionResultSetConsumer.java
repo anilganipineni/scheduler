@@ -65,8 +65,8 @@ public class ExecutionResultSetConsumer implements ResultSetMapper<Void> {
                     .map(Timestamp::toInstant).orElse(null);
             long version = rs.getLong("version");
             
-            Class<Task> tclz = task.get().getDataClass();
-            Supplier dataSupplier = memoize(() -> serializer.deserialize(tclz, data));
+            // Class<Object> tclz = task.get().getDataClass();
+            Supplier dataSupplier = memoize(() -> serializer.deserialize(Object.class, data));
             this.consumer.accept(new ScheduledTasks(executionTime, taskName, instanceId, dataSupplier, picked, pickedBy, lastSuccess, lastFailure, consecutiveFailures, lastHeartbeat, version));
         }
 

@@ -20,7 +20,6 @@ import static com.github.anilganipineni.scheduler.ExecutorUtils.defaultThreadFac
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -36,17 +35,15 @@ import org.slf4j.LoggerFactory;
 
 import com.github.anilganipineni.scheduler.SchedulerState.SettableSchedulerState;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
-import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry.SchedulerStatsEvent;
 import com.github.anilganipineni.scheduler.task.CompletionHandler;
-import com.github.anilganipineni.scheduler.task.ExecutionComplete;
-import com.github.anilganipineni.scheduler.task.ExecutionContext;
-import com.github.anilganipineni.scheduler.task.ExecutionOperations;
-import com.github.anilganipineni.scheduler.task.FailureHandler;
-import com.github.anilganipineni.scheduler.task.OnStartup;
 import com.github.anilganipineni.scheduler.task.Task;
+import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
+import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
+import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
+import com.github.anilganipineni.scheduler.task.helper.ExecutionOperations;
 
 public class Scheduler implements SchedulerClient {
 
@@ -56,13 +53,13 @@ public class Scheduler implements SchedulerClient {
     private static final Logger LOG = LoggerFactory.getLogger(Scheduler.class);
     private final SchedulerClient delegate;
     private final Clock clock;
-    private final SchedulerRepository taskRepository;
+    private final SchedulerRepository<ScheduledTasks> taskRepository;
     private final TaskResolver taskResolver;
     private int threadpoolSize;
     private final ExecutorService executorService;
     private final Waiter executeDueWaiter;
     private final Duration deleteUnresolvedAfter;
-    protected final List<Task<?>> onStartup;
+    protected final List<Task> onStartup;
     private final Waiter detectDeadWaiter;
     private final Duration heartbeatInterval;
     private final StatsRegistry statsRegistry;
@@ -75,8 +72,8 @@ public class Scheduler implements SchedulerClient {
     private final SettableSchedulerState schedulerState = new SettableSchedulerState();
     private int currentGenerationNumber = 1;
 
-    public Scheduler(Clock clock, SchedulerRepository taskRepository, TaskResolver taskResolver, int threadpoolSize, ExecutorService executorService, SchedulerName schedulerName,
-              Waiter executeDueWaiter, Duration heartbeatInterval, boolean enableImmediateExecution, StatsRegistry statsRegistry, int pollingLimit, Duration deleteUnresolvedAfter, List<Task<?>> onStartup) {
+    public Scheduler(Clock clock, SchedulerRepository<ScheduledTasks> taskRepository, TaskResolver taskResolver, int threadpoolSize, ExecutorService executorService, SchedulerName schedulerName,
+              Waiter executeDueWaiter, Duration heartbeatInterval, boolean enableImmediateExecution, StatsRegistry statsRegistry, int pollingLimit, Duration deleteUnresolvedAfter, List<Task> onStartup) {
         this.clock = clock;
         this.taskRepository = taskRepository;
         this.taskResolver = taskResolver;
@@ -214,7 +211,6 @@ public class Scheduler implements SchedulerClient {
         statsRegistry.register(SchedulerStatsEvent.RAN_EXECUTE_DUE);
     }
 
-    @SuppressWarnings({"rawtypes","unchecked"})
     public void detectDeadExecutions() {
         LOG.debug("Deleting executions with unresolved tasks.");
         List<String> taskNames = taskResolver.getUnresolvedTaskNames(deleteUnresolvedAfter);
@@ -381,13 +377,4 @@ public class Scheduler implements SchedulerClient {
         }
 
     }
-
-    public static SchedulerBuilder create(SchedulerDataSource dataSource, Task<?> ... knownTasks) {
-        return create(dataSource, Arrays.asList(knownTasks));
-    }
-
-    public static SchedulerBuilder create(SchedulerDataSource dataSource, List<Task<?>> knownTasks) {
-        return new SchedulerBuilder(dataSource, knownTasks);
-    }
-
 }

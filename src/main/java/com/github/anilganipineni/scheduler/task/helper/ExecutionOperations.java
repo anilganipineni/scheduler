@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task;
+package com.github.anilganipineni.scheduler.task.helper;
 
 import java.time.Instant;
 
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 
-public class ExecutionOperations<T> {
+public class ExecutionOperations {
 
-    private final SchedulerRepository taskRepository;
+    private final SchedulerRepository<ScheduledTasks> taskRepository;
     private final ScheduledTasks execution;
 
-    public ExecutionOperations(SchedulerRepository taskRepository, ScheduledTasks execution) {
+    public ExecutionOperations(SchedulerRepository<ScheduledTasks> taskRepository, ScheduledTasks execution) {
         this.taskRepository = taskRepository;
         this.execution = execution;
     }
@@ -43,7 +43,7 @@ public class ExecutionOperations<T> {
 
     }
 
-    public void reschedule(ExecutionComplete completed, Instant nextExecutionTime, T newData) {
+    public void reschedule(ExecutionComplete completed, Instant nextExecutionTime, ScheduledTasks newData) {
         if (completed.getResult() == ExecutionComplete.Result.OK) {
             taskRepository.reschedule(execution, nextExecutionTime, newData, completed.getTimeDone(), execution.lastFailure, 0);
         } else {

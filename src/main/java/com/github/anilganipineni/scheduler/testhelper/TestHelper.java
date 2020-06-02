@@ -26,16 +26,15 @@ import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 import com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
-import com.github.anilganipineni.scheduler.task.OnStartup;
 import com.github.anilganipineni.scheduler.task.Task;
 
 public class TestHelper {
 
-    public static ManualSchedulerBuilder createManualScheduler(SchedulerDataSource dataSource, Task<?>... knownTasks) {
+    public static ManualSchedulerBuilder createManualScheduler(SchedulerDataSource dataSource, Task... knownTasks) {
         return new ManualSchedulerBuilder(dataSource, Arrays.asList(knownTasks));
     }
 
-    public static ManualSchedulerBuilder createManualScheduler(SchedulerDataSource dataSource, List<Task<?>> knownTasks) {
+    public static ManualSchedulerBuilder createManualScheduler(SchedulerDataSource dataSource, List<Task> knownTasks) {
         return new ManualSchedulerBuilder(dataSource, knownTasks);
     }
 
@@ -43,7 +42,7 @@ public class TestHelper {
     public static class ManualSchedulerBuilder extends SchedulerBuilder {
         private SettableClock clock;
 
-        public ManualSchedulerBuilder(SchedulerDataSource dataSource, List<Task<?>> knownTasks) {
+        public ManualSchedulerBuilder(SchedulerDataSource dataSource, List<Task> knownTasks) {
             super(dataSource, knownTasks);
         }
 
@@ -52,7 +51,7 @@ public class TestHelper {
             return this;
         }
 
-        public <T> ManualSchedulerBuilder startTasks(List<Task<T>> startTasks) {
+        public ManualSchedulerBuilder startTasks(List<Task> startTasks) {
             super.startTasks(startTasks);
             return this;
         }

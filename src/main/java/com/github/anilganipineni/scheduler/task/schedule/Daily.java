@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.github.anilganipineni.scheduler.task.ExecutionComplete;
+import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
 
 public class Daily implements Schedule {
 

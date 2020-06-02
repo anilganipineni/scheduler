@@ -19,7 +19,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
-import com.github.anilganipineni.scheduler.task.ExecutionComplete;
+import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
 
 /**
  * @author akganipineni

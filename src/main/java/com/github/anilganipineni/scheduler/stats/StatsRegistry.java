@@ -15,7 +15,7 @@
  */
 package com.github.anilganipineni.scheduler.stats;
 
-import com.github.anilganipineni.scheduler.task.ExecutionComplete;
+import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
 
 public interface StatsRegistry {
 

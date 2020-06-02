@@ -52,20 +52,20 @@ public interface SchedulerClient {
     public class Builder {
 
         private final SchedulerDataSource dataSource;
-        private List<Task<?>> knownTasks;
+        private List<Task> knownTasks;
         private final Serializer serializer = Serializer.DEFAULT_JAVA_SERIALIZER;
         private String tableName = JdbcTaskRepository.DEFAULT_TABLE_NAME;
 
-        private Builder(SchedulerDataSource dataSource, List<Task<?>> knownTasks) {
+        private Builder(SchedulerDataSource dataSource, List<Task> knownTasks) {
             this.dataSource = dataSource;
             this.knownTasks = knownTasks;
         }
 
-        public static Builder create(SchedulerDataSource dataSource, Task<?> ... knownTasks) {
+        public static Builder create(SchedulerDataSource dataSource, Task ... knownTasks) {
             return new Builder(dataSource, Arrays.asList(knownTasks));
         }
 
-        public static Builder create(SchedulerDataSource dataSource, List<Task<?>> knownTasks) {
+        public static Builder create(SchedulerDataSource dataSource, List<Task> knownTasks) {
             return new Builder(dataSource, knownTasks);
         }
 
