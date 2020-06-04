@@ -16,6 +16,7 @@
 package com.github.anilganipineni.scheduler.task.helper;
 
 import java.time.Instant;
+import java.util.Map;
 
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
@@ -43,11 +44,11 @@ public class ExecutionOperations {
 
     }
 
-    public void reschedule(ExecutionComplete completed, Instant nextExecutionTime, ScheduledTasks newData) {
+    public void reschedule(ExecutionComplete completed, Instant nextExecutionTime, Map<String, Object> newData) {
         if (completed.getResult() == ExecutionComplete.Result.OK) {
-            taskRepository.reschedule(execution, nextExecutionTime, newData, completed.getTimeDone(), execution.lastFailure, 0);
+            taskRepository.reschedule(execution, nextExecutionTime, completed.getTimeDone(), execution.lastFailure, 0, newData);
         } else {
-            taskRepository.reschedule(execution, nextExecutionTime, newData, execution.lastSuccess, completed.getTimeDone(), execution.consecutiveFailures + 1);
+            taskRepository.reschedule(execution, nextExecutionTime, execution.lastSuccess, completed.getTimeDone(), execution.consecutiveFailures + 1, newData);
         }
     }
 

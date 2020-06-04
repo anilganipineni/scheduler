@@ -18,33 +18,36 @@ package com.github.anilganipineni.scheduler.dao;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+
+import com.github.anilganipineni.scheduler.SchedulerException;
 
 /**
  * @author akganipineni
  */
 public interface SchedulerRepository<T> {
-    public static final String DEFAULT_TABLE_NAME = "scheduled_tasks";
+    public static final String TABLE_NAME = "scheduled_tasks";
 
     boolean createIfNotExists(T execution);
     List<T> getDue(Instant now, int limit);
-    void getScheduledExecutions(Consumer<T> consumer);
-    void getScheduledExecutions(String taskName, Consumer<T> consumer);
+    void getScheduledExecutions(Consumer<T> consumer) throws SchedulerException;
+    void getScheduledExecutions(String taskName, Consumer<T> consumer) throws SchedulerException;
 
     void remove(T execution);
     boolean reschedule(T execution, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures);
-    boolean reschedule(T execution, Instant nextExecutionTime, Object newData, Instant lastSuccess, Instant lastFailure, int consecutiveFailures);
+    boolean reschedule(T execution, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures, Map<String, Object> newData);
 
     Optional<T> pick(T e, Instant timePicked);
 
-    List<T> getDeadExecutions(Instant olderThan);
+    List<T> getDeadExecutions(Instant olderThan) throws SchedulerException;
 
     void updateHeartbeat(T execution, Instant heartbeatTime);
 
-    List<T> getExecutionsFailingLongerThan(Duration interval);
+    List<T> getExecutionsFailingLongerThan(Duration interval) throws SchedulerException;
 
-    Optional<T> getExecution(String taskName, String taskInstanceId);
+    Optional<T> getExecution(String taskName, String taskInstanceId) throws SchedulerException;
 
     int removeExecutions(String taskName);
 }

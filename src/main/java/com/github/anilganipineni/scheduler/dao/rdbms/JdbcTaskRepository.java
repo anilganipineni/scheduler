@@ -21,6 +21,7 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -35,7 +36,8 @@ import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.StringUtils;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.UnresolvedTask;
-import com.github.anilganipineni.scheduler.dao.BaseTaskRepository;
+import com.github.anilganipineni.scheduler.dao.ExecutionResultSetConsumer;
+import com.github.anilganipineni.scheduler.dao.ExecutionResultSetMapper;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.testhelper.DataSourceCassandra;
@@ -43,24 +45,22 @@ import com.github.anilganipineni.scheduler.testhelper.DataSourceCassandra;
 /**
  * @author akganipineni
  */
-public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> implements SchedulerRepository<ScheduledTasks> {
+public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     /**
      * The <code>Logger</code> instance for this class.
      */
 	private static final Logger logger = LogManager.getLogger(DataSourceCassandra.class);
-    private final String tableName;
+    private final String tableName = TABLE_NAME;
     private final TaskResolver taskResolver;
     private final SchedulerName schedulerSchedulerName;
     private final JdbcRunner jdbcRunner;
     private final Serializer serializer;
 
-    public JdbcTaskRepository(DataSource dataSource, String tableName, TaskResolver taskResolver, SchedulerName schedulerSchedulerName) {
-        this(dataSource, tableName, taskResolver, schedulerSchedulerName, Serializer.DEFAULT_JAVA_SERIALIZER);
+    public JdbcTaskRepository(DataSource dataSource, TaskResolver taskResolver, SchedulerName schedulerSchedulerName) {
+        this(dataSource, taskResolver, schedulerSchedulerName, Serializer.DEFAULT_JAVA_SERIALIZER);
     }
 
-    public JdbcTaskRepository(DataSource dataSource, String tableName, TaskResolver taskResolver, SchedulerName schedulerSchedulerName, Serializer serializer) {
-    	super(dataSource, tableName, taskResolver, schedulerSchedulerName, serializer);
-        this.tableName = tableName;
+    public JdbcTaskRepository(DataSource dataSource, TaskResolver taskResolver, SchedulerName schedulerSchedulerName, Serializer serializer) {
         this.taskResolver = taskResolver;
         this.schedulerSchedulerName = schedulerSchedulerName;
         this.jdbcRunner = new JdbcRunner(dataSource);
@@ -102,7 +102,7 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
     @Override
     public void getScheduledExecutions(Consumer<ScheduledTasks> consumer) {
         UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
-        jdbcRunner.query(
+        jdbcRunner.execute(
                 "select * from " + tableName + " where picked = ? " + unresolvedFilter.andCondition() + " order by execution_time asc",
                 (PreparedStatement p) -> {
                     int index = 1;
@@ -115,13 +115,13 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
 
     @Override
     public void getScheduledExecutions(String taskName, Consumer<ScheduledTasks> consumer) {
-        jdbcRunner.query(
+        jdbcRunner.execute(
                 "select * from " + tableName + " where picked = ? and task_name = ? order by execution_time asc",
                 (PreparedStatement p) -> {
                     p.setBoolean(1, false);
                     p.setString(2, taskName);
                 },
-                new com.github.anilganipineni.scheduler.dao.ExecutionResultSetConsumer(consumer, taskResolver, serializer)
+                new ExecutionResultSetConsumer(consumer, taskResolver, serializer)
         );
     }
 
@@ -129,7 +129,7 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
     public List<ScheduledTasks> getDue(Instant now, int limit) {
         final UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
 
-        return jdbcRunner.query(
+        return jdbcRunner.execute(
                 "select * from " + tableName + " where picked = ? and execution_time <= ? " + unresolvedFilter.andCondition() + " order by execution_time asc",
                 (PreparedStatement p) -> {
                     int index = 1;
@@ -138,7 +138,7 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
                     unresolvedFilter.setParameters(p, index);
                     p.setMaxRows(limit);
                 },
-                new com.github.anilganipineni.scheduler.dao.ExecutionResultSetMapper(taskResolver, serializer)
+                new ExecutionResultSetMapper(taskResolver, serializer)
         );
     }
 
@@ -157,18 +157,33 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
             throw new RuntimeException("Expected one execution to be removed, but removed " + removed + ". Indicates a bug.");
         }
     }
-
+    /**
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#reschedule(java.lang.Object,
+	 *      java.time.Instant, java.time.Instant, java.time.Instant, int)
+	 */
     @Override
     public boolean reschedule(ScheduledTasks execution, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures) {
-        return rescheduleInternal(execution, nextExecutionTime, null, lastSuccess, lastFailure, consecutiveFailures);
+        return reschedule(execution, nextExecutionTime, lastSuccess, lastFailure, consecutiveFailures, null);
     }
-
+	/**
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#reschedule(java.lang.Object,
+	 *      java.time.Instant, java.time.Instant, java.time.Instant, int,
+	 *      java.util.Map)
+	 */
     @Override
-    public boolean reschedule(ScheduledTasks execution, Instant nextExecutionTime, Object newData, Instant lastSuccess, Instant lastFailure, int consecutiveFailures) {
-        return rescheduleInternal(execution, nextExecutionTime, new NewData(newData), lastSuccess, lastFailure, consecutiveFailures);
+    public boolean reschedule(ScheduledTasks execution, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures, Map<String, Object> newData) {
+        return rescheduleInternal(execution, nextExecutionTime, newData, lastSuccess, lastFailure, consecutiveFailures);
     }
-
-    private boolean rescheduleInternal(ScheduledTasks execution, Instant nextExecutionTime, NewData newData, Instant lastSuccess, Instant lastFailure, int consecutiveFailures) {
+    /**
+     * @param execution
+     * @param nextExecutionTime
+     * @param data
+     * @param lastSuccess
+     * @param lastFailure
+     * @param consecutiveFailures
+     * @return
+     */
+    private boolean rescheduleInternal(ScheduledTasks execution, Instant nextExecutionTime, Map<String, Object> data, Instant lastSuccess, Instant lastFailure, int consecutiveFailures) {
         final int updated = jdbcRunner.execute(
                 "update " + tableName + " set " +
                         "picked = ?, " +
@@ -178,7 +193,7 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
                         "last_failure = ?, " +
                         "consecutive_failures = ?, " +
                         "execution_time = ?, " +
-                        (newData != null ? "task_data = ?, " : "") +
+                        (data != null ? "task_data = ?, " : "") +
                         "version = version + 1 " +
                         "where task_name = ? " +
                         "and task_instance = ? " +
@@ -192,9 +207,9 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
                     ps.setTimestamp(index++, Optional.ofNullable(lastFailure).map(Timestamp::from).orElse(null));
                     ps.setInt(index++, consecutiveFailures);
                     ps.setTimestamp(index++, Timestamp.from(nextExecutionTime));
-                    if (newData != null) {
+                    if (data != null) {
                         // may cause datbase-specific problems, might have to use setNull instead
-                        ps.setObject(index++, serializer.serialize(newData.data));
+                        ps.setObject(index++, serializer.serialize(data));
                     }
                     ps.setString(index++, execution.getTaskName());
                     ps.setString(index++, execution.getId());
@@ -244,7 +259,7 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
     @Override
     public List<ScheduledTasks> getDeadExecutions(Instant olderThan) {
         final UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
-        return jdbcRunner.query(
+        return jdbcRunner.execute(
                 "select * from " + tableName + " where picked = ? and last_heartbeat <= ? " + unresolvedFilter.andCondition() + " order by last_heartbeat asc",
                 (PreparedStatement p) -> {
                     int index = 1;
@@ -284,7 +299,7 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
     @Override
     public List<ScheduledTasks> getExecutionsFailingLongerThan(Duration interval) {
         UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
-        return jdbcRunner.query(
+        return jdbcRunner.execute(
                 "select * from " + tableName + " where " +
                         "    ((last_success is null and last_failure is not null)" +
                         "    or (last_failure is not null and last_success < ?)) " +
@@ -306,13 +321,24 @@ public class JdbcTaskRepository extends BaseTaskRepository<ScheduledTasks> imple
             });
     }
 
+    public Optional<ScheduledTasks> getExecution(ScheduledTasks taskInstance) {
+        return getExecution(taskInstance.getTaskName(), taskInstance.getId());
+    }
 
-
-    private static class NewData {
-        private final Object data;
-        NewData(Object data) {
-            this.data = data;
+    public Optional<ScheduledTasks> getExecution(String taskName, String taskInstanceId) {
+        final List<ScheduledTasks> executions = jdbcRunner.execute("select * from " + tableName + " where task_name = ? and task_instance = ?",
+                (PreparedStatement p) -> {
+                    p.setString(1, taskName);
+                    p.setString(2, taskInstanceId);
+                },
+                new ExecutionResultSetMapper(taskResolver, serializer)
+        );
+        
+        if (executions.size() > 1) {
+            throw new RuntimeException(String.format("Found more than one matching execution for task name/id combination: '%s'/'%s'", taskName, taskInstanceId));
         }
+
+        return executions.size() == 1 ? Optional.ofNullable(executions.get(0)) : Optional.empty();
     }
 
     private static class UnresolvedFilter {

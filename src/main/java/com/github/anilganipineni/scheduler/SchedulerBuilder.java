@@ -56,7 +56,6 @@ public class SchedulerBuilder {
     protected StatsRegistry statsRegistry = StatsRegistry.NOOP;
     protected Duration heartbeatInterval = Duration.ofMinutes(5);
     protected Serializer serializer = Serializer.DEFAULT_JAVA_SERIALIZER;
-    protected String tableName = JdbcTaskRepository.DEFAULT_TABLE_NAME;
     protected boolean enableImmediateExecution = false;
     protected ExecutorService executorService;
     protected Duration deleteUnresolvedAfter = Duration.ofDays(14);
@@ -145,14 +144,6 @@ public class SchedulerBuilder {
         return this;
     }
     /**
-     * @param tableName
-     * @return
-     */
-    public SchedulerBuilder tableName(String tableName) {
-        this.tableName = tableName;
-        return this;
-    }
-    /**
      * @return
      */
     public SchedulerBuilder enableImmediateExecution() {
@@ -185,9 +176,9 @@ public class SchedulerBuilder {
         /*final SchedulerRepository taskRepository = DbUtils.getRepository(dataSource, tableName, taskResolver, schedulerName, serializer); FIXME*/
         final SchedulerRepository<ScheduledTasks> taskRepository;
         if(DataSourceType.RDBMS.equals(dataSource.dataSourceType())) {
-        	taskRepository = new JdbcTaskRepository(dataSource.rdbmsDataSource(), tableName, taskResolver, schedulerName, serializer);
+        	taskRepository = new JdbcTaskRepository(dataSource.rdbmsDataSource(), taskResolver, schedulerName, serializer);
         } else {
-        	taskRepository = new CassandraTaskRepository(dataSource.cassandraDataSource(), tableName, taskResolver, schedulerName, serializer);
+        	taskRepository = new CassandraTaskRepository(dataSource.cassandraDataSource(), taskResolver, schedulerName);
         }
 
         ExecutorService candidateExecutorService = executorService;
@@ -195,9 +186,9 @@ public class SchedulerBuilder {
             candidateExecutorService = Executors.newFixedThreadPool(executorThreads, defaultThreadFactoryWithPrefix(THREAD_PREFIX + "-"));
         }
 		logger.info(
-				"Creating scheduler with configuration: threads={}, pollInterval={}s, heartbeat={}s enable-immediate-execution={}, table-name={}, name={}",
+				"Creating scheduler with configuration: threads={}, pollInterval={}s, heartbeat={}s enable-immediate-execution={}, name={}",
 				executorThreads, waiter.getWaitDuration().getSeconds(), heartbeatInterval.getSeconds(),
-				enableImmediateExecution, tableName, schedulerName.getName());
+				enableImmediateExecution, schedulerName.getName());
         
 		return new Scheduler(clock,
 							 taskRepository,

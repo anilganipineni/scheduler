@@ -18,15 +18,13 @@ package com.github.anilganipineni.scheduler.dao.rdbms;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+/**
+ * @author akganipineni
+ */
 public interface PreparedStatementSetter {
-
-	void setParameters(PreparedStatement preparedStatement) throws SQLException;
-
-
-	PreparedStatementSetter NOOP = new PreparedStatementSetter() {
-		@Override
-		public void setParameters(PreparedStatement preparedStatement) throws SQLException {
-		}
-	};
-
+	/**
+	 * @param preparedStatement
+	 * @throws SQLException
+	 */
+	public void setParameters(PreparedStatement preparedStatement) throws SQLException;
 }

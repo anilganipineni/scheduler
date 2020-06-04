@@ -17,10 +17,11 @@ package com.github.anilganipineni.scheduler.dao.rdbms;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.function.Function;
 
-public interface ResultSetMapper<T>{
+/**
+ * @author akganipineni
+ */
+public interface ResultSetMapper<T> {
 
-	T map(ResultSet resultSet) throws SQLException;
-
+	T map(ResultSet rs) throws SQLException;
 }

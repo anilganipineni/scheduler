@@ -160,7 +160,7 @@ public class Scheduler implements SchedulerClient {
     }
 
     @Override
-    public <T> void reschedule(ScheduledTasks taskInstanceId, Instant newExecutionTime, T newData) {
+    public void reschedule(ScheduledTasks taskInstanceId, Instant newExecutionTime, Map<String, Object> newData) {
         this.delegate.reschedule(taskInstanceId, newExecutionTime, newData);
     }
 
@@ -184,7 +184,12 @@ public class Scheduler implements SchedulerClient {
         return this.delegate.getScheduledExecution(taskInstanceId);
     }
 
-    public List<ScheduledTasks> getFailingExecutions(Duration failingAtLeastFor) {
+    /**
+     * @param failingAtLeastFor
+     * @return
+     * @throws SchedulerException
+     */
+    public List<ScheduledTasks> getFailingExecutions(Duration failingAtLeastFor) throws SchedulerException {
         return taskRepository.getExecutionsFailingLongerThan(failingAtLeastFor);
     }
 
@@ -224,9 +229,17 @@ public class Scheduler implements SchedulerClient {
         LOG.debug("Checking for dead executions.");
         Instant now = clock.now();
         final Instant oldAgeLimit = now.minus(getMaxAgeBeforeConsideredDead());
-        List<ScheduledTasks> oldExecutions = taskRepository.getDeadExecutions(oldAgeLimit);
+        List<ScheduledTasks> oldExecutions = null;
+		try {
+			oldExecutions = taskRepository.getDeadExecutions(oldAgeLimit);
+		} catch (SchedulerException ex) {
+			LOG.warn("Failed to fetch the dead executions", ex);
+			/* NO-OP */
+		}
 
-        if (!oldExecutions.isEmpty()) {
+        if (oldExecutions == null || oldExecutions.isEmpty()) {
+            LOG.trace("No dead executions found.");
+        } else {
             oldExecutions.forEach(execution -> {
 
                 LOG.info("Found dead execution. Delegating handling to task. ScheduledTasks: " + execution);
@@ -245,8 +258,6 @@ public class Scheduler implements SchedulerClient {
                     statsRegistry.register(SchedulerStatsEvent.UNEXPECTED_ERROR);
                 }
             });
-        } else {
-            LOG.trace("No dead executions found.");
         }
         statsRegistry.register(SchedulerStatsEvent.RAN_DETECT_DEAD);
     }

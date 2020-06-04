@@ -15,37 +15,102 @@
  */
 package com.github.anilganipineni.scheduler.dao.rdbms;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
+import javax.sql.DataSource;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+/**
+ * @author akganipineni
+ */
 public class JdbcRunner {
-	private static final Logger LOG = LoggerFactory.getLogger(JdbcRunner.class);
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(JdbcRunner.class);
+	/**
+	 * The {@link DataSource} to access the RDBMS
+	 */
 	private final DataSource dataSource;
-
+	/**
+	 * @param dataSource
+	 */
 	public JdbcRunner(DataSource dataSource) {
 		this.dataSource = dataSource;
 	}
-
+	/**
+	 * @param query
+	 * @param setParameters
+	 * @return
+	 */
 	public int execute(String query, PreparedStatementSetter setParameters) {
-		return execute(query, setParameters, (PreparedStatement p) -> p.getUpdateCount());
+		return execute(query, setParameters, new AfterExecutionImpl1());
 	}
-
-	public <T> List<T> query(String query, PreparedStatementSetter setParameters, RowMapper<T> rowMapper) {
-		return execute(query, setParameters, (PreparedStatement p) -> mapResultSet(p, rowMapper));
+	/**
+	 * @param query
+	 * @param setParameters
+	 * @param mapper
+	 * @return
+	 */
+	public <T> T execute(String query, PreparedStatementSetter setParameters, ResultSetMapper<T> mapper) {
+		// return query(query, setParameters, (PreparedStatement p) -> mapResultSet(p, mapper));
+		return execute(query, setParameters, new AfterExecutionImpl2<T>(mapper));
 	}
-
-	public <T> T query(String query, PreparedStatementSetter setParameters, ResultSetMapper<T> resultSetMapper) {
-		return execute(query, setParameters, (PreparedStatement p) -> mapResultSet(p, resultSetMapper));
+	/**
+	 * @param query
+	 * @param setParameters
+	 * @param mapper
+	 * @return
+	 */
+	public <T> List<T> execute(String query, PreparedStatementSetter setParameters, RowMapper<T> mapper) {
+		return execute(query, setParameters, (PreparedStatement p) -> mapResultSet(p, mapper));
 	}
-
+	/**
+	 * @param query
+	 * @param setParameters
+	 * @param afterExecution
+	 * @return
+	 */
 	private <T> T execute(String query, PreparedStatementSetter setParameters, AfterExecution<T> afterExecution) {
-		return withConnection(c -> {
+
+		Connection conn = getConnection();
+		PreparedStatement ps = null;
+		try {
+
+			try {
+				ps = conn.prepareStatement(query);
+			} catch (SQLException e) {
+				throw new SQLRuntimeException("Error when preparing statement.", e);
+			}
+
+			try {
+				logger.trace("Setting parameters of prepared statement.");
+				setParameters.setParameters(ps);
+			} catch (SQLException e) {
+				throw new SQLRuntimeException(e);
+			}
+			try {
+				logger.trace("Executing prepared statement");
+				ps.execute();
+				return afterExecution.doAfterExecution(ps);
+			} catch (SQLException e) {
+				throw translateException(e);
+			}
+
+		} finally {
+			nonThrowingClose(ps);
+			nonThrowingClose(conn);
+		}
+		
+		/*return withConnection(c -> {
 
 			PreparedStatement preparedStatement = null;
 			try {
@@ -57,13 +122,13 @@ public class JdbcRunner {
 				}
 
 				try {
-					LOG.trace("Setting parameters of prepared statement.");
+					logger.trace("Setting parameters of prepared statement.");
 					setParameters.setParameters(preparedStatement);
 				} catch (SQLException e) {
 					throw new SQLRuntimeException(e);
 				}
 				try {
-					LOG.trace("Executing prepared statement");
+					logger.trace("Executing prepared statement");
 					preparedStatement.execute();
 					return afterExecution.doAfterExecution(preparedStatement);
 				} catch (SQLException e) {
@@ -73,8 +138,21 @@ public class JdbcRunner {
 			} finally {
 				nonThrowingClose(preparedStatement);
 			}
-		});
+		});*/
 	}
+	/**
+	 * @param doWithConnection
+	 * @return
+	 */
+	/*private <T> T withConnection(Function<Connection, T> doWithConnection) {
+		Connection c = getConnection();
+
+		try {
+			return doWithConnection.apply(c);
+		} finally {
+			nonThrowingClose(c);
+		}
+	}*/
 
 	private SQLRuntimeException translateException(SQLException ex) {
 		if (ex instanceof SQLIntegrityConstraintViolationException) {
@@ -83,21 +161,18 @@ public class JdbcRunner {
 			return new SQLRuntimeException(ex);
 		}
 	}
-
-	private <T> T withConnection(Function<Connection, T> doWithConnection) {
+	/**
+	 * @return
+	 */
+	private Connection getConnection() {
 		Connection c;
+		logger.trace("Getting connection from datasource");
 		try {
-			LOG.trace("Getting connection from datasource");
 			c = dataSource.getConnection();
-		} catch (SQLException e) {
-			throw new SQLRuntimeException("Unable to open connection", e);
+		} catch (SQLException ex) {
+			throw new SQLRuntimeException("Unable to open connection", ex);
 		}
-
-		try {
-			return doWithConnection.apply(c);
-		} finally {
-			nonThrowingClose(c);
-		}
+		return c;
 	}
 
 	private <T> List<T> mapResultSet(PreparedStatement executedPreparedStatement, RowMapper<T> rowMapper) {
@@ -112,12 +187,12 @@ public class JdbcRunner {
 				});
 	}
 
-	private <T> T mapResultSet(PreparedStatement executedPreparedStatement, ResultSetMapper<T> resultSetMapper) {
+	/*private <T> T mapResultSet(PreparedStatement executedPreparedStatement, ResultSetMapper<T> resultSetMapper) {
 		return withResultSet(
 				executedPreparedStatement,
 				(ResultSet rs) -> resultSetMapper.map(rs)
 		);
-	}
+	}*/
 
 	private <T> T withResultSet(PreparedStatement executedPreparedStatement, DoWithResultSet<T> doWithResultSet) {
 		ResultSet rs = null;
@@ -145,13 +220,52 @@ public class JdbcRunner {
 			return;
 		}
 		try {
-			LOG.trace("Closing " + toClose.getClass().getSimpleName());
+			logger.trace("Closing " + toClose.getClass().getSimpleName());
 			toClose.close();
 		} catch (Exception e) {
-			LOG.warn("Exception on close of " + toClose.getClass().getSimpleName(), e);
+			logger.warn("Exception on close of " + toClose.getClass().getSimpleName(), e);
 		}
 	}
+	/**
+	 * @author akganipineni
+	 */
+	private class AfterExecutionImpl1 implements AfterExecution<Integer> {
+		/**
+		 * @see com.github.anilganipineni.scheduler.dao.rdbms.JdbcRunner.AfterExecution#doAfterExecution(java.sql.PreparedStatement)
+		 */
+		@Override
+		public Integer doAfterExecution(PreparedStatement ps) throws SQLException {
+			return ps.getUpdateCount();
+		}
+	}
+	/**
+	 * @author akganipineni
+	 */
+	private class AfterExecutionImpl2<T> implements AfterExecution<T> {
+		private ResultSetMapper<T> mapper = null;
+		/**
+		 * @param mapper
+		 */
+		public AfterExecutionImpl2(ResultSetMapper<T> mapper) {
+			this.mapper = mapper;
+		}
 
+		/**
+		 * @see com.github.anilganipineni.scheduler.dao.rdbms.JdbcRunner.AfterExecution#doAfterExecution(java.sql.PreparedStatement)
+		 */
+		@Override
+		public T doAfterExecution(PreparedStatement ps) throws SQLException {
+			ResultSet rs = null;
+			try {
+				rs = ps.getResultSet();
+				return mapper.map(rs);
+			} catch (SQLException e) {
+				throw new SQLRuntimeException(e);
+			} finally {
+				nonThrowingClose(rs);
+			}
+		}
+	}
 	interface AfterExecution<T> {
 		T doAfterExecution(PreparedStatement executedPreparedStatement) throws SQLException;
 	}

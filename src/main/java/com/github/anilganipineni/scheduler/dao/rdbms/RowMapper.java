@@ -18,6 +18,9 @@ package com.github.anilganipineni.scheduler.dao.rdbms;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * @author akganipineni
+ */
 public interface RowMapper<T> {
 
 	T map(ResultSet rs) throws SQLException;
