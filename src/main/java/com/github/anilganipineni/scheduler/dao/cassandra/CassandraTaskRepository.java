@@ -36,7 +36,6 @@ import com.datastax.driver.core.exceptions.DriverException;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.Result;
 import com.github.anilganipineni.scheduler.JsonUtils;
-import com.github.anilganipineni.scheduler.SchedulerException;
 import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.StringUtils;
 import com.github.anilganipineni.scheduler.TaskResolver;
@@ -44,6 +43,7 @@ import com.github.anilganipineni.scheduler.UnresolvedTask;
 import com.github.anilganipineni.scheduler.dao.CassandraDataSource;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
+import com.github.anilganipineni.scheduler.exception.SchedulerException;
 
 /**
  * @author akganipineni

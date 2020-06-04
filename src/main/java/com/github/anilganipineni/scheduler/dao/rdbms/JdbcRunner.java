@@ -28,6 +28,9 @@ import javax.sql.DataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.anilganipineni.scheduler.exception.IntegrityConstraintViolation;
+import com.github.anilganipineni.scheduler.exception.SQLRuntimeException;
+
 /**
  * @author akganipineni
  */

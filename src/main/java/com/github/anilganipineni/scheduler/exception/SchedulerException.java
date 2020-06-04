@@ -1,4 +1,4 @@
-package com.github.anilganipineni.scheduler;
+package com.github.anilganipineni.scheduler.exception;
 
 import java.util.List;
 

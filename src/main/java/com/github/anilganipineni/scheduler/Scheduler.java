@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import com.github.anilganipineni.scheduler.SchedulerState.SettableSchedulerState;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
+import com.github.anilganipineni.scheduler.exception.SchedulerException;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry.SchedulerStatsEvent;
 import com.github.anilganipineni.scheduler.task.CompletionHandler;

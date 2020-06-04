@@ -18,6 +18,8 @@ package com.github.anilganipineni.scheduler.dao.rdbms;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import com.github.anilganipineni.scheduler.exception.SingleResultExpected;
+
 public class Mappers {
 
 	public static final SingleResultMapper<Integer> SINGLE_INT = new SingleResultMapper<>(rs -> rs.getInt(1));
@@ -49,13 +51,6 @@ public class Mappers {
 				throw new SingleResultExpected("Expected single result in resultset, but had more than 1.");
 			}
 			return result;
-		}
-	}
-
-	public static class SingleResultExpected extends SQLRuntimeException {
-
-		public SingleResultExpected(String message) {
-			super(message);
 		}
 	}
 

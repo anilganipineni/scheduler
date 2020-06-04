@@ -36,10 +36,9 @@ import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.StringUtils;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.UnresolvedTask;
-import com.github.anilganipineni.scheduler.dao.ExecutionResultSetConsumer;
-import com.github.anilganipineni.scheduler.dao.ExecutionResultSetMapper;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
+import com.github.anilganipineni.scheduler.exception.SQLRuntimeException;
 import com.github.anilganipineni.scheduler.testhelper.DataSourceCassandra;
 
 /**
@@ -102,27 +101,33 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     @Override
     public void getScheduledExecutions(Consumer<ScheduledTasks> consumer) {
         UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
-        jdbcRunner.execute(
+        List<ScheduledTasks> tasks = jdbcRunner.execute(
                 "select * from " + tableName + " where picked = ? " + unresolvedFilter.andCondition() + " order by execution_time asc",
                 (PreparedStatement p) -> {
                     int index = 1;
                     p.setBoolean(index++, false);
                     unresolvedFilter.setParameters(p, index);
                 },
-                new com.github.anilganipineni.scheduler.dao.ExecutionResultSetConsumer(consumer, taskResolver, serializer)
+                new JdbcResultSetMapper(taskResolver, serializer)
         );
+    	for(ScheduledTasks t : tasks) {
+    		consumer.accept(t);
+    	}
     }
 
     @Override
     public void getScheduledExecutions(String taskName, Consumer<ScheduledTasks> consumer) {
-        jdbcRunner.execute(
+    	List<ScheduledTasks> tasks = jdbcRunner.execute(
                 "select * from " + tableName + " where picked = ? and task_name = ? order by execution_time asc",
                 (PreparedStatement p) -> {
                     p.setBoolean(1, false);
                     p.setString(2, taskName);
                 },
-                new ExecutionResultSetConsumer(consumer, taskResolver, serializer)
+                new JdbcResultSetMapper(taskResolver, serializer)
         );
+    	for(ScheduledTasks t : tasks) {
+    		consumer.accept(t);
+    	}
     }
 
     @Override
@@ -138,7 +143,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     unresolvedFilter.setParameters(p, index);
                     p.setMaxRows(limit);
                 },
-                new ExecutionResultSetMapper(taskResolver, serializer)
+                new JdbcResultSetMapper(taskResolver, serializer)
         );
     }
 
@@ -267,7 +272,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     p.setTimestamp(index++, Timestamp.from(olderThan));
                     unresolvedFilter.setParameters(p, index);
                 },
-                new com.github.anilganipineni.scheduler.dao.ExecutionResultSetMapper(taskResolver, serializer)
+                new JdbcResultSetMapper(taskResolver, serializer)
         );
     }
 
@@ -309,7 +314,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     p.setTimestamp(index++, Timestamp.from(Instant.now().minus(interval)));
                     unresolvedFilter.setParameters(p, index);
                 },
-                new com.github.anilganipineni.scheduler.dao.ExecutionResultSetMapper(taskResolver, serializer)
+                new JdbcResultSetMapper(taskResolver, serializer)
         );
     }
 
@@ -331,7 +336,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     p.setString(1, taskName);
                     p.setString(2, taskInstanceId);
                 },
-                new ExecutionResultSetMapper(taskResolver, serializer)
+                new JdbcResultSetMapper(taskResolver, serializer)
         );
         
         if (executions.size() > 1) {

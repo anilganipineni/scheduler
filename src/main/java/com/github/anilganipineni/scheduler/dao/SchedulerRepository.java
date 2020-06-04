@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import com.github.anilganipineni.scheduler.SchedulerException;
+import com.github.anilganipineni.scheduler.exception.SchedulerException;
 
 /**
  * @author akganipineni

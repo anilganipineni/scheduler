@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.Objects;
 
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+import com.github.anilganipineni.scheduler.exception.SchedulerException;
 
 /**
  * @author akganipineni
@@ -46,11 +47,16 @@ public class ScheduledExecution<T> {
     public Instant getExecutionTime() {
         return execution.getExecutionTime();
     }
-    public T getData() {
+    /**
+     * @return
+     * @throws SchedulerException
+     */
+    @SuppressWarnings("unchecked")
+	public T getData() throws SchedulerException {
         if (dataClass.isInstance(this.execution.getTaskData())) {
             return (T) this.execution.getTaskData();
         }
-        throw new DataClassMismatchException();
+        throw new SchedulerException();
     }
     @Override
     public boolean equals(Object o) {
@@ -62,8 +68,5 @@ public class ScheduledExecution<T> {
     @Override
     public int hashCode() {
         return Objects.hash(execution);
-    }
-    public static class DataClassMismatchException extends RuntimeException {
-    	
     }
 }
