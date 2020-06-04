@@ -20,8 +20,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.sql.DataSource;
 
@@ -64,17 +62,7 @@ public class JdbcRunner {
 	 * @return
 	 */
 	public <T> T execute(String query, PreparedStatementSetter setParameters, ResultSetMapper<T> mapper) {
-		// return query(query, setParameters, (PreparedStatement p) -> mapResultSet(p, mapper));
 		return execute(query, setParameters, new AfterExecutionImpl2<T>(mapper));
-	}
-	/**
-	 * @param query
-	 * @param setParameters
-	 * @param mapper
-	 * @return
-	 */
-	public <T> List<T> execute(String query, PreparedStatementSetter setParameters, RowMapper<T> mapper) {
-		return execute(query, setParameters, (PreparedStatement p) -> mapResultSet(p, mapper));
 	}
 	/**
 	 * @param query
@@ -112,50 +100,7 @@ public class JdbcRunner {
 			nonThrowingClose(ps);
 			nonThrowingClose(conn);
 		}
-		
-		/*return withConnection(c -> {
-
-			PreparedStatement preparedStatement = null;
-			try {
-
-				try {
-					preparedStatement = c.prepareStatement(query);
-				} catch (SQLException e) {
-					throw new SQLRuntimeException("Error when preparing statement.", e);
-				}
-
-				try {
-					logger.trace("Setting parameters of prepared statement.");
-					setParameters.setParameters(preparedStatement);
-				} catch (SQLException e) {
-					throw new SQLRuntimeException(e);
-				}
-				try {
-					logger.trace("Executing prepared statement");
-					preparedStatement.execute();
-					return afterExecution.doAfterExecution(preparedStatement);
-				} catch (SQLException e) {
-					throw translateException(e);
-				}
-
-			} finally {
-				nonThrowingClose(preparedStatement);
-			}
-		});*/
 	}
-	/**
-	 * @param doWithConnection
-	 * @return
-	 */
-	/*private <T> T withConnection(Function<Connection, T> doWithConnection) {
-		Connection c = getConnection();
-
-		try {
-			return doWithConnection.apply(c);
-		} finally {
-			nonThrowingClose(c);
-		}
-	}*/
 
 	private SQLRuntimeException translateException(SQLException ex) {
 		if (ex instanceof SQLIntegrityConstraintViolationException) {
@@ -176,45 +121,6 @@ public class JdbcRunner {
 			throw new SQLRuntimeException("Unable to open connection", ex);
 		}
 		return c;
-	}
-
-	private <T> List<T> mapResultSet(PreparedStatement executedPreparedStatement, RowMapper<T> rowMapper) {
-		return withResultSet(
-				executedPreparedStatement,
-				(ResultSet rs) -> {
-					List<T> results = new ArrayList<>();
-					while (rs.next()) {
-						results.add(rowMapper.map(rs));
-					}
-					return results;
-				});
-	}
-
-	/*private <T> T mapResultSet(PreparedStatement executedPreparedStatement, ResultSetMapper<T> resultSetMapper) {
-		return withResultSet(
-				executedPreparedStatement,
-				(ResultSet rs) -> resultSetMapper.map(rs)
-		);
-	}*/
-
-	private <T> T withResultSet(PreparedStatement executedPreparedStatement, DoWithResultSet<T> doWithResultSet) {
-		ResultSet rs = null;
-		try {
-			try {
-				rs = executedPreparedStatement.getResultSet();
-			} catch (SQLException e) {
-				throw new SQLRuntimeException(e);
-			}
-
-			try {
-				return doWithResultSet.withResultSet(rs);
-			} catch (SQLException e) {
-				throw new SQLRuntimeException(e);
-			}
-
-		} finally {
-			nonThrowingClose(rs);
-		}
 	}
 
 
