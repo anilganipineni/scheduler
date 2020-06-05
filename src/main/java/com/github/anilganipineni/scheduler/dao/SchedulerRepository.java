@@ -31,7 +31,7 @@ public interface SchedulerRepository<T> {
     public static final String TABLE_NAME = "scheduled_tasks";
 
     boolean createIfNotExists(T execution);
-    List<T> getDue(Instant now, int limit);
+    List<T> getDue(Instant now, int limit) throws SchedulerException;
     void getScheduledExecutions(Consumer<T> consumer) throws SchedulerException;
     void getScheduledExecutions(String taskName, Consumer<T> consumer) throws SchedulerException;
 
@@ -49,5 +49,5 @@ public interface SchedulerRepository<T> {
 
     Optional<T> getExecution(String taskName, String taskInstanceId) throws SchedulerException;
 
-    int removeExecutions(String taskName);
+    int removeExecutions(String taskName) throws SchedulerException;
 }

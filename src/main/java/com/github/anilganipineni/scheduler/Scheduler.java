@@ -203,29 +203,40 @@ public class Scheduler implements SchedulerClient {
     }
 
     public void executeDue() {
-        Instant now = clock.now();
-        List<ScheduledTasks> dueExecutions = taskRepository.getDue(now, pollingLimit);
-        LOG.trace("Found {} taskinstances due for execution", dueExecutions.size());
+		try {
+	        Instant now = clock.now();
+	        List<ScheduledTasks> dueExecutions = taskRepository.getDue(now, pollingLimit);
+	        LOG.trace("Found {} taskinstances due for execution", dueExecutions.size());
 
-        int thisGenerationNumber = this.currentGenerationNumber + 1;
-        DueExecutionsBatch newDueBatch = new DueExecutionsBatch(Scheduler.this.threadpoolSize, thisGenerationNumber, dueExecutions.size(), pollingLimit == dueExecutions.size());
+	        int thisGenerationNumber = this.currentGenerationNumber + 1;
+	        DueExecutionsBatch newDueBatch = new DueExecutionsBatch(Scheduler.this.threadpoolSize, thisGenerationNumber, dueExecutions.size(), pollingLimit == dueExecutions.size());
 
-        for (ScheduledTasks e : dueExecutions) {
-            executorService.execute(new PickAndExecute(e, newDueBatch));
-        }
-        this.currentGenerationNumber = thisGenerationNumber;
-        statsRegistry.register(SchedulerStatsEvent.RAN_EXECUTE_DUE);
+	        for (ScheduledTasks e : dueExecutions) {
+	            executorService.execute(new PickAndExecute(e, newDueBatch));
+	        }
+	        this.currentGenerationNumber = thisGenerationNumber;
+	        statsRegistry.register(SchedulerStatsEvent.RAN_EXECUTE_DUE);
+		} catch (SchedulerException ex) {
+			// TODO Auto-generated catch block
+			ex.printStackTrace();
+		}
     }
 
     public void detectDeadExecutions() {
-        LOG.debug("Deleting executions with unresolved tasks.");
-        List<String> taskNames = taskResolver.getUnresolvedTaskNames(deleteUnresolvedAfter);
-        taskNames.forEach(taskName -> {
+        try {
+            LOG.debug("Deleting executions with unresolved tasks.");
+            List<String> taskNames = taskResolver.getUnresolvedTaskNames(deleteUnresolvedAfter);
+            for(String taskName : taskNames) {
                 LOG.warn("Deleting all executions for task with name '{}'. They have been unresolved for more than {}", taskName, deleteUnresolvedAfter);
                 int removed = taskRepository.removeExecutions(taskName);
                 LOG.info("Removed {} executions", removed);
-                taskResolver.clearUnresolved(taskName);
-            });
+                taskResolver.clearUnresolved(taskName);	
+            }
+			
+		} catch (SchedulerException ex) {
+			// TODO Auto-generated catch block
+			ex.printStackTrace();
+		}
 
         LOG.debug("Checking for dead executions.");
         Instant now = clock.now();

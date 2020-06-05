@@ -19,6 +19,8 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,12 +55,12 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
      * The <code>Logger</code> instance for this class.
      */
 	private static final Logger logger = LogManager.getLogger(CassandraTaskRepository.class);
-	private static final String SELECT 				= "select * from " + TABLE_NAME;
-	private static final String UPDATE				= "update " + TABLE_NAME;
-	private static final String WHERE_PK			= " where task_name = ? and task_instance = ?";
-	private static final String WHERE_PK_CK			= WHERE_PK + " and version = ?";
-
-	private static final String SELECT_WITH_PK		= SELECT + WHERE_PK;
+	private static final String SELECT 				= " select * from " + TABLE_NAME;
+	private static final String UPDATE				= " update " + TABLE_NAME;
+	private static final String WHERE_PK			= " where task_name = ? ";
+	private static final String WHERE_PK_CK			= WHERE_PK + " and task_instance = ? and version = ? ";
+	private static final String SELECT_WITH_PK_CK1	= SELECT + WHERE_PK + " and task_instance = ? ";
+	private static final String LIMIT				= " LIMIT 2000 ";
 	/**
 	 * The preparedStatementCache for GSP application
 	 */
@@ -207,7 +209,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 		try {
 			String taskName		= task.getTaskName();
 			String taskId		= task.getId();
-			List<ScheduledTasks> taskss = getResultList(SELECT_WITH_PK, ScheduledTasks.class, taskName, taskId);
+			List<ScheduledTasks> taskss = getResultList(SELECT_WITH_PK_CK1, ScheduledTasks.class, taskName, taskId);
 			
 			if(taskss == null || taskss.isEmpty()) {
 				create(task, ScheduledTasks.class);
@@ -249,24 +251,23 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#getDue(java.time.Instant, int)
 	 */
 	@Override
-	public List<ScheduledTasks> getDue(Instant now, int limit) {
+	public List<ScheduledTasks> getDue(Instant now, int limit) throws SchedulerException {
 
-		try {
+		List<String> taskNames = taskResolver.getUnresolved().stream().map(UnresolvedTask::getTaskName).collect(Collectors.toList());
+		
+		// We are limiting fetch size to 2000, as we are not using any PK
+		// Ideally there should not be more than 2000 tasks
+		List<ScheduledTasks> all = getResultList(SELECT + LIMIT, ScheduledTasks.class);
 
-	        List<UnresolvedTask> unresolved = taskResolver.getUnresolved();
-
-			// String taskName		= task.getTaskName();
-			// String taskId		= task.getId();
-	        String and = unresolved.isEmpty() ? "" : "and task_name not in (" + unresolved.stream().map(ignored -> "?").collect(Collectors.joining(",")) + ")";
-	        // FIXME : the below query for cassandra
-			String cql			= SELECT + " where picked = ? and execution_time <= ? " + and + " order by execution_time asc";
-			final List<String> unresolvedTasknames = unresolved.stream().map(UnresolvedTask::getTaskName).collect(Collectors.toList());
-			
-			return getResultList(cql, ScheduledTasks.class, false, Timestamp.from(now), unresolvedTasknames);
-		} catch (SchedulerException ex) {
-			logger.warn("", ex);
-			return new ArrayList<>();
+		List<ScheduledTasks> dues = new ArrayList<ScheduledTasks>();
+		for(ScheduledTasks t : all) {
+			if(!t.isPicked() && !taskNames.contains(t.getTaskName()) && t.executionTime.isBefore(now)) {
+				dues.add(t);
+			}
 		}
+		Collections.sort(dues, c);
+		
+		return dues;
 	}
 	/**
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#getScheduledExecutions(java.util.function.Consumer)
@@ -274,16 +275,20 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	@Override
 	public void getScheduledExecutions(Consumer<ScheduledTasks> consumer) throws SchedulerException {
 
-		List<UnresolvedTask> unresolved = taskResolver.getUnresolved();
-		String and = unresolved.isEmpty() ? "" : "and task_name not in (" + unresolved.stream().map(ignored -> "?").collect(Collectors.joining(",")) + ")";
-        // FIXME : the below query for cassandra
-		String cql			= SELECT + " where picked = ? " + and + " order by execution_time asc";
-		final List<String> unresolvedTasknames = unresolved.stream().map(UnresolvedTask::getTaskName).collect(Collectors.toList());		
+		List<String> taskNames = taskResolver.getUnresolved().stream().map(UnresolvedTask::getTaskName).collect(Collectors.toList());
 		
-		List<ScheduledTasks> results = getResultList(cql, ScheduledTasks.class, false, unresolvedTasknames);
+		// We are limiting fetch size to 2000, as we are not using any PK
+		// Ideally there should not be more than 2000 tasks
+		List<ScheduledTasks> results = getResultList(SELECT + LIMIT, ScheduledTasks.class);
+
+		List<ScheduledTasks> dues = new ArrayList<ScheduledTasks>();
 		for(ScheduledTasks t : results) {
-			consumer.accept(t);
+			if(!t.isPicked() && !taskNames.contains(t.getTaskName())) {
+				dues.add(t);
+			}
 		}
+		
+		consume(dues, consumer);
 	}
 	/**
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#getScheduledExecutions(java.lang.String,
@@ -291,10 +296,26 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	 */
 	@Override
 	public void getScheduledExecutions(String taskName, Consumer<ScheduledTasks> consumer) throws SchedulerException {
-        // FIXME : the below query for cassandra
-		String cql			= SELECT + " where picked = ? and task_name = ? order by execution_time asc ";
-		List<ScheduledTasks> results = getResultList(cql, ScheduledTasks.class, false, taskName);
+		
+		List<ScheduledTasks> results = getResultList(SELECT + " where task_name = ? " + LIMIT, ScheduledTasks.class, taskName);
+		List<ScheduledTasks> dues = new ArrayList<ScheduledTasks>();
 		for(ScheduledTasks t : results) {
+			if(!t.isPicked()) {
+				dues.add(t);
+			}
+		}
+		
+		consume(dues, consumer);
+	}
+	/**
+	 * @param tasks
+	 * @param consumer
+	 */
+	private void consume(List<ScheduledTasks> tasks, Consumer<ScheduledTasks> consumer) {
+		
+		Collections.sort(tasks, c);
+
+		for(ScheduledTasks t : tasks) {
 			consumer.accept(t);
 		}
 	}
@@ -326,20 +347,13 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#removeExecutions(java.lang.String)
 	 */
 	@Override
-	public int removeExecutions(String taskName) {
+	public int removeExecutions(String taskName) throws SchedulerException {
 		int removed = 0;
-		try {
-	        // FIXME : the below query for cassandra
-			String cql = SELECT + " where task_name = ?";
-			List<ScheduledTasks> tasks = getResultList(cql, ScheduledTasks.class, taskName);
-			if(tasks != null) {
-				for(ScheduledTasks t : tasks) {
-					delete(t, ScheduledTasks.class);
-					removed++;
-				}
-			}
-		} catch (SchedulerException ex) {
-            throw new RuntimeException(ex);
+		String cql = SELECT + " where task_name = ?";
+		List<ScheduledTasks> tasks = getResultList(cql, ScheduledTasks.class, taskName);
+		for(ScheduledTasks t : tasks) {
+			delete(t, ScheduledTasks.class);
+			removed++;
 		}
 		
 		return removed;
@@ -350,10 +364,9 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	@Override
 	public Optional<ScheduledTasks> pick(ScheduledTasks e, Instant timePicked) {
 		int updated = 0;
-        // FIXME : the below query for cassandra
-		String cql = UPDATE + " set picked = ?, picked_by = ?, last_heartbeat = ?, version = version + 1 where picked = ? and task_name = ? and task_instance = ? and version = ?";
+		String cql = UPDATE + " set picked = ?, picked_by = ?, last_heartbeat = ?, version = ? " + WHERE_PK_CK; /*" + and picked = ? "*/;
 		
-		ResultSet rs = execute(cql, true, StringUtils.truncate(schedulerSchedulerName.getName(), 50), Timestamp.from(timePicked), false, e.getTaskName(), e.getId(), e.version);
+		ResultSet rs = execute(cql, true, StringUtils.truncate(schedulerSchedulerName.getName(), 50), Timestamp.from(timePicked), e.version + 1, false, e.getTaskName(), e.getId(), e.version);
 		updated = rs.getAvailableWithoutFetching();
 
         if (updated == 0) {
@@ -363,7 +376,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
         } else if (updated == 1) {
         	ScheduledTasks pickedTask = null;
 			try {
-				pickedTask = getSingleResult(SELECT_WITH_PK, ScheduledTasks.class, e.getTaskName(), e.getId());
+				pickedTask = getSingleResult(SELECT_WITH_PK_CK1, ScheduledTasks.class, e.getTaskName(), e.getId());
 			} catch (SchedulerException ex) {
 				pickedTask = null;
 			}
@@ -384,13 +397,23 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	 */
 	@Override
 	public List<ScheduledTasks> getDeadExecutions(Instant olderThan) throws SchedulerException {
-		List<UnresolvedTask> unresolved = taskResolver.getUnresolved();
-		String and = unresolved.isEmpty() ? "" : "and task_name not in (" + unresolved.stream().map(ignored -> "?").collect(Collectors.joining(",")) + ")";
-        // FIXME : the below query for cassandra
-		String cql			= SELECT + " where picked = ? and last_heartbeat <= ? " + and + " order by last_heartbeat asc";
-		final List<String> unresolvedTasknames = unresolved.stream().map(UnresolvedTask::getTaskName).collect(Collectors.toList());		
+
+
+		List<String> taskNames = taskResolver.getUnresolved().stream().map(UnresolvedTask::getTaskName).collect(Collectors.toList());
 		
-		return getResultList(cql, ScheduledTasks.class, true, Timestamp.from(olderThan), unresolvedTasknames);
+		// We are limiting fetch size to 2000, as we are not using any PK
+		// Ideally there should not be more than 2000 tasks
+		List<ScheduledTasks> all = getResultList(SELECT + LIMIT, ScheduledTasks.class);
+
+		List<ScheduledTasks> dues = new ArrayList<ScheduledTasks>();
+		for(ScheduledTasks t : all) {
+			if(t.isPicked() && !taskNames.contains(t.getTaskName()) && t.lastHeartbeat.isBefore(olderThan)) {
+				dues.add(t);
+			}
+		}
+		Collections.sort(dues, c2);
+		
+		return dues;
 	}
 	/**
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#updateHeartbeat(java.lang.Object, java.time.Instant)
@@ -418,19 +441,30 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	@Override
 	public List<ScheduledTasks> getExecutionsFailingLongerThan(Duration interval) throws SchedulerException {
 
-        List<UnresolvedTask> unresolved = taskResolver.getUnresolved();
-        String and = unresolved.isEmpty() ? "" : "and task_name not in (" + unresolved.stream().map(ignored -> "?").collect(Collectors.joining(",")) + ")";
-        // FIXME : the below query for cassandra
-		String cql			= SELECT + " where ((last_success is null and last_failure is not null) or (last_failure is not null and last_success < ?)) " + and;
-		final List<String> unresolvedTasknames = unresolved.stream().map(UnresolvedTask::getTaskName).collect(Collectors.toList());
-		return getResultList(cql, ScheduledTasks.class, Timestamp.from(Instant.now().minus(interval)), unresolvedTasknames);
+		List<String> taskNames = taskResolver.getUnresolved().stream().map(UnresolvedTask::getTaskName).collect(Collectors.toList());
+		
+		// We are limiting fetch size to 2000, as we are not using any PK
+		// Ideally there should not be more than 2000 tasks
+		List<ScheduledTasks> all = getResultList(SELECT + LIMIT, ScheduledTasks.class);
+
+		List<ScheduledTasks> dues = new ArrayList<ScheduledTasks>();
+		for(ScheduledTasks t : all) {
+			if (!taskNames.contains(t.getTaskName())
+					&& ((t.lastFailure != null && t.lastSuccess == null)
+					||  (t.lastFailure != null && t.lastSuccess.isBefore(Instant.now().minus(interval))))) {
+				dues.add(t);
+			}
+		}
+		
+		return dues;
+	
 	}
 	/**
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#getExecution(java.lang.String, java.lang.String)
 	 */
 	@Override
 	public Optional<ScheduledTasks> getExecution(String name, String instance) throws SchedulerException {
-		List<ScheduledTasks> tasks = getResultList(SELECT_WITH_PK, ScheduledTasks.class, name, instance);
+		List<ScheduledTasks> tasks = getResultList(SELECT_WITH_PK_CK1, ScheduledTasks.class, name, instance);
 		
         if (tasks.size() > 1) {
             throw new SchedulerException(String.format("Found more than one matching execution for task name/id combination: '%s'/'%s'", name, instance));
@@ -449,9 +483,8 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
      */
     private boolean rescheduleInternal(ScheduledTasks task, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures, Map<String, Object> data) {
     	int updated = 0;
-        // FIXME : the below query for cassandra
     	String cql	= UPDATE + " set picked = ?, picked_by = ?, last_heartbeat = ?, last_success = ?, last_failure = ?, "
-    				+ "consecutive_failures = ?, execution_time = ?, task_data = ?, version = version + 1 " + WHERE_PK_CK;
+    				+ "consecutive_failures = ?, execution_time = ?, task_data = ?, version = ? " + WHERE_PK_CK;
     	
     	ResultSet rs = execute(cql, false,
 				null,
@@ -459,7 +492,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 				Optional.ofNullable(lastSuccess).map(Timestamp::from).orElse(null),
 				Optional.ofNullable(lastFailure).map(Timestamp::from).orElse(null), 
 				consecutiveFailures,
-				Timestamp.from(nextExecutionTime), JsonUtils.convertObject2Json(data), task.getTaskName(), task.getId(), task.version);
+				Timestamp.from(nextExecutionTime), JsonUtils.convertObject2Json(data), task.version + 1, task.getTaskName(), task.getId(), task.version);
 		updated = rs.getAvailableWithoutFetching();
 
 
@@ -468,4 +501,48 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
         }
         return updated > 0;
     }
+    /**
+     * @author akganipineni
+     */
+    private static Comparator<ScheduledTasks> c = new Comparator<ScheduledTasks>() {
+		/**
+		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+		 */
+		@Override
+		public int compare(ScheduledTasks o1, ScheduledTasks o2) {
+			if(o1 == null && o2 == null) {
+				return 0;
+			}
+			if(o1 == null) {
+				return 1;
+			}
+			if(o2 == null) {
+				return -1;
+			}
+			
+			return o1.getExecutionTime().compareTo(o2.getExecutionTime());
+		}
+    };
+    /**
+     * @author akganipineni
+     */
+    private static Comparator<ScheduledTasks> c2 = new Comparator<ScheduledTasks>() {
+		/**
+		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+		 */
+		@Override
+		public int compare(ScheduledTasks o1, ScheduledTasks o2) {
+			if(o1 == null && o2 == null) {
+				return 0;
+			}
+			if(o1 == null) {
+				return 1;
+			}
+			if(o2 == null) {
+				return -1;
+			}
+			
+			return o1.lastHeartbeat.compareTo(o2.lastHeartbeat);
+		}
+    };
 }
