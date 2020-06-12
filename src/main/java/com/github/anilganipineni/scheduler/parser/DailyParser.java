@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task.schedule;
+package com.github.anilganipineni.scheduler.parser;
 
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -24,6 +24,9 @@ import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.github.anilganipineni.scheduler.schedule.Daily;
+import com.github.anilganipineni.scheduler.schedule.Schedule;
 
 public final class DailyParser extends RegexBasedParser {
     private static final Pattern DAILY_PATTERN_WITH_TIMEZONE = Pattern.compile("^DAILY\\|((\\d{2}:\\d{2})(,\\d{2}:\\d{2})*)(\\|(.+))?$");

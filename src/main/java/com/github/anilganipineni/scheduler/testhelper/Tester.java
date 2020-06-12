@@ -10,10 +10,10 @@ import java.util.Map;
 import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.SchedulerBuilder;
 import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
+import com.github.anilganipineni.scheduler.schedule.FixedDelay;
 import com.github.anilganipineni.scheduler.task.OneTimeTask;
 import com.github.anilganipineni.scheduler.task.Task;
 import com.github.anilganipineni.scheduler.task.TaskFactory;
-import com.github.anilganipineni.scheduler.task.schedule.FixedDelay;
 
 /**
  * @author akganipineni

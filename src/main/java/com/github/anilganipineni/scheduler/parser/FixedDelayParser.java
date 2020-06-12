@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task.schedule;
+package com.github.anilganipineni.scheduler.parser;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
+
+import com.github.anilganipineni.scheduler.schedule.FixedDelay;
+import com.github.anilganipineni.scheduler.schedule.Schedule;
 
 public final class FixedDelayParser extends RegexBasedParser {
     private static final Pattern FIXED_DELAY_PATTERN = Pattern.compile("^FIXED_DELAY\\|(\\d+)s$");

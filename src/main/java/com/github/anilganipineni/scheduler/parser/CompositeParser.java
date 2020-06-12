@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task.schedule;
+package com.github.anilganipineni.scheduler.parser;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import com.github.anilganipineni.scheduler.schedule.Schedule;
 
 public final class CompositeParser implements Parser {
     private final List<Parser> delegates;

@@ -20,9 +20,9 @@ import java.time.Instant;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.anilganipineni.scheduler.schedule.Schedule;
 import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
 import com.github.anilganipineni.scheduler.task.helper.ExecutionOperations;
-import com.github.anilganipineni.scheduler.task.schedule.Schedule;
 
 /**
  * @author akganipineni

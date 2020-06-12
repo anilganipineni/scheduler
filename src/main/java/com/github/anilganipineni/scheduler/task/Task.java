@@ -18,10 +18,10 @@ package com.github.anilganipineni.scheduler.task;
 import com.github.anilganipineni.scheduler.Clock;
 import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+import com.github.anilganipineni.scheduler.schedule.Schedule;
 import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler;
 import com.github.anilganipineni.scheduler.task.handler.ExecutionHandler;
 import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
-import com.github.anilganipineni.scheduler.task.schedule.Schedule;
 
 /**
  * @author akganipineni

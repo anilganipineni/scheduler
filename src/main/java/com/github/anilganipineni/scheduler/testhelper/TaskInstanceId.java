@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task;
+package com.github.anilganipineni.scheduler.testhelper;
 
 import java.util.Objects;
 
@@ -43,14 +43,14 @@ public interface TaskInstanceId {
             this.id = id;
         }
         /**
-         * @see com.github.anilganipineni.scheduler.task.TaskInstanceId#getTaskName()
+         * @see com.github.anilganipineni.scheduler.testhelper.TaskInstanceId#getTaskName()
          */
         @Override
         public String getTaskName() {
             return this.taskName;
         }
         /**
-         * @see com.github.anilganipineni.scheduler.task.TaskInstanceId#getId()
+         * @see com.github.anilganipineni.scheduler.testhelper.TaskInstanceId#getId()
          */
         @Override
         public String getId() {

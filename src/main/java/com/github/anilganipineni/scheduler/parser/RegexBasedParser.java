@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task.schedule;
+package com.github.anilganipineni.scheduler.parser;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,6 +23,8 @@ import java.util.Optional;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.github.anilganipineni.scheduler.schedule.Schedule;
 
 public abstract class RegexBasedParser implements Parser {
     private final Pattern pattern;

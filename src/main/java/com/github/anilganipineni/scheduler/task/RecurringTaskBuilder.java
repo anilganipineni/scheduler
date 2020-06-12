@@ -1,12 +1,12 @@
 package com.github.anilganipineni.scheduler.task;
 
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+import com.github.anilganipineni.scheduler.schedule.Schedule;
 import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler;
 import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
 import com.github.anilganipineni.scheduler.task.handler.OnFailureReschedule;
 import com.github.anilganipineni.scheduler.task.handler.VoidExecutionHandler;
 import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
-import com.github.anilganipineni.scheduler.task.schedule.Schedule;
 
 /**
  * @author akganipineni

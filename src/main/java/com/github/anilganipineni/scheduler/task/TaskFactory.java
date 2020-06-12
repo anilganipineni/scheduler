@@ -15,7 +15,7 @@
  */
 package com.github.anilganipineni.scheduler.task;
 
-import com.github.anilganipineni.scheduler.task.schedule.Schedule;
+import com.github.anilganipineni.scheduler.schedule.Schedule;
 
 /**
  * @author akganipineni
