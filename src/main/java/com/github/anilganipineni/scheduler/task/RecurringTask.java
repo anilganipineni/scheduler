@@ -33,6 +33,21 @@ public abstract class RecurringTask extends Task {
 		super(name, failureHandler, deadExecutionHandler);
 	}
     /**
+     * @param name
+     * @param schedule
+     */
+    public RecurringTask(String name, Schedule schedule) {
+    	this(name, schedule, null);
+    }
+    /**
+     * @param name
+     * @param schedule
+     * @param initialData
+     */
+    public RecurringTask(String name, Schedule schedule, Object initialData) {
+    	this(name, new FailureHandler.OnFailureReschedule(schedule), new DeadExecutionHandler.ReviveDeadExecution(), schedule, INSTANCE, initialData);
+    }
+    /**
 	 * @param name
 	 * @param failureHandler
 	 * @param deadExecutionHandler

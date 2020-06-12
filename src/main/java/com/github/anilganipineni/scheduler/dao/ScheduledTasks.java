@@ -36,10 +36,17 @@ public final class ScheduledTasks {
     public  Instant lastFailure;
     public  Instant lastSuccess;
     /**
+	 * @param taskName
+	 * @param id
+	 */
+	public ScheduledTasks(String taskName, String id) {
+		this.taskName = taskName;
+		this.id = id;
+	}
+    /**
 	 * @param executionTime
 	 * @param taskName
 	 * @param id
-	 * @param taskData
 	 */
 	public ScheduledTasks(Instant executionTime, String taskName, String id) {
 		this.executionTime = executionTime;

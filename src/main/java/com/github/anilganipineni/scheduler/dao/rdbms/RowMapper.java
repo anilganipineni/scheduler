@@ -1,5 +1,5 @@
 /**
- * Copyright (C) Anil Ganipineni
+ * Copyright (C) Gustav Karlsson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,27 +15,11 @@
  */
 package com.github.anilganipineni.scheduler.dao.rdbms;
 
-import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/**
- * @author akganipineni
- */
-public interface PreparedStatementSetter {
-	/**
-	 * @param preparedStatement
-	 * @throws SQLException
-	 */
-	public void setParameters(PreparedStatement preparedStatement) throws SQLException;
-	/**
-	 * 
-	 */
-	public static final PreparedStatementSetter NOOP = new PreparedStatementSetter() {
-		/**
-		 * @see com.github.anilganipineni.scheduler.dao.rdbms.PreparedStatementSetter#setParameters(java.sql.PreparedStatement)
-		 */
-		@Override
-		public void setParameters(PreparedStatement preparedStatement) throws SQLException {
-		}
-	};
+public interface RowMapper<T> {
+
+	T map(ResultSet rs) throws SQLException;
+
 }

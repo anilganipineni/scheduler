@@ -20,6 +20,7 @@ import static com.github.anilganipineni.scheduler.ExecutorUtils.defaultThreadFac
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.anilganipineni.scheduler.SchedulerState.SettableSchedulerState;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.exception.SchedulerException;
 import com.github.anilganipineni.scheduler.stats.StatsRegistry;
@@ -399,5 +401,21 @@ public class Scheduler implements SchedulerClient {
             }
         }
 
+    }
+    /**
+     * @param dataSource
+     * @param knownTasks
+     * @return
+     */
+    public static SchedulerBuilder create(SchedulerDataSource dataSource, Task ... knownTasks) {
+        return create(dataSource, Arrays.asList(knownTasks));
+    }
+    /**
+     * @param dataSource
+     * @param knownTasks
+     * @return
+     */
+    public static SchedulerBuilder create(SchedulerDataSource dataSource, List<Task> knownTasks) {
+        return new SchedulerBuilder(dataSource, knownTasks);
     }
 }

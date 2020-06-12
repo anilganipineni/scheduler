@@ -8,7 +8,6 @@ import com.datastax.driver.core.CodecRegistry;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SocketOptions;
 import com.datastax.driver.extras.codecs.jdk8.InstantCodec;
-import com.datastax.driver.mapping.MappingManager;
 import com.github.anilganipineni.scheduler.dao.CassandraDataSource;
 
 /**
@@ -43,10 +42,6 @@ public class DataSourceCassandra implements CassandraDataSource {
 	 * The singleton session for the whole application
 	 */
 	private Session m_session = null;
-	/**
-	 * The singleton MappingManager for the whole application
-	 */
-	private MappingManager m_mappingManager = null;
 	/**
 	 * Default Constructor
 	 */
@@ -93,12 +88,6 @@ public class DataSourceCassandra implements CassandraDataSource {
 			}
 			logger.info("Created Cassandra session successfully.........................");
 			
-			m_mappingManager = new MappingManager(m_session);
-			if(m_mappingManager == null) {
-				 throw new IllegalStateException("Failed to create Mapping Manager!");
-			}
-			logger.info("Created Cassandra Mapping Manager successfully.........................");
-			
 		} catch(Exception e) {
 			logger.error("Either Cassandra is not running or Session is not initilised properly!", e);
 			 throw new IllegalStateException("Either Cassandra is not running or Session is not initilised properly!");
@@ -133,12 +122,5 @@ public class DataSourceCassandra implements CassandraDataSource {
 				cluster.close();
 			}
 		}
-	}
-	/**
-	 * @see com.github.anilganipineni.scheduler.dao.CassandraDataSource#getMappingManager()
-	 */
-	@Override
-	public MappingManager getMappingManager() {
-		return m_mappingManager;
 	}
 }

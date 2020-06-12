@@ -21,7 +21,7 @@ import com.github.anilganipineni.scheduler.testhelper.DataSourceCassandra;
 /**
  * @author akganipineni
  */
-public class JdbcResultSetMapper implements ResultSetMapper<List<ScheduledTasks>> {
+public class ScheduledTasksMapper implements ResultSetMapper<List<ScheduledTasks>> {
     /**
      * The <code>Logger</code> instance for this class.
      */
@@ -32,7 +32,7 @@ public class JdbcResultSetMapper implements ResultSetMapper<List<ScheduledTasks>
 	 * @param taskResolver
 	 * @param serializer
 	 */
-	public JdbcResultSetMapper(TaskResolver taskResolver, Serializer serializer) {
+	public ScheduledTasksMapper(TaskResolver taskResolver, Serializer serializer) {
 		this.taskResolver = taskResolver;
 		this.serializer = serializer;
 	}

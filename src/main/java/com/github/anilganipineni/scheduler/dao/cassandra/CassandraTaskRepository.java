@@ -36,6 +36,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.exceptions.DriverException;
 import com.datastax.driver.mapping.Mapper;
+import com.datastax.driver.mapping.MappingManager;
 import com.datastax.driver.mapping.Result;
 import com.github.anilganipineni.scheduler.JsonUtils;
 import com.github.anilganipineni.scheduler.SchedulerName;
@@ -69,6 +70,10 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
     private final TaskResolver taskResolver;
     private final SchedulerName schedulerSchedulerName;
 	/**
+	 * The singleton MappingManager for the whole application
+	 */
+	private MappingManager m_mappingManager = null;
+	/**
 	 * @param dataSource
 	 * @param taskResolver
 	 * @param schedulerSchedulerName
@@ -77,6 +82,12 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 		this.dataSource = dataSource;
         this.taskResolver = taskResolver;
         this.schedulerSchedulerName = schedulerSchedulerName;
+        
+        m_mappingManager = new MappingManager(dataSource.getSession());
+		if(m_mappingManager == null) {
+			 throw new IllegalStateException("Failed to create Mapping Manager!");
+		}
+		logger.info("Created Cassandra Mapping Manager successfully.........................");
 	}
 	/**
 	 * @param query
@@ -91,7 +102,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	 * @return
 	 */
 	private <E> Mapper<E> getMapper(Class<E> entityType) {
-		return dataSource.getMappingManager().mapper(entityType);
+		return m_mappingManager.mapper(entityType);
 	}
 	/**
 	 * @param sqlQuery

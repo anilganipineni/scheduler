@@ -54,18 +54,29 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     private final SchedulerName schedulerSchedulerName;
     private final JdbcRunner jdbcRunner;
     private final Serializer serializer;
-
+    /**
+     * @param dataSource
+     * @param taskResolver
+     * @param schedulerSchedulerName
+     */
     public JdbcTaskRepository(DataSource dataSource, TaskResolver taskResolver, SchedulerName schedulerSchedulerName) {
         this(dataSource, taskResolver, schedulerSchedulerName, Serializer.DEFAULT_JAVA_SERIALIZER);
     }
-
+    /**
+     * @param dataSource
+     * @param taskResolver
+     * @param schedulerSchedulerName
+     * @param serializer
+     */
     public JdbcTaskRepository(DataSource dataSource, TaskResolver taskResolver, SchedulerName schedulerSchedulerName, Serializer serializer) {
         this.taskResolver = taskResolver;
         this.schedulerSchedulerName = schedulerSchedulerName;
         this.jdbcRunner = new JdbcRunner(dataSource);
         this.serializer = serializer;
     }
-
+    /**
+     * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#createIfNotExists(java.lang.Object)
+     */
     @Override
     public boolean createIfNotExists(ScheduledTasks execution) {
         try {
@@ -97,7 +108,9 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
             return false;
         }
     }
-
+    /**
+     * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#getScheduledExecutions(java.util.function.Consumer)
+     */
     @Override
     public void getScheduledExecutions(Consumer<ScheduledTasks> consumer) {
         UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
@@ -108,13 +121,16 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     p.setBoolean(index++, false);
                     unresolvedFilter.setParameters(p, index);
                 },
-                new JdbcResultSetMapper(taskResolver, serializer)
+                new ScheduledTasksMapper(taskResolver, serializer)
         );
     	for(ScheduledTasks t : tasks) {
     		consumer.accept(t);
     	}
     }
-
+	/**
+	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#getScheduledExecutions(java.lang.String,
+	 *      java.util.function.Consumer)
+	 */
     @Override
     public void getScheduledExecutions(String taskName, Consumer<ScheduledTasks> consumer) {
     	List<ScheduledTasks> tasks = jdbcRunner.execute(
@@ -123,7 +139,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     p.setBoolean(1, false);
                     p.setString(2, taskName);
                 },
-                new JdbcResultSetMapper(taskResolver, serializer)
+                new ScheduledTasksMapper(taskResolver, serializer)
         );
     	for(ScheduledTasks t : tasks) {
     		consumer.accept(t);
@@ -143,7 +159,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     unresolvedFilter.setParameters(p, index);
                     p.setMaxRows(limit);
                 },
-                new JdbcResultSetMapper(taskResolver, serializer)
+                new ScheduledTasksMapper(taskResolver, serializer)
         );
     }
 
@@ -272,7 +288,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     p.setTimestamp(index++, Timestamp.from(olderThan));
                     unresolvedFilter.setParameters(p, index);
                 },
-                new JdbcResultSetMapper(taskResolver, serializer)
+                new ScheduledTasksMapper(taskResolver, serializer)
         );
     }
 
@@ -314,7 +330,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     p.setTimestamp(index++, Timestamp.from(Instant.now().minus(interval)));
                     unresolvedFilter.setParameters(p, index);
                 },
-                new JdbcResultSetMapper(taskResolver, serializer)
+                new ScheduledTasksMapper(taskResolver, serializer)
         );
     }
 
@@ -336,7 +352,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     p.setString(1, taskName);
                     p.setString(2, taskInstanceId);
                 },
-                new JdbcResultSetMapper(taskResolver, serializer)
+                new ScheduledTasksMapper(taskResolver, serializer)
         );
         
         if (executions.size() > 1) {

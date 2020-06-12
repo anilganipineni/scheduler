@@ -97,6 +97,13 @@ public abstract class Task implements ExecutionHandler {
 	}
 	/**
 	 * @param id
+	 * @return
+	 */
+	public ScheduledTasks instance(String id) {
+        return new ScheduledTasks(null, this.name, id);
+    }
+	/**
+	 * @param id
 	 * @param data
 	 * @return
 	 */
