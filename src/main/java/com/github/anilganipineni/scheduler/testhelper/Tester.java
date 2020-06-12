@@ -23,7 +23,7 @@ public class Tester {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		startScheduler(new DataSourceScheduler());
+		startScheduler(new SchedulerDataSourceImpl());
 	}
 	/**
 	 * 

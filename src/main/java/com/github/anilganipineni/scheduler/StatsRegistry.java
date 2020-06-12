@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.stats;
+package com.github.anilganipineni.scheduler;
 
 import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
 

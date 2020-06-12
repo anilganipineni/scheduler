@@ -13,18 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task;
+package com.github.anilganipineni.scheduler.task.handler;
 
-import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionOperations;
+import com.github.anilganipineni.scheduler.Clock;
+import com.github.anilganipineni.scheduler.Scheduler;
+import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
 
 /**
  * @author akganipineni
  */
-public interface CompletionHandler {
+public interface ExecutionHandler {
 	/**
-	 * @param executionComplete
-	 * @param executionOperations
+	 * @param scheduler
+	 * @param clock
 	 */
-	public void complete(ExecutionComplete executionComplete, ExecutionOperations executionOperations);
+	public void onStartup(Scheduler scheduler, Clock clock);
+    /**
+     * @param task
+     * @param context
+     * @return
+     */
+    public CompletionHandler execute(ScheduledTasks task, ExecutionContext context);
 }

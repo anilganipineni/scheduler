@@ -13,11 +13,11 @@ import com.github.anilganipineni.scheduler.dao.CassandraDataSource;
 /**
  * @author akganipineni
  */
-public class DataSourceCassandra implements CassandraDataSource {
+public class CassandraDataSourceImpl implements CassandraDataSource {
     /**
      * The <code>Logger</code> instance for this class.
      */
-	private static Logger logger = LogManager.getLogger(DataSourceCassandra.class);
+	private static Logger logger = LogManager.getLogger(CassandraDataSourceImpl.class);
 	/**
 	 * The <code>readtimeout</code> which should be more than read_request_timeout_in_ms specified
 	 * in cassandra.yaml. The default is of 12 seconds so as to be slightly bigger that the 
@@ -45,7 +45,7 @@ public class DataSourceCassandra implements CassandraDataSource {
 	/**
 	 * Default Constructor
 	 */
-	public DataSourceCassandra() {
+	public CassandraDataSourceImpl() {
 		/* NO-OP */
 	}
 	/**
@@ -53,7 +53,7 @@ public class DataSourceCassandra implements CassandraDataSource {
 	 * @param port
 	 * @param keySpace
 	 */
-	public DataSourceCassandra(String server, Integer port, String keySpace) {
+	public CassandraDataSourceImpl(String server, Integer port, String keySpace) {
 		m_server = server;
 		m_port = port;
 		m_keySpace = keySpace;

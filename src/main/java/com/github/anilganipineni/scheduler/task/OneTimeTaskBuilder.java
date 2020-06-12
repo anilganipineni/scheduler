@@ -5,6 +5,7 @@ import java.time.Duration;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler;
 import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
+import com.github.anilganipineni.scheduler.task.handler.OnFailureRetryLater;
 import com.github.anilganipineni.scheduler.task.handler.VoidExecutionHandler;
 import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
 
@@ -20,11 +21,11 @@ public class OneTimeTaskBuilder {
     public OneTimeTaskBuilder(String name) {
         this.name = name;
         this.onDeadExecution = new DeadExecutionHandler.ReviveDeadExecution();
-        this.onFailure = new FailureHandler.OnFailureRetryLater(DEFAULT_RETRY_INTERVAL);
+        this.onFailure = new OnFailureRetryLater(DEFAULT_RETRY_INTERVAL);
     }
 
     public OneTimeTaskBuilder onFailureRetryLater() {
-        this.onFailure = new FailureHandler.OnFailureRetryLater(DEFAULT_RETRY_INTERVAL);
+        this.onFailure = new OnFailureRetryLater(DEFAULT_RETRY_INTERVAL);
         return this;
     }
 

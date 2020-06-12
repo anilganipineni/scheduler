@@ -18,6 +18,9 @@ package com.github.anilganipineni.scheduler.task.handler;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
 
+/**
+ * @author akganipineni
+ */
 public interface VoidExecutionHandler {
-    void execute(ScheduledTasks taskInstance, ExecutionContext executionContext);
+    void execute(ScheduledTasks task, ExecutionContext ctx);
 }

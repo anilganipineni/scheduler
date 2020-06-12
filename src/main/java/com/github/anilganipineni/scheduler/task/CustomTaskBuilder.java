@@ -3,8 +3,12 @@ package com.github.anilganipineni.scheduler.task;
 import java.time.Duration;
 
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+import com.github.anilganipineni.scheduler.task.handler.CompletionHandler;
 import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler;
+import com.github.anilganipineni.scheduler.task.handler.ExecutionHandler;
 import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
+import com.github.anilganipineni.scheduler.task.handler.OnFailureReschedule;
+import com.github.anilganipineni.scheduler.task.handler.OnFailureRetryLater;
 import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
 import com.github.anilganipineni.scheduler.task.schedule.Schedule;
 
@@ -22,14 +26,14 @@ public class CustomTaskBuilder {
     public CustomTaskBuilder(String name) {
         this.name = name;
         this.onDeadExecution = new DeadExecutionHandler.ReviveDeadExecution();
-        this.onFailure = new FailureHandler.OnFailureRetryLater(DEFAULT_RETRY_INTERVAL);
+        this.onFailure = new OnFailureRetryLater(DEFAULT_RETRY_INTERVAL);
     }
     /**
      * @param schedule
      * @return
      */
     public CustomTaskBuilder onFailureReschedule(Schedule schedule) {
-        this.onFailure = new FailureHandler.OnFailureReschedule(schedule);
+        this.onFailure = new OnFailureReschedule(schedule);
         return this;
     }
     /**

@@ -39,7 +39,7 @@ import com.github.anilganipineni.scheduler.UnresolvedTask;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.exception.SQLRuntimeException;
-import com.github.anilganipineni.scheduler.testhelper.DataSourceCassandra;
+import com.github.anilganipineni.scheduler.testhelper.CassandraDataSourceImpl;
 
 /**
  * @author akganipineni
@@ -48,7 +48,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     /**
      * The <code>Logger</code> instance for this class.
      */
-	private static final Logger logger = LogManager.getLogger(DataSourceCassandra.class);
+	private static final Logger logger = LogManager.getLogger(CassandraDataSourceImpl.class);
     private final String tableName = TABLE_NAME;
     private final TaskResolver taskResolver;
     private final SchedulerName schedulerSchedulerName;

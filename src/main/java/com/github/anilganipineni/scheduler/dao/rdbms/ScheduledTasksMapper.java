@@ -16,7 +16,7 @@ import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.task.Task;
-import com.github.anilganipineni.scheduler.testhelper.DataSourceCassandra;
+import com.github.anilganipineni.scheduler.testhelper.CassandraDataSourceImpl;
 
 /**
  * @author akganipineni
@@ -25,7 +25,7 @@ public class ScheduledTasksMapper implements ResultSetMapper<List<ScheduledTasks
     /**
      * The <code>Logger</code> instance for this class.
      */
-	private static final Logger logger = LogManager.getLogger(DataSourceCassandra.class);
+	private static final Logger logger = LogManager.getLogger(CassandraDataSourceImpl.class);
     private final TaskResolver taskResolver;
     private final Serializer serializer;
 	/**

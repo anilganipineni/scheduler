@@ -1,6 +1,5 @@
 package com.github.anilganipineni.scheduler.task.handler;
 
-import com.github.anilganipineni.scheduler.task.CompletionHandler;
 import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
 import com.github.anilganipineni.scheduler.task.helper.ExecutionOperations;
 
@@ -9,7 +8,7 @@ import com.github.anilganipineni.scheduler.task.helper.ExecutionOperations;
  */
 public class OnCompleteRemove implements CompletionHandler {
 	/**
-	 * @see com.github.anilganipineni.scheduler.task.CompletionHandler#complete(com.github.anilganipineni.scheduler.task.helper.ExecutionComplete,
+	 * @see com.github.anilganipineni.scheduler.task.handler.CompletionHandler#complete(com.github.anilganipineni.scheduler.task.helper.ExecutionComplete,
 	 *      com.github.anilganipineni.scheduler.task.helper.ExecutionOperations)
 	 */
 	@Override

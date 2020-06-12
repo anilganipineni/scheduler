@@ -13,7 +13,7 @@ import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 /**
  * @author akganipineni
  */
-public class DataSourceScheduler implements SchedulerDataSource {
+public class SchedulerDataSourceImpl implements SchedulerDataSource {
 	private static final String RDBMS_DRIVER	= "com.mysql.jdbc.Driver";
 	private static final String RDBMS_URL		= "jdbc:mysql://localhost:3306/gstwrapper?useSSL=false";
 	private static final String RDBMS_USER		= "root";
@@ -23,7 +23,7 @@ public class DataSourceScheduler implements SchedulerDataSource {
 	 */
 	@Override
 	public DataSourceType dataSourceType() {
-		return DataSourceType.RDBMS; // FIXME
+		return DataSourceType.RDBMS;
 	}
 	/**
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerDataSource#rdbmsDataSource()
@@ -37,7 +37,7 @@ public class DataSourceScheduler implements SchedulerDataSource {
 	 */
 	@Override
 	public CassandraDataSource cassandraDataSource() {
-		return new DataSourceCassandra();
+		return new CassandraDataSourceImpl();
 	}
     /**
      * @return

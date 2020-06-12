@@ -19,16 +19,34 @@ import java.time.Instant;
 
 import com.github.anilganipineni.scheduler.Clock;
 
+/**
+ * @author akganipineni
+ */
 public class SettableClock implements Clock {
-
     public Instant now = Instant.now();
-
+    /**
+     * @see com.github.anilganipineni.scheduler.Clock#now()
+     */
     @Override
     public Instant now() {
-        return now;
+        return getNow();
     }
-
+    /**
+     * @param newNow
+     */
     public void set(Instant newNow) {
-        this.now = newNow;
+    	setNow(newNow);
     }
+	/**
+	 * @return the now
+	 */
+	public Instant getNow() {
+		return now;
+	}
+	/**
+	 * @param now the now to set
+	 */
+	public void setNow(Instant now) {
+		this.now = now;
+	}
 }

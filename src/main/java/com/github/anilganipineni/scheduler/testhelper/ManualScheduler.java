@@ -20,23 +20,29 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.SchedulerName;
+import com.github.anilganipineni.scheduler.StatsRegistry;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.Waiter;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
-import com.github.anilganipineni.scheduler.stats.StatsRegistry;
 import com.github.anilganipineni.scheduler.task.Task;
 
+/**
+ * @author akganipineni
+ */
 public class ManualScheduler extends Scheduler {
-    private static final Logger LOG = LoggerFactory.getLogger(ManualScheduler.class);
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(ManualScheduler.class);
     private final SettableClock clock;
 
-    ManualScheduler(SettableClock clock, SchedulerRepository<ScheduledTasks> taskRepository, TaskResolver taskResolver, int maxThreads, ExecutorService executorService, SchedulerName schedulerName, Waiter waiter, Duration heartbeatInterval, boolean executeImmediately, StatsRegistry statsRegistry, int pollingLimit, Duration deleteUnresolvedAfter, List<Task> onStartup) {
+    public ManualScheduler(SettableClock clock, SchedulerRepository<ScheduledTasks> taskRepository, TaskResolver taskResolver, int maxThreads, ExecutorService executorService, SchedulerName schedulerName, Waiter waiter, Duration heartbeatInterval, boolean executeImmediately, StatsRegistry statsRegistry, int pollingLimit, Duration deleteUnresolvedAfter, List<Task> onStartup) {
         super(clock, taskRepository, taskResolver, maxThreads, executorService, schedulerName, waiter, heartbeatInterval, executeImmediately, statsRegistry, pollingLimit, deleteUnresolvedAfter, onStartup);
         this.clock = clock;
     }
@@ -63,7 +69,7 @@ public class ManualScheduler extends Scheduler {
 
 
     public void start() {
-        LOG.info("Starting manual scheduler. Executing on-startup tasks.");
+        logger.info("Starting manual scheduler. Executing on-startup tasks.");
         executeOnStartup();
     }
 

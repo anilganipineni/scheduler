@@ -19,6 +19,7 @@ import com.github.anilganipineni.scheduler.Clock;
 import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler;
+import com.github.anilganipineni.scheduler.task.handler.ExecutionHandler;
 import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
 import com.github.anilganipineni.scheduler.task.schedule.Schedule;
 
@@ -118,7 +119,7 @@ public abstract class Task implements ExecutionHandler {
         return "Task = " + getName();
     }
 	/**
-	 * @see com.github.anilganipineni.scheduler.task.ExecutionHandler#onStartup(com.github.anilganipineni.scheduler.Scheduler,
+	 * @see com.github.anilganipineni.scheduler.task.handler.ExecutionHandler#onStartup(com.github.anilganipineni.scheduler.Scheduler,
 	 *      com.github.anilganipineni.scheduler.Clock)
 	 */
 	@Override

@@ -18,8 +18,6 @@ package com.github.anilganipineni.scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.anilganipineni.scheduler.stats.StatsRegistry;
-
 public class RunUntilShutdown implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(RunUntilShutdown.class);
     private final Runnable toRun;

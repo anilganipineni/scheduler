@@ -17,8 +17,8 @@ package com.github.anilganipineni.scheduler.task.handler;
 
 import java.time.Instant;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
 import com.github.anilganipineni.scheduler.task.helper.ExecutionOperations;
@@ -27,26 +27,27 @@ import com.github.anilganipineni.scheduler.task.schedule.Schedule;
 /**
  * @author akganipineni
  */
-public class OnCompleteReschedule implements CompletionHandler {
+public class OnFailureReschedule implements FailureHandler {
+
+    private static final Logger LOG = LoggerFactory.getLogger(FailureHandler.class);
     /**
-     * The <code>Logger</code> instance for this class.
+     * 
      */
-	private static final Logger logger = LogManager.getLogger(OnCompleteReschedule.class);
     private final Schedule schedule;
-	/**
-	 * @param schedule
-	 */
-	public OnCompleteReschedule(Schedule schedule) {
-		this.schedule = schedule;
-	}
-	/**
-	 * @see com.github.anilganipineni.scheduler.task.handler.CompletionHandler#complete(com.github.anilganipineni.scheduler.task.helper.ExecutionComplete,
+    /**
+     * @param schedule
+     */
+    public OnFailureReschedule(Schedule schedule) {
+        this.schedule = schedule;
+    }
+    /**
+	 * @see com.github.anilganipineni.scheduler.task.handler.FailureHandler#onFailure(com.github.anilganipineni.scheduler.task.helper.ExecutionComplete,
 	 *      com.github.anilganipineni.scheduler.task.helper.ExecutionOperations)
 	 */
-	@Override
-	public void complete(ExecutionComplete executionComplete, ExecutionOperations executionOperations) {
+    @Override
+    public void onFailure(ExecutionComplete executionComplete, ExecutionOperations executionOperations) {
         Instant nextExecution = schedule.getNextExecutionTime(executionComplete);
-        logger.debug("Rescheduling task {} to {}", executionComplete.getExecution(), nextExecution);
-        executionOperations.reschedule(executionComplete, nextExecution);	
-	}
+        LOG.debug("ScheduledTasks failed. Rescheduling task {} to {}", executionComplete.getExecution(), nextExecution);
+        executionOperations.reschedule(executionComplete, nextExecution);
+    }
 }
