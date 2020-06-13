@@ -1,4 +1,4 @@
-package com.github.anilganipineni.scheduler.dao.rdbms;
+package com.github.anilganipineni.scheduler.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.TaskResolver;
-import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.task.Task;
 import com.github.anilganipineni.scheduler.testhelper.CassandraDataSourceImpl;
 
@@ -37,7 +36,7 @@ public class ScheduledTasksMapper implements ResultSetMapper<List<ScheduledTasks
 		this.serializer = serializer;
 	}
 	/**
-	 * @see com.github.anilganipineni.scheduler.dao.rdbms.ResultSetMapper#map(java.sql.ResultSet)
+	 * @see com.github.anilganipineni.scheduler.dao.ResultSetMapper#map(java.sql.ResultSet)
 	 */
 	@SuppressWarnings("rawtypes") // FIXME --> @SuppressWarnings("rawtypes")
 	@Override

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.dao.rdbms;
+package com.github.anilganipineni.scheduler.dao;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -32,7 +32,7 @@ public interface PreparedStatementSetter {
 	 */
 	public static final PreparedStatementSetter NOOP = new PreparedStatementSetter() {
 		/**
-		 * @see com.github.anilganipineni.scheduler.dao.rdbms.PreparedStatementSetter#setParameters(java.sql.PreparedStatement)
+		 * @see com.github.anilganipineni.scheduler.dao.PreparedStatementSetter#setParameters(java.sql.PreparedStatement)
 		 */
 		@Override
 		public void setParameters(PreparedStatement preparedStatement) throws SQLException {

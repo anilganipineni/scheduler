@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.dao.rdbms;
+package com.github.anilganipineni.scheduler.dao;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -36,8 +36,6 @@ import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.StringUtils;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.UnresolvedTask;
-import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
-import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.exception.SQLRuntimeException;
 
 /**

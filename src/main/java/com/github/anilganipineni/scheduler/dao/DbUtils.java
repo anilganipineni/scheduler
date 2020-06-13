@@ -18,8 +18,6 @@ package com.github.anilganipineni.scheduler.dao;
 import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.TaskResolver;
-import com.github.anilganipineni.scheduler.dao.cassandra.CassandraTaskRepository;
-import com.github.anilganipineni.scheduler.dao.rdbms.JdbcTaskRepository;
 
 /**
  * @author akganipineni

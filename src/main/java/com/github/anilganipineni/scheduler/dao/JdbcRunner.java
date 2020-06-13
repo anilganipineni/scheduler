@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.dao.rdbms;
+package com.github.anilganipineni.scheduler.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -140,7 +140,7 @@ public class JdbcRunner {
 	 */
 	private class AfterExecutionImpl1 implements AfterExecution<Integer> {
 		/**
-		 * @see com.github.anilganipineni.scheduler.dao.rdbms.JdbcRunner.AfterExecution#doAfterExecution(java.sql.PreparedStatement)
+		 * @see com.github.anilganipineni.scheduler.dao.JdbcRunner.AfterExecution#doAfterExecution(java.sql.PreparedStatement)
 		 */
 		@Override
 		public Integer doAfterExecution(PreparedStatement ps) throws SQLException {
@@ -160,7 +160,7 @@ public class JdbcRunner {
 		}
 
 		/**
-		 * @see com.github.anilganipineni.scheduler.dao.rdbms.JdbcRunner.AfterExecution#doAfterExecution(java.sql.PreparedStatement)
+		 * @see com.github.anilganipineni.scheduler.dao.JdbcRunner.AfterExecution#doAfterExecution(java.sql.PreparedStatement)
 		 */
 		@Override
 		public T doAfterExecution(PreparedStatement ps) throws SQLException {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.dao.cassandra;
+package com.github.anilganipineni.scheduler.dao;
 
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -43,9 +43,6 @@ import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.StringUtils;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.UnresolvedTask;
-import com.github.anilganipineni.scheduler.dao.CassandraDataSource;
-import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
-import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.exception.SchedulerException;
 
 /**
