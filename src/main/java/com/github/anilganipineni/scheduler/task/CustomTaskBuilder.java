@@ -2,6 +2,7 @@ package com.github.anilganipineni.scheduler.task;
 
 import java.time.Duration;
 
+import com.github.anilganipineni.scheduler.ExecutionContext;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.schedule.Schedule;
 import com.github.anilganipineni.scheduler.task.handler.CompletionHandler;
@@ -10,7 +11,7 @@ import com.github.anilganipineni.scheduler.task.handler.ExecutionHandler;
 import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
 import com.github.anilganipineni.scheduler.task.handler.OnFailureReschedule;
 import com.github.anilganipineni.scheduler.task.handler.OnFailureRetryLater;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
+import com.github.anilganipineni.scheduler.task.handler.ReviveDeadExecution;
 
 /**
  * @author akganipineni
@@ -25,7 +26,7 @@ public class CustomTaskBuilder {
      */
     public CustomTaskBuilder(String name) {
         this.name = name;
-        this.onDeadExecution = new DeadExecutionHandler.ReviveDeadExecution();
+        this.onDeadExecution = new ReviveDeadExecution();
         this.onFailure = new OnFailureRetryLater(DEFAULT_RETRY_INTERVAL);
     }
     /**
@@ -40,7 +41,7 @@ public class CustomTaskBuilder {
      * @return
      */
     public CustomTaskBuilder onDeadExecutionRevive() {
-        this.onDeadExecution = new DeadExecutionHandler.ReviveDeadExecution();
+        this.onDeadExecution = new ReviveDeadExecution();
         return this;
     }
     /**

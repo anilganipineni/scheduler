@@ -21,8 +21,8 @@ import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionOperations;
+import com.github.anilganipineni.scheduler.ExecutionComplete;
+import com.github.anilganipineni.scheduler.ExecutionOperations;
 
 /**
  * TODO: Failure handler with backoff: if (isFailing(.)) then nextTry = 2* duration_from_first_failure (minimum 1m, max 1d)

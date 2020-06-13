@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task.helper;
+package com.github.anilganipineni.scheduler;
 
 import java.time.Instant;
 import java.util.function.Function;
 
-import com.github.anilganipineni.scheduler.Clock;
-import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.task.Task;
 
 public class ScheduleOnStartup {

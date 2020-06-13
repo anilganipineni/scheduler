@@ -15,8 +15,8 @@
  */
 package com.github.anilganipineni.scheduler.task.handler;
 
+import com.github.anilganipineni.scheduler.ExecutionContext;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
 
 /**
  * @author akganipineni

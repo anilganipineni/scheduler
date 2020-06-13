@@ -20,9 +20,9 @@ import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.anilganipineni.scheduler.ExecutionComplete;
+import com.github.anilganipineni.scheduler.ExecutionOperations;
 import com.github.anilganipineni.scheduler.schedule.Schedule;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionOperations;
 
 /**
  * @author akganipineni
@@ -41,8 +41,8 @@ public class OnFailureReschedule implements FailureHandler {
         this.schedule = schedule;
     }
     /**
-	 * @see com.github.anilganipineni.scheduler.task.handler.FailureHandler#onFailure(com.github.anilganipineni.scheduler.task.helper.ExecutionComplete,
-	 *      com.github.anilganipineni.scheduler.task.helper.ExecutionOperations)
+	 * @see com.github.anilganipineni.scheduler.task.handler.FailureHandler#onFailure(com.github.anilganipineni.scheduler.ExecutionComplete,
+	 *      com.github.anilganipineni.scheduler.ExecutionOperations)
 	 */
     @Override
     public void onFailure(ExecutionComplete executionComplete, ExecutionOperations executionOperations) {

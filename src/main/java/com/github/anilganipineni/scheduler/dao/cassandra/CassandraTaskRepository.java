@@ -68,7 +68,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	private Map<String, PreparedStatement> preparedStatementCache = new HashMap<String, PreparedStatement>();
 	private CassandraDataSource dataSource = null;
     private final TaskResolver taskResolver;
-    private final SchedulerName schedulerSchedulerName;
+    private final SchedulerName schedulerName;
 	/**
 	 * The singleton MappingManager for the whole application
 	 */
@@ -76,12 +76,12 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	/**
 	 * @param dataSource
 	 * @param taskResolver
-	 * @param schedulerSchedulerName
+	 * @param schedulerName
 	 */
-	public CassandraTaskRepository(CassandraDataSource dataSource, TaskResolver taskResolver, SchedulerName schedulerSchedulerName) {
+	public CassandraTaskRepository(CassandraDataSource dataSource, TaskResolver taskResolver, SchedulerName schedulerName) {
 		this.dataSource = dataSource;
         this.taskResolver = taskResolver;
-        this.schedulerSchedulerName = schedulerSchedulerName;
+        this.schedulerName = schedulerName;
         
         m_mappingManager = new MappingManager(dataSource.getSession());
 		if(m_mappingManager == null) {
@@ -377,7 +377,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 		int updated = 0;
 		String cql = UPDATE + " set picked = ?, picked_by = ?, last_heartbeat = ?, version = ? " + WHERE_PK_CK; /*" + and picked = ? "*/;
 		
-		ResultSet rs = execute(cql, true, StringUtils.truncate(schedulerSchedulerName.getName(), 50), Timestamp.from(timePicked), e.version + 1, false, e.getTaskName(), e.getId(), e.version);
+		ResultSet rs = execute(cql, true, StringUtils.truncate(schedulerName.getName(), 50), Timestamp.from(timePicked), e.version + 1, false, e.getTaskName(), e.getId(), e.version);
 		updated = rs.getAvailableWithoutFetching();
 
         if (updated == 0) {

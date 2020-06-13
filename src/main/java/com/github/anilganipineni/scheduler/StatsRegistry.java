@@ -15,8 +15,6 @@
  */
 package com.github.anilganipineni.scheduler;
 
-import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
-
 public interface StatsRegistry {
 
     enum SchedulerStatsEvent {

@@ -15,6 +15,7 @@
  */
 package com.github.anilganipineni.scheduler.task;
 
+import com.github.anilganipineni.scheduler.ExecutionContext;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.schedule.Schedule;
 import com.github.anilganipineni.scheduler.task.handler.CompletionHandler;
@@ -22,7 +23,7 @@ import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler;
 import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
 import com.github.anilganipineni.scheduler.task.handler.OnCompleteReschedule;
 import com.github.anilganipineni.scheduler.task.handler.OnFailureReschedule;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
+import com.github.anilganipineni.scheduler.task.handler.ReviveDeadExecution;
 
 public abstract class RecurringTask extends Task {
     public static final String INSTANCE = "recurring";
@@ -47,7 +48,7 @@ public abstract class RecurringTask extends Task {
      * @param initialData
      */
     public RecurringTask(String name, Schedule schedule, Object initialData) {
-    	this(name, new OnFailureReschedule(schedule), new DeadExecutionHandler.ReviveDeadExecution(), schedule, INSTANCE, initialData);
+    	this(name, new OnFailureReschedule(schedule), new ReviveDeadExecution(), schedule, INSTANCE, initialData);
     }
     /**
 	 * @param name
@@ -71,7 +72,7 @@ public abstract class RecurringTask extends Task {
 	}
 	/**
 	 * @see com.github.anilganipineni.scheduler.task.handler.ExecutionHandler#execute(com.github.anilganipineni.scheduler.dao.ScheduledTasks,
-	 *      com.github.anilganipineni.scheduler.task.helper.ExecutionContext)
+	 *      com.github.anilganipineni.scheduler.ExecutionContext)
 	 */
 	@Override
 	public final CompletionHandler execute(ScheduledTasks task, ExecutionContext context) {

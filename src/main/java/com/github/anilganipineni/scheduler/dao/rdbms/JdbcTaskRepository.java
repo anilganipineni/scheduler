@@ -39,7 +39,6 @@ import com.github.anilganipineni.scheduler.UnresolvedTask;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.exception.SQLRuntimeException;
-import com.github.anilganipineni.scheduler.testhelper.CassandraDataSourceImpl;
 
 /**
  * @author akganipineni
@@ -48,29 +47,28 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     /**
      * The <code>Logger</code> instance for this class.
      */
-	private static final Logger logger = LogManager.getLogger(CassandraDataSourceImpl.class);
-    private final String tableName = TABLE_NAME;
+	private static final Logger logger = LogManager.getLogger(JdbcTaskRepository.class);
     private final TaskResolver taskResolver;
-    private final SchedulerName schedulerSchedulerName;
+    private final SchedulerName schedulerName;
     private final JdbcRunner jdbcRunner;
     private final Serializer serializer;
     /**
      * @param dataSource
      * @param taskResolver
-     * @param schedulerSchedulerName
+     * @param schedulerName
      */
-    public JdbcTaskRepository(DataSource dataSource, TaskResolver taskResolver, SchedulerName schedulerSchedulerName) {
-        this(dataSource, taskResolver, schedulerSchedulerName, Serializer.DEFAULT_JAVA_SERIALIZER);
+    public JdbcTaskRepository(DataSource dataSource, TaskResolver taskResolver, SchedulerName schedulerName) {
+        this(dataSource, taskResolver, schedulerName, Serializer.DEFAULT_JAVA_SERIALIZER);
     }
     /**
      * @param dataSource
      * @param taskResolver
-     * @param schedulerSchedulerName
+     * @param schedulerName
      * @param serializer
      */
-    public JdbcTaskRepository(DataSource dataSource, TaskResolver taskResolver, SchedulerName schedulerSchedulerName, Serializer serializer) {
+    public JdbcTaskRepository(DataSource dataSource, TaskResolver taskResolver, SchedulerName schedulerName, Serializer serializer) {
         this.taskResolver = taskResolver;
-        this.schedulerSchedulerName = schedulerSchedulerName;
+        this.schedulerName = schedulerName;
         this.jdbcRunner = new JdbcRunner(dataSource);
         this.serializer = serializer;
     }
@@ -87,7 +85,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
             }
 
             jdbcRunner.execute(
-                    "insert into " + tableName + "(task_name, task_instance, task_data, execution_time, picked, version) values(?, ?, ?, ?, ?, ?)",
+                    "insert into " + TABLE_NAME + "(task_name, task_instance, task_data, execution_time, picked, version) values(?, ?, ?, ?, ?, ?)",
                     (PreparedStatement p) -> {
                         p.setString(1, execution.getTaskName());
                         p.setString(2, execution.getId());
@@ -115,7 +113,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     public void getScheduledExecutions(Consumer<ScheduledTasks> consumer) {
         UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
         List<ScheduledTasks> tasks = jdbcRunner.execute(
-                "select * from " + tableName + " where picked = ? " + unresolvedFilter.andCondition() + " order by execution_time asc",
+                "select * from " + TABLE_NAME + " where picked = ? " + unresolvedFilter.andCondition() + " order by execution_time asc",
                 (PreparedStatement p) -> {
                     int index = 1;
                     p.setBoolean(index++, false);
@@ -134,7 +132,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     @Override
     public void getScheduledExecutions(String taskName, Consumer<ScheduledTasks> consumer) {
     	List<ScheduledTasks> tasks = jdbcRunner.execute(
-                "select * from " + tableName + " where picked = ? and task_name = ? order by execution_time asc",
+                "select * from " + TABLE_NAME + " where picked = ? and task_name = ? order by execution_time asc",
                 (PreparedStatement p) -> {
                     p.setBoolean(1, false);
                     p.setString(2, taskName);
@@ -151,7 +149,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
         final UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
 
         return jdbcRunner.execute(
-                "select * from " + tableName + " where picked = ? and execution_time <= ? " + unresolvedFilter.andCondition() + " order by execution_time asc",
+                "select * from " + TABLE_NAME + " where picked = ? and execution_time <= ? " + unresolvedFilter.andCondition() + " order by execution_time asc",
                 (PreparedStatement p) -> {
                     int index = 1;
                     p.setBoolean(index++, false);
@@ -166,7 +164,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     @Override
     public void remove(ScheduledTasks execution) {
 
-        final int removed = jdbcRunner.execute("delete from " + tableName + " where task_name = ? and task_instance = ? and version = ?",
+        final int removed = jdbcRunner.execute("delete from " + TABLE_NAME + " where task_name = ? and task_instance = ? and version = ?",
                 ps -> {
                     ps.setString(1, execution.getTaskName());
                     ps.setString(2, execution.getId());
@@ -206,7 +204,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
      */
     private boolean rescheduleInternal(ScheduledTasks execution, Instant nextExecutionTime, Map<String, Object> data, Instant lastSuccess, Instant lastFailure, int consecutiveFailures) {
         final int updated = jdbcRunner.execute(
-                "update " + tableName + " set " +
+                "update " + TABLE_NAME + " set " +
                         "picked = ?, " +
                         "picked_by = ?, " +
                         "last_heartbeat = ?, " +
@@ -246,14 +244,14 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     @Override
     public Optional<ScheduledTasks> pick(ScheduledTasks e, Instant timePicked) {
         final int updated = jdbcRunner.execute(
-                "update " + tableName + " set picked = ?, picked_by = ?, last_heartbeat = ?, version = version + 1 " +
+                "update " + TABLE_NAME + " set picked = ?, picked_by = ?, last_heartbeat = ?, version = version + 1 " +
                         "where picked = ? " +
                         "and task_name = ? " +
                         "and task_instance = ? " +
                         "and version = ?",
                 ps -> {
                     ps.setBoolean(1, true);
-                    ps.setString(2, StringUtils.truncate(schedulerSchedulerName.getName(), 50));
+                    ps.setString(2, StringUtils.truncate(schedulerName.getName(), 50));
                     ps.setTimestamp(3, Timestamp.from(timePicked));
                     ps.setBoolean(4, false);
                     ps.setString(5, e.getTaskName());
@@ -281,7 +279,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     public List<ScheduledTasks> getDeadExecutions(Instant olderThan) {
         final UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
         return jdbcRunner.execute(
-                "select * from " + tableName + " where picked = ? and last_heartbeat <= ? " + unresolvedFilter.andCondition() + " order by last_heartbeat asc",
+                "select * from " + TABLE_NAME + " where picked = ? and last_heartbeat <= ? " + unresolvedFilter.andCondition() + " order by last_heartbeat asc",
                 (PreparedStatement p) -> {
                     int index = 1;
                     p.setBoolean(index++, true);
@@ -296,7 +294,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     public void updateHeartbeat(ScheduledTasks e, Instant newHeartbeat) {
 
         final int updated = jdbcRunner.execute(
-                "update " + tableName + " set last_heartbeat = ? " +
+                "update " + TABLE_NAME + " set last_heartbeat = ? " +
                         "where task_name = ? " +
                         "and task_instance = ? " +
                         "and version = ?",
@@ -321,7 +319,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     public List<ScheduledTasks> getExecutionsFailingLongerThan(Duration interval) {
         UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
         return jdbcRunner.execute(
-                "select * from " + tableName + " where " +
+                "select * from " + TABLE_NAME + " where " +
                         "    ((last_success is null and last_failure is not null)" +
                         "    or (last_failure is not null and last_success < ?)) " +
                         unresolvedFilter.andCondition(),
@@ -336,7 +334,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
 
     @Override
     public int removeExecutions(String taskName) {
-        return jdbcRunner.execute("delete from " + tableName + " where task_name = ?",
+        return jdbcRunner.execute("delete from " + TABLE_NAME + " where task_name = ?",
             (PreparedStatement p) -> {
                 p.setString(1, taskName);
             });
@@ -347,7 +345,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     }
 
     public Optional<ScheduledTasks> getExecution(String taskName, String taskInstanceId) {
-        final List<ScheduledTasks> executions = jdbcRunner.execute("select * from " + tableName + " where task_name = ? and task_instance = ?",
+        final List<ScheduledTasks> executions = jdbcRunner.execute("select * from " + TABLE_NAME + " where task_name = ? and task_instance = ?",
                 (PreparedStatement p) -> {
                     p.setString(1, taskName);
                     p.setString(2, taskInstanceId);

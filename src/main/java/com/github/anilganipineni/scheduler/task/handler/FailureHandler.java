@@ -15,8 +15,8 @@
  */
 package com.github.anilganipineni.scheduler.task.handler;
 
-import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionOperations;
+import com.github.anilganipineni.scheduler.ExecutionComplete;
+import com.github.anilganipineni.scheduler.ExecutionOperations;
 
 /**
  * @author akganipineni

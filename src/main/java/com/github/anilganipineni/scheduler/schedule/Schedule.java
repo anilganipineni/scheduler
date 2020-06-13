@@ -17,7 +17,7 @@ package com.github.anilganipineni.scheduler.schedule;
 
 import java.time.Instant;
 
-import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
+import com.github.anilganipineni.scheduler.ExecutionComplete;
 
 /**
  * @author akganipineni

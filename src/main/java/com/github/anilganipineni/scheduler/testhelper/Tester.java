@@ -11,7 +11,6 @@ import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.SchedulerBuilder;
 import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 import com.github.anilganipineni.scheduler.schedule.FixedDelay;
-import com.github.anilganipineni.scheduler.task.OneTimeTask;
 import com.github.anilganipineni.scheduler.task.Task;
 import com.github.anilganipineni.scheduler.task.TaskFactory;
 
@@ -29,14 +28,16 @@ public class Tester {
 	 * 
 	 */
 	private static void startScheduler(SchedulerDataSource dataSource) {
-		Task hourlyTask = TaskFactory.recurring("my-hourly-task", FixedDelay.ofHours(1))
-		        .execute((inst, ctx) -> {
-		        	System.out.println(new Date() + " - Anil Scheduler Executed..........");
+		Task hourlyTask = TaskFactory.recurring("my-hourly-task", FixedDelay.ofHours(6))
+		        .execute((task, ctx) -> {
+		        	System.out.println(new Date() + " - Anil Hourly Scheduler Executed..........");
 		        });
+		
 		Task minutesTask = TaskFactory.recurring("my-minutes-task", FixedDelay.ofMinutes(5))
-		        .execute((inst, ctx) -> {
-		        	System.out.println(new Date() + " - Anil minutes Scheduler Executed..........");
+		        .execute((task, ctx) -> {
+		        	System.out.println(new Date() + " - Anil Minutes Scheduler Executed..........");
 		        });
+		
 		System.out.println(new Date() + " - Enabling the Anil Scheduler..........");
 		
 		List<Task> startTasks = Arrays.asList(hourlyTask, minutesTask);
@@ -54,35 +55,41 @@ public class Tester {
 				}
 		    }
 		});
-		
-		Runnable r = new Runnable() {
-			/**
-			 * @see java.lang.Runnable#run()
-			 */
-			@Override
-			public void run() {
-				try {
-					System.out.println(new Date() + " - " + Thread.currentThread().getName() + " - Line 65 ");
-					Thread.sleep(1 * 60 * 1000);
-					System.out.println(new Date() + " - " + Thread.currentThread().getName() + " - Line 67 ");
-					OneTimeTask myAdhocTask = TaskFactory.oneTime("my-typed-adhoc-task")
-			                .execute((inst, ctx) -> {
-			                	System.out.println(new Date() + " - " + Thread.currentThread().getName() + "Executed! Custom data, Id: " + inst.getId());
-			                });
+		new Thread(new OneTimeTaskInitiater(s), "New Ontetime Task").start();
+	}
+	/**
+	 * @author akganipineni
+	 */
+	private static class OneTimeTaskInitiater implements Runnable {
+		private Scheduler s = null;
+		/**
+		 * @param s
+		 */
+		public OneTimeTaskInitiater(Scheduler s) {
+			this.s = s;
+		}
+		/**
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			try {
+				Thread.sleep(1 * 60 * 1000);
 
-					System.out.println(new Date() + " - " + Thread.currentThread().getName() + " - Line 73 ");
-					Map<String, Object> map = new HashMap<String, Object>();
-					map.put("id", Long.parseLong("1001"));
+				Task oneTimeTask = TaskFactory.oneTime("my-onetime-task")
+		                .execute((task, ctx) -> {
+		                	System.out.println(new Date() + " - Anil One Time Scheduler Executed and Custom data Id : " + task.getId());
+		                });
 
-					System.out.println(new Date() + " - " + Thread.currentThread().getName() + " - Line 77 ");
- 					s.schedule(myAdhocTask.instance("1045", map), Instant.now().plusSeconds(5));
-					System.out.println(new Date() + " - " + Thread.currentThread().getName() + " - Thread executed........... ");
-					
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("id", Long.parseLong("1001"));
+
+					s.schedule(oneTimeTask.instance("1045", map), Instant.now().plusSeconds(5));
+				System.out.println(new Date() + " - " + Thread.currentThread().getName() + " - Thread completed and scheduleed the one time task!");
+				
+			} catch (Exception ex) {
+				ex.printStackTrace();
 			}
-		};
-		new Thread(r, "New Task Thread ").start();
+		}	
 	}
 }

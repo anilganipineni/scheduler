@@ -15,44 +15,65 @@
  */
 package com.github.anilganipineni.scheduler;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+/**
+ * @author akganipineni
+ */
 public interface SchedulerName {
-
     String getName();
-
-
+    /**
+     * @author akganipineni
+     */
     class Fixed implements SchedulerName {
         private final String name;
-
+        /**
+         * default constructor with fixed name
+         */
+        public Fixed() {
+            this("FixedNameSchedulerClient");
+        }
+        /**
+         * @param name
+         */
         public Fixed(String name) {
             this.name = name;
         }
-
+        /**
+         * @see com.github.anilganipineni.scheduler.SchedulerName#getName()
+         */
         @Override
         public String getName() {
             return name;
         }
     }
-
-
+    /**
+     * @author akganipineni
+     */
     class Hostname implements SchedulerName {
-        private static final Logger LOG = LoggerFactory.getLogger(Hostname.class);
+        /**
+         * The <code>Logger</code> instance for this class.
+         */
+    	private static final Logger logger = LogManager.getLogger(Hostname.class);
         private String cachedHostname;
-
+        /**
+         * Default constructor
+         */
         public Hostname() {
             try {
                 cachedHostname = InetAddress.getLocalHost().getHostName();
             } catch (UnknownHostException e) {
-                LOG.warn("Failed to resolve hostname. Using dummy-name for scheduler.");
+                logger.warn("Failed to resolve hostname. Using dummy-name for scheduler.");
                 cachedHostname = "failed.hostname.lookup";
             }
         }
-
+        /**
+         * @see com.github.anilganipineni.scheduler.SchedulerName#getName()
+         */
         @Override
         public String getName() {
             return cachedHostname;

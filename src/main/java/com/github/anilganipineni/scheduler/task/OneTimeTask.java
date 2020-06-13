@@ -17,14 +17,14 @@ package com.github.anilganipineni.scheduler.task;
 
 import java.time.Duration;
 
+import com.github.anilganipineni.scheduler.ExecutionContext;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.task.handler.CompletionHandler;
 import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler;
-import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler.ReviveDeadExecution;
 import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
 import com.github.anilganipineni.scheduler.task.handler.OnCompleteRemove;
 import com.github.anilganipineni.scheduler.task.handler.OnFailureRetryLater;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
+import com.github.anilganipineni.scheduler.task.handler.ReviveDeadExecution;
 
 public abstract class OneTimeTask extends Task {
 	/**
@@ -48,7 +48,7 @@ public abstract class OneTimeTask extends Task {
 	}
 	/**
 	 * @see com.github.anilganipineni.scheduler.task.handler.ExecutionHandler#execute(com.github.anilganipineni.scheduler.dao.ScheduledTasks,
-	 *      com.github.anilganipineni.scheduler.task.helper.ExecutionContext)
+	 *      com.github.anilganipineni.scheduler.ExecutionContext)
 	 */
 	@Override
 	public final CompletionHandler execute(ScheduledTasks task, ExecutionContext context) {

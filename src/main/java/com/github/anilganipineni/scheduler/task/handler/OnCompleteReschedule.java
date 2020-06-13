@@ -20,9 +20,9 @@ import java.time.Instant;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.anilganipineni.scheduler.ExecutionComplete;
+import com.github.anilganipineni.scheduler.ExecutionOperations;
 import com.github.anilganipineni.scheduler.schedule.Schedule;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionOperations;
 
 /**
  * @author akganipineni
@@ -40,8 +40,8 @@ public class OnCompleteReschedule implements CompletionHandler {
 		this.schedule = schedule;
 	}
 	/**
-	 * @see com.github.anilganipineni.scheduler.task.handler.CompletionHandler#complete(com.github.anilganipineni.scheduler.task.helper.ExecutionComplete,
-	 *      com.github.anilganipineni.scheduler.task.helper.ExecutionOperations)
+	 * @see com.github.anilganipineni.scheduler.task.handler.CompletionHandler#complete(com.github.anilganipineni.scheduler.ExecutionComplete,
+	 *      com.github.anilganipineni.scheduler.ExecutionOperations)
 	 */
 	@Override
 	public void complete(ExecutionComplete executionComplete, ExecutionOperations executionOperations) {

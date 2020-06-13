@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task.helper;
+package com.github.anilganipineni.scheduler;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -25,7 +25,7 @@ import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
  * @author akganipineni
  */
 public class ExecutionComplete {
-    private final ScheduledTasks execution;
+    private final ScheduledTasks scheduledTask;
     private final Instant timeStarted;
     private final Instant timeDone;
     private final Result result;
@@ -37,7 +37,7 @@ public class ExecutionComplete {
         if (result == Result.OK && cause != null) {
             throw new IllegalArgumentException("Result 'OK' should never have a cause.");
         }
-        this.execution = execution;
+        this.scheduledTask = execution;
         this.timeDone = timeDone;
         this.result = result;
     }
@@ -51,7 +51,7 @@ public class ExecutionComplete {
     }
 
     /**
-     * Simulated ExecutionComplete used to generate first execution-time from a Schedule.
+     * Simulated ExecutionComplete used to generate first scheduledTask-time from a Schedule.
      */
     public static ExecutionComplete simulatedSuccess(Instant timeDone) {
         ScheduledTasks nonExistingExecution = new ScheduledTasks(timeDone, "non-existing-task", "non-existing-id", null, false, "simulated-picked-by", timeDone, null, 0, null, 1);
@@ -59,7 +59,7 @@ public class ExecutionComplete {
     }
 
     public ScheduledTasks getExecution() {
-        return execution;
+        return scheduledTask;
     }
 
     public Instant getTimeDone() {

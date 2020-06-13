@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.anilganipineni.scheduler.task.helper;
+package com.github.anilganipineni.scheduler;
 
-import com.github.anilganipineni.scheduler.SchedulerClient;
-import com.github.anilganipineni.scheduler.SchedulerState;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 
 public class ExecutionContext {

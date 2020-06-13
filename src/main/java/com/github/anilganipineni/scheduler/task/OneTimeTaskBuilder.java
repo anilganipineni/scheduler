@@ -2,12 +2,13 @@ package com.github.anilganipineni.scheduler.task;
 
 import java.time.Duration;
 
+import com.github.anilganipineni.scheduler.ExecutionContext;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler;
 import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
 import com.github.anilganipineni.scheduler.task.handler.OnFailureRetryLater;
+import com.github.anilganipineni.scheduler.task.handler.ReviveDeadExecution;
 import com.github.anilganipineni.scheduler.task.handler.VoidExecutionHandler;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
 
 /**
  * @author akganipineni
@@ -20,7 +21,7 @@ public class OneTimeTaskBuilder {
 
     public OneTimeTaskBuilder(String name) {
         this.name = name;
-        this.onDeadExecution = new DeadExecutionHandler.ReviveDeadExecution();
+        this.onDeadExecution = new ReviveDeadExecution();
         this.onFailure = new OnFailureRetryLater(DEFAULT_RETRY_INTERVAL);
     }
 
@@ -30,7 +31,7 @@ public class OneTimeTaskBuilder {
     }
 
     public OneTimeTaskBuilder onDeadExecutionRevive() {
-        this.onDeadExecution = new DeadExecutionHandler.ReviveDeadExecution();
+        this.onDeadExecution = new ReviveDeadExecution();
         return this;
     }
 

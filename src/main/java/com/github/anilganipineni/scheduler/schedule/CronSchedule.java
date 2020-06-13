@@ -20,7 +20,7 @@ import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.parser.CronParser;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
+import com.github.anilganipineni.scheduler.ExecutionComplete;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

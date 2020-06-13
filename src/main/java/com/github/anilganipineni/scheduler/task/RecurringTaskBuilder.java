@@ -1,12 +1,13 @@
 package com.github.anilganipineni.scheduler.task;
 
+import com.github.anilganipineni.scheduler.ExecutionContext;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.schedule.Schedule;
 import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler;
 import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
 import com.github.anilganipineni.scheduler.task.handler.OnFailureReschedule;
+import com.github.anilganipineni.scheduler.task.handler.ReviveDeadExecution;
 import com.github.anilganipineni.scheduler.task.handler.VoidExecutionHandler;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
 
 /**
  * @author akganipineni
@@ -22,7 +23,7 @@ public class RecurringTaskBuilder {
         this.name = name;
         this.schedule = schedule;
         this.onFailure = new OnFailureReschedule(schedule);
-        this.onDeadExecution = new DeadExecutionHandler.ReviveDeadExecution();
+        this.onDeadExecution = new ReviveDeadExecution();
     }
 
     public RecurringTaskBuilder onFailureReschedule() {
@@ -31,7 +32,7 @@ public class RecurringTaskBuilder {
     }
 
     public RecurringTaskBuilder onDeadExecutionRevive() {
-        this.onDeadExecution = new DeadExecutionHandler.ReviveDeadExecution();
+        this.onDeadExecution = new ReviveDeadExecution();
         return this;
     }
 

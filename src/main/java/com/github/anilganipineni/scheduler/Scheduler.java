@@ -43,9 +43,6 @@ import com.github.anilganipineni.scheduler.exception.SchedulerException;
 import com.github.anilganipineni.scheduler.task.Task;
 import com.github.anilganipineni.scheduler.task.handler.CompletionHandler;
 import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionComplete;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionContext;
-import com.github.anilganipineni.scheduler.task.helper.ExecutionOperations;
 
 public class Scheduler implements SchedulerClient {
 
@@ -151,37 +148,37 @@ public class Scheduler implements SchedulerClient {
         return schedulerState;
     }
 
-    @Override
+    
     public <T> void schedule(ScheduledTasks taskInstance, Instant executionTime) {
         this.delegate.schedule(taskInstance, executionTime);
     }
 
-    @Override
+    
     public void reschedule(ScheduledTasks taskInstanceId, Instant newExecutionTime) {
         this.delegate.reschedule(taskInstanceId, newExecutionTime);
     }
 
-    @Override
+    
     public void reschedule(ScheduledTasks taskInstanceId, Instant newExecutionTime, Map<String, Object> newData) {
         this.delegate.reschedule(taskInstanceId, newExecutionTime, newData);
     }
 
-    @Override
+    
     public void cancel(ScheduledTasks taskInstanceId) {
         this.delegate.cancel(taskInstanceId);
     }
 
-    @Override
+    
     public void getScheduledExecutions(Consumer<ScheduledExecution<Object>> consumer) {
         this.delegate.getScheduledExecutions(consumer);
     }
 
-    @Override
+    
     public <T> void getScheduledExecutionsForTask(String taskName, Class<T> dataClass, Consumer<ScheduledExecution<T>> consumer) {
         this.delegate.getScheduledExecutionsForTask(taskName, dataClass, consumer);
     }
 
-    @Override
+    
     public Optional<ScheduledExecution<Object>> getScheduledExecution(ScheduledTasks taskInstanceId) {
         return this.delegate.getScheduledExecution(taskInstanceId);
     }
@@ -308,7 +305,7 @@ public class Scheduler implements SchedulerClient {
             this.addedDueExecutionsBatch = dueExecutionsBatch;
         }
 
-        @Override
+        
         public void run() {
             if (schedulerState.isShuttingDown()) {
                 LOG.info("Scheduler has been shutdown. Skipping fetched due execution: " + candidate.getTaskAndInstance());
