@@ -15,7 +15,6 @@ import org.apache.logging.log4j.Logger;
 import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.task.Task;
-import com.github.anilganipineni.scheduler.testhelper.CassandraDataSourceImpl;
 
 /**
  * @author akganipineni
@@ -24,7 +23,7 @@ public class ScheduledTasksMapper implements ResultSetMapper<List<ScheduledTasks
     /**
      * The <code>Logger</code> instance for this class.
      */
-	private static final Logger logger = LogManager.getLogger(CassandraDataSourceImpl.class);
+	private static final Logger logger = LogManager.getLogger(ScheduledTasksMapper.class);
     private final TaskResolver taskResolver;
     private final Serializer serializer;
 	/**
