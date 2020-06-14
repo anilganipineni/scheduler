@@ -38,7 +38,6 @@ import com.datastax.driver.core.exceptions.DriverException;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 import com.datastax.driver.mapping.Result;
-import com.github.anilganipineni.scheduler.JsonUtils;
 import com.github.anilganipineni.scheduler.SchedulerName;
 import com.github.anilganipineni.scheduler.StringUtils;
 import com.github.anilganipineni.scheduler.TaskResolver;
@@ -500,7 +499,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 				Optional.ofNullable(lastSuccess).map(Timestamp::from).orElse(null),
 				Optional.ofNullable(lastFailure).map(Timestamp::from).orElse(null), 
 				consecutiveFailures,
-				Timestamp.from(nextExecutionTime), JsonUtils.convertObject2Json(data), task.version + 1, task.getTaskName(), task.getId(), task.version);
+				Timestamp.from(nextExecutionTime), StringUtils.convertMap2String(data), task.version + 1, task.getTaskName(), task.getId(), task.version);
 		updated = rs.getAvailableWithoutFetching();
 
 
