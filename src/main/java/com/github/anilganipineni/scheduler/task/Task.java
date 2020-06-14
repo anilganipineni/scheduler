@@ -28,11 +28,12 @@ import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
  */
 public abstract class Task implements ExecutionHandler {
 	private String name;
-    private String instance;
-    private Object data;
-    private Schedule schedule;
     private FailureHandler failureHandler;
     private DeadExecutionHandler deadExecutionHandler;
+    
+    private Schedule schedule;
+    private String instance;
+    private Object data;
     /**
      * @param name
      * @param failureHandler

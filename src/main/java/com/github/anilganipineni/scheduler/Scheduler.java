@@ -399,6 +399,12 @@ public class Scheduler implements SchedulerClient {
 
     }
     /**
+     * @param task
+     */
+    public void addTask(Task task) {
+    	taskResolver.addTask(task);
+    }
+    /**
      * @param dataSource
      * @param knownTasks
      * @return

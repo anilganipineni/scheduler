@@ -14,9 +14,10 @@ import com.github.anilganipineni.scheduler.task.handler.VoidExecutionHandler;
  */
 public class RecurringTaskBuilder {
     private final String name;
-    private final Schedule schedule;
     private FailureHandler onFailure;
     private DeadExecutionHandler onDeadExecution;
+    
+    private final Schedule schedule;
     private Object initialData = null;
 
     public RecurringTaskBuilder(String name, Schedule schedule) {

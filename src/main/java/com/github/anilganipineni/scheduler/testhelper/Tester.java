@@ -74,7 +74,7 @@ public class Tester {
 		@Override
 		public void run() {
 			try {
-				Thread.sleep(1 * 60 * 1000);
+				/*Thread.sleep(1 * 60 * 1000);*/
 
 				Task oneTimeTask = TaskFactory.oneTime("my-onetime-task")
 		                .execute((task, ctx) -> {
@@ -83,8 +83,9 @@ public class Tester {
 
 				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("id", Long.parseLong("1001"));
+				s.addTask(oneTimeTask);
 
-					s.schedule(oneTimeTask.instance("1045", map), Instant.now().plusSeconds(5));
+					s.schedule(oneTimeTask.instance("1045", map), Instant.now().plusSeconds(600));
 				System.out.println(new Date() + " - " + Thread.currentThread().getName() + " - Thread completed and scheduleed the one time task!");
 				
 			} catch (Exception ex) {
