@@ -11,7 +11,7 @@ Scheduler with only one table and support both RDBMS and Cassandra
 		</dependency>
 ```
 
-2. Create the `scheduled_tasks` table in your database-schema. See table definition for [CASSANDRA](scheduler/src/main/resources/cassandra.sql)or [MYSQL](scheduler/src/main/resources/mysql.sql).
+2. Create the `scheduled_tasks` table in your database-schema. See table definition for [CASSANDRA](src/main/resources/cassandra.sql)or [MYSQL](src/main/resources/mysql.sql).
 
 3. Instantiate and start the scheduler, which then will start any defined recurring tasks.
 ```java
