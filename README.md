@@ -1,5 +1,5 @@
-# scheduler
-Scheduler with only one table and support both RDBMS and Cassandra
+## Scheduler
+Scheduler with only one table and supports both RDBMS and Cassandra
 
 ## Getting started
 1. Add maven dependency
@@ -53,13 +53,13 @@ public class Tester {
      */
 	private static final Logger logger = LogManager.getLogger(CassandraDataSourceImpl.class);
 	private static final String RDBMS_DRIVER		= "com.mysql.jdbc.Driver";
-	private static final String RDBMS_URL			= "jdbc:mysql://localhost:3306/gstwrapper?useSSL=false";
-	private static final String RDBMS_USER			= "root";
-	private static final String RDBMS_PWD			= "admin";
+	private static final String RDBMS_URL			= "jdbc:mysql://localhost:3306/schema?useSSL=false";
+	private static final String RDBMS_USER			= "user";
+	private static final String RDBMS_PWD			= "password";
 	
 	private static final String CASSANDRA_SERVER	= "127.0.0.1";
 	private static final Integer CASSANDRA_PORT		= 9042;
-	private static final String CASSANDRA_KYE_SPACE	= "gsp";
+	private static final String CASSANDRA_KYE_SPACE	= "keyspace";
 	/**
 	 * @param args
 	 */
