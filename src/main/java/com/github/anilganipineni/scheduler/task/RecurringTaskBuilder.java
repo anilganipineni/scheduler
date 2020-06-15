@@ -1,5 +1,7 @@
 package com.github.anilganipineni.scheduler.task;
 
+import java.util.Map;
+
 import com.github.anilganipineni.scheduler.ExecutionContext;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.schedule.Schedule;
@@ -18,7 +20,7 @@ public class RecurringTaskBuilder {
     private DeadExecutionHandler onDeadExecution;
     
     private final Schedule schedule;
-    private Object initialData = null;
+    private Map<String, Object> initialData = null;
 
     public RecurringTaskBuilder(String name, Schedule schedule) {
         this.name = name;
@@ -47,7 +49,7 @@ public class RecurringTaskBuilder {
         return this;
     }
 
-    public RecurringTaskBuilder initialData(Object initialData) {
+    public RecurringTaskBuilder initialData(Map<String, Object> initialData) {
         this.initialData = initialData;
         return this;
     }

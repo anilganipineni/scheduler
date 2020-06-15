@@ -54,9 +54,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	private static final Logger logger = LogManager.getLogger(CassandraTaskRepository.class);
 	private static final String SELECT 				= " select * from " + TABLE_NAME;
 	private static final String UPDATE				= " update " + TABLE_NAME;
-	private static final String WHERE_PK			= " where task_name = ? ";
-	private static final String WHERE_PK_CK			= WHERE_PK + " and task_instance = ? and version = ? ";
-	private static final String SELECT_WITH_PK_CK1	= SELECT + WHERE_PK + " and task_instance = ? ";
+	private static final String WHERE_PK_CK			= " where task_name = ?  and task_id = ? ";
 	private static final String LIMIT				= " LIMIT 2000 ";
 	/**
 	 * The preparedStatementCache for GSP application
@@ -215,8 +213,8 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	public boolean createIfNotExists(ScheduledTasks task) {
 		try {
 			String taskName		= task.getTaskName();
-			String taskId		= task.getId();
-			List<ScheduledTasks> taskss = getResultList(SELECT_WITH_PK_CK1, ScheduledTasks.class, taskName, taskId);
+			String taskId		= task.getTaskId();
+			List<ScheduledTasks> taskss = getResultList(SELECT + WHERE_PK_CK, ScheduledTasks.class, taskName, taskId);
 			
 			if(taskss == null || taskss.isEmpty()) {
 				create(task, ScheduledTasks.class);
@@ -229,7 +227,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	        
 	        // found only one
 	        ScheduledTasks existingTask = taskss.get(0);
-	        logger.debug("ScheduledTasks not created, it already exists. Due: {}", existingTask.executionTime);
+	        logger.debug("ScheduledTasks not created, it already exists. Due: {}", existingTask.getExecutionTime());
 	        
 		} catch (SchedulerException ex) {
             logger.error("ScheduledTasks not created, another thread created it.", ex);
@@ -268,7 +266,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 
 		List<ScheduledTasks> dues = new ArrayList<ScheduledTasks>();
 		for(ScheduledTasks t : all) {
-			if(!t.isPicked() && !taskNames.contains(t.getTaskName()) && t.executionTime.isBefore(now)) {
+			if(!t.isPicked() && !taskNames.contains(t.getTaskName()) && t.getExecutionTime().isBefore(now)) {
 				dues.add(t);
 			}
 		}
@@ -334,7 +332,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 		try {
 			int removed = 0;
 			String cql = SELECT + WHERE_PK_CK;
-			List<ScheduledTasks> tasks = getResultList(cql, ScheduledTasks.class, task.getTaskName(), task.getId(), task.version);
+			List<ScheduledTasks> tasks = getResultList(cql, ScheduledTasks.class, task.getTaskName(), task.getTaskId());
 			if(tasks == null || tasks.isEmpty()) {
 	            throw new RuntimeException("Expected one execution to be removed, but zero found. Indicates a bug.");
 			}
@@ -373,7 +371,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 		int updated = 0;
 		String cql = UPDATE + " set picked = ?, picked_by = ?, last_heartbeat = ?, version = ? " + WHERE_PK_CK; /*" + and picked = ? "*/;
 		
-		ResultSet rs = execute(cql, true, StringUtils.truncate(schedulerName.getName(), 50), Timestamp.from(timePicked), e.version + 1, false, e.getTaskName(), e.getId(), e.version);
+		ResultSet rs = execute(cql, true, StringUtils.truncate(schedulerName.getName(), 50), Timestamp.from(timePicked), e.getVersion() + 1, e.getTaskName(), e.getTaskId());
 		updated = rs.getAvailableWithoutFetching();
 
         if (updated == 0) {
@@ -383,7 +381,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
         } else if (updated == 1) {
         	ScheduledTasks pickedTask = null;
 			try {
-				pickedTask = getSingleResult(SELECT_WITH_PK_CK1, ScheduledTasks.class, e.getTaskName(), e.getId());
+				pickedTask = getSingleResult(SELECT + WHERE_PK_CK, ScheduledTasks.class, e.getTaskName(), e.getTaskId());
 			} catch (SchedulerException ex) {
 				pickedTask = null;
 			}
@@ -414,7 +412,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 
 		List<ScheduledTasks> dues = new ArrayList<ScheduledTasks>();
 		for(ScheduledTasks t : all) {
-			if(t.isPicked() && !taskNames.contains(t.getTaskName()) && t.lastHeartbeat.isBefore(olderThan)) {
+			if(t.isPicked() && !taskNames.contains(t.getTaskName()) && t.getLastHeartbeat().isBefore(olderThan)) {
 				dues.add(t);
 			}
 		}
@@ -430,7 +428,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 		String cql = UPDATE + " set last_heartbeat = ?" + WHERE_PK_CK;
 
 		int updated = 0;
-		ResultSet rs = execute(cql, Timestamp.from(heartbeatTime), e.getTaskName(), e.getId(), e.version);
+		ResultSet rs = execute(cql, Timestamp.from(heartbeatTime), e.getTaskName(), e.getTaskId());
 		updated = rs.getAvailableWithoutFetching();
 
         if (updated == 0) {
@@ -457,8 +455,8 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 		List<ScheduledTasks> dues = new ArrayList<ScheduledTasks>();
 		for(ScheduledTasks t : all) {
 			if (!taskNames.contains(t.getTaskName())
-					&& ((t.lastFailure != null && t.lastSuccess == null)
-					||  (t.lastFailure != null && t.lastSuccess.isBefore(Instant.now().minus(interval))))) {
+					&& ((t.getLastFailure() != null && t.getLastSuccess() == null)
+					||  (t.getLastFailure() != null && t.getLastSuccess().isBefore(Instant.now().minus(interval))))) {
 				dues.add(t);
 			}
 		}
@@ -471,7 +469,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	 */
 	@Override
 	public Optional<ScheduledTasks> getExecution(String name, String instance) throws SchedulerException {
-		List<ScheduledTasks> tasks = getResultList(SELECT_WITH_PK_CK1, ScheduledTasks.class, name, instance);
+		List<ScheduledTasks> tasks = getResultList(SELECT + WHERE_PK_CK, ScheduledTasks.class, name, instance);
 		
         if (tasks.size() > 1) {
             throw new SchedulerException(String.format("Found more than one matching execution for task name/id combination: '%s'/'%s'", name, instance));
@@ -499,7 +497,11 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 				Optional.ofNullable(lastSuccess).map(Timestamp::from).orElse(null),
 				Optional.ofNullable(lastFailure).map(Timestamp::from).orElse(null), 
 				consecutiveFailures,
-				Timestamp.from(nextExecutionTime), StringUtils.convertMap2String(data), task.version + 1, task.getTaskName(), task.getId(), task.version);
+				Timestamp.from(nextExecutionTime),
+				StringUtils.convertMap2String(data),
+				task.getVersion() + 1,
+				task.getTaskName(),
+				task.getTaskId());
 		updated = rs.getAvailableWithoutFetching();
 
 
@@ -549,7 +551,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 				return -1;
 			}
 			
-			return o1.lastHeartbeat.compareTo(o2.lastHeartbeat);
+			return o1.getLastHeartbeat().compareTo(o2.getLastHeartbeat());
 		}
     };
 }

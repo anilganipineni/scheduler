@@ -29,8 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.github.anilganipineni.scheduler.dao.CassandraTaskRepository;
-import com.github.anilganipineni.scheduler.dao.DataSourceType;
-import com.github.anilganipineni.scheduler.dao.JdbcTaskRepository;
+import com.github.anilganipineni.scheduler.dao.DbUtils;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
@@ -172,13 +171,7 @@ public class SchedulerBuilder {
         }
         final TaskResolver taskResolver = new TaskResolver(statsRegistry, clock, knownTasks);
         
-        /*final SchedulerRepository taskRepository = DbUtils.getRepository(dataSource, tableName, taskResolver, schedulerName, serializer); FIXME*/
-        final SchedulerRepository<ScheduledTasks> taskRepository;
-        if(DataSourceType.RDBMS.equals(dataSource.dataSourceType())) {
-        	taskRepository = new JdbcTaskRepository(dataSource.rdbmsDataSource(), taskResolver, schedulerName, serializer);
-        } else {
-        	taskRepository = new CassandraTaskRepository(dataSource.cassandraDataSource(), taskResolver, schedulerName);
-        }
+        final SchedulerRepository<ScheduledTasks> taskRepository = DbUtils.getRepository(dataSource, taskResolver, schedulerName);
 
         ExecutorService candidateExecutorService = executorService;
         if (candidateExecutorService == null) {

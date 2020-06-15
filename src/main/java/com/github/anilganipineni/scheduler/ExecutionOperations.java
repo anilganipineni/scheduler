@@ -37,18 +37,18 @@ public class ExecutionOperations {
 
     public void reschedule(ExecutionComplete completed, Instant nextExecutionTime) {
         if (completed.getResult() == ExecutionComplete.Result.OK) {
-            taskRepository.reschedule(execution, nextExecutionTime, completed.getTimeDone(), execution.lastFailure, 0);
+            taskRepository.reschedule(execution, nextExecutionTime, completed.getTimeDone(), execution.getLastFailure(), 0);
         } else {
-            taskRepository.reschedule(execution, nextExecutionTime, execution.lastSuccess, completed.getTimeDone(), execution.consecutiveFailures + 1);
+            taskRepository.reschedule(execution, nextExecutionTime, execution.getLastSuccess(), completed.getTimeDone(), execution.getConsecutiveFailures() + 1);
         }
 
     }
 
     public void reschedule(ExecutionComplete completed, Instant nextExecutionTime, Map<String, Object> newData) {
         if (completed.getResult() == ExecutionComplete.Result.OK) {
-            taskRepository.reschedule(execution, nextExecutionTime, completed.getTimeDone(), execution.lastFailure, 0, newData);
+            taskRepository.reschedule(execution, nextExecutionTime, completed.getTimeDone(), execution.getLastFailure(), 0, newData);
         } else {
-            taskRepository.reschedule(execution, nextExecutionTime, execution.lastSuccess, completed.getTimeDone(), execution.consecutiveFailures + 1, newData);
+            taskRepository.reschedule(execution, nextExecutionTime, execution.getLastSuccess(), completed.getTimeDone(), execution.getConsecutiveFailures() + 1, newData);
         }
     }
 

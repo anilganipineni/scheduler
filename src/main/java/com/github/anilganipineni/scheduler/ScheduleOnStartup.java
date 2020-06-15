@@ -16,27 +16,24 @@
 package com.github.anilganipineni.scheduler;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.function.Function;
 
 import com.github.anilganipineni.scheduler.task.Task;
 
 public class ScheduleOnStartup {
     String instance;
-    Object data;
+    Map<String, Object> data;
     Function<Instant, Instant> firstExecutionTime;
 
-    public ScheduleOnStartup(String instance, Object data, Function<Instant, Instant> firstExecutionTime) {
+    public ScheduleOnStartup(String instance, Map<String, Object> data, Function<Instant, Instant> firstExecutionTime) {
         this.firstExecutionTime = firstExecutionTime;
         this.instance = instance;
         this.data = data;
     }
 
     public void apply(Scheduler scheduler, Clock clock, Task task) {
-        if (data == null) {
-            scheduler.schedule(task.instance(instance, null), firstExecutionTime.apply(clock.now()));
-        } else {
-            scheduler.schedule(task.instance(instance, data), firstExecutionTime.apply(clock.now()));
-        }
+        scheduler.schedule(task.instance(instance, data), firstExecutionTime.apply(clock.now()));
     }
 
 }

@@ -16,7 +16,6 @@
 package com.github.anilganipineni.scheduler.dao;
 
 import com.github.anilganipineni.scheduler.SchedulerName;
-import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.TaskResolver;
 
 /**
@@ -27,27 +26,15 @@ public class DbUtils {
 	 * @param ds
 	 * @param resolver
 	 * @param name
-	 * @return
-	 */
-	public static final SchedulerRepository<ScheduledTasks> getRepository(SchedulerDataSource ds,
-																		  TaskResolver resolver,
-																		  SchedulerName name) {
-        return getRepository(ds, resolver, name, Serializer.DEFAULT_JAVA_SERIALIZER);
-	}
-	/**
-	 * @param ds
-	 * @param resolver
-	 * @param name
 	 * @param serializer
 	 * @return
 	 */
 	public static final SchedulerRepository<ScheduledTasks> getRepository(SchedulerDataSource ds,
 																		  TaskResolver resolver,
-																		  SchedulerName name,
-																		  Serializer serializer) {
+																		  SchedulerName name) {
         SchedulerRepository<ScheduledTasks> repository;
         if(DataSourceType.RDBMS.equals(ds.dataSourceType())) {
-        	repository = new JdbcTaskRepository(ds.rdbmsDataSource(), resolver, name, serializer);
+        	repository = new JdbcTaskRepository(ds.rdbmsDataSource(), resolver, name);
         } else {
         	repository = new CassandraTaskRepository(ds.cassandraDataSource(), resolver, name);
         }

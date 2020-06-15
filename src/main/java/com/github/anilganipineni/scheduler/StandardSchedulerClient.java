@@ -31,22 +31,22 @@ public class StandardSchedulerClient implements SchedulerClient {
     }
 
     @Override
-    public <T> void schedule(ScheduledTasks taskInstance, Instant executionTime) {
-        boolean success = taskRepository.createIfNotExists(new ScheduledTasks(executionTime, taskInstance.getTaskName(), taskInstance.getId(), taskInstance.getTaskData()));
+    public <T> void schedule(ScheduledTasks taskId, Instant executionTime) {
+        boolean success = taskRepository.createIfNotExists(new ScheduledTasks(executionTime, taskId.getTaskName(), taskId.getTaskId(), taskId.getTaskData()));
         if (success) {
-            notifyListeners(ClientEvent.EventType.SCHEDULE, taskInstance, executionTime);
+            notifyListeners(ClientEvent.EventType.SCHEDULE, taskId, executionTime);
         }
     }
 
     @Override
-    public void reschedule(ScheduledTasks taskInstanceId, Instant newExecutionTime) {
-        reschedule(taskInstanceId, newExecutionTime, null);
+    public void reschedule(ScheduledTasks task, Instant newExecutionTime) {
+        reschedule(task, newExecutionTime, null);
     }
 
     @Override
-    public void reschedule(ScheduledTasks taskInstanceId, Instant newExecutionTime, Map<String, Object> newData) {
-        String taskName = taskInstanceId.getTaskName();
-        String instanceId = taskInstanceId.getId();
+    public void reschedule(ScheduledTasks task, Instant newExecutionTime, Map<String, Object> newData) {
+        String taskName = task.getTaskName();
+        String instanceId = task.getTaskId();
         Optional<ScheduledTasks> execution = getExecution(taskName, instanceId);
         if(execution.isPresent()) {
             if(execution.get().isPicked()) {
@@ -61,7 +61,7 @@ public class StandardSchedulerClient implements SchedulerClient {
             }
 
             if (success) {
-                notifyListeners(ClientEvent.EventType.RESCHEDULE, taskInstanceId, newExecutionTime);
+                notifyListeners(ClientEvent.EventType.RESCHEDULE, task, newExecutionTime);
             }
         } else {
             throw new RuntimeException(String.format("Could not reschedule - no task with name '%s' and id '%s' was found." , taskName, instanceId));
@@ -69,9 +69,9 @@ public class StandardSchedulerClient implements SchedulerClient {
     }
 
     @Override
-    public void cancel(ScheduledTasks taskInstanceId) {
-        String taskName = taskInstanceId.getTaskName();
-        String instanceId = taskInstanceId.getId();
+    public void cancel(ScheduledTasks task) {
+        String taskName = task.getTaskName();
+        String instanceId = task.getTaskId();
         Optional<ScheduledTasks> execution = getExecution(taskName, instanceId);
         if(execution.isPresent()) {
             if(execution.get().isPicked()) {
@@ -79,7 +79,7 @@ public class StandardSchedulerClient implements SchedulerClient {
             }
 
             taskRepository.remove(execution.get());
-            notifyListeners(ClientEvent.EventType.CANCEL, taskInstanceId, execution.get().executionTime);
+            notifyListeners(ClientEvent.EventType.CANCEL, task, execution.get().getExecutionTime());
         } else {
             throw new RuntimeException(String.format("Could not cancel schedule - no task with name '%s' and id '%s' was found." , taskName, instanceId));
         }
@@ -106,26 +106,26 @@ public class StandardSchedulerClient implements SchedulerClient {
     }
 
     @Override
-    public Optional<ScheduledExecution<Object>> getScheduledExecution(ScheduledTasks taskInstanceId) {
-        Optional<ScheduledTasks> e = getExecution(taskInstanceId.getTaskName(), taskInstanceId.getId());
+    public Optional<ScheduledExecution<Object>> getScheduledExecution(ScheduledTasks task) {
+        Optional<ScheduledTasks> e = getExecution(task.getTaskName(), task.getTaskId());
         return e.map(oe -> new ScheduledExecution<>(Object.class, oe));
     }
 
-    private void notifyListeners(ClientEvent.EventType eventType, ScheduledTasks taskInstanceId, Instant executionTime) {
+    private void notifyListeners(ClientEvent.EventType eventType, ScheduledTasks task, Instant executionTime) {
         try {
-            schedulerClientEventListener.newEvent(new ClientEvent(new ClientEvent.ClientEventContext(eventType, taskInstanceId.getTaskName(), taskInstanceId.getId(), taskInstanceId.getTaskData(), executionTime)));
+            schedulerClientEventListener.newEvent(new ClientEvent(new ClientEvent.ClientEventContext(eventType, task.getTaskName(), task.getTaskId(), task.getTaskData(), executionTime)));
         } catch (Exception e) {
             LOG.error("Error when notifying SchedulerClientEventListener.", e);
         }
     }
     /**
      * @param taskName
-     * @param taskInstanceId
+     * @param task
      * @return
      */
-    public Optional<ScheduledTasks> getExecution(String taskName, String taskInstanceId) {
+    public Optional<ScheduledTasks> getExecution(String taskName, String task) {
     	try {
-			return taskRepository.getExecution(taskName, taskInstanceId);
+			return taskRepository.getExecution(taskName, task);
 		} catch (SchedulerException ex) {
             throw new RuntimeException(ex.getMessage(), ex); // TODO : Why runtime exception
 		}

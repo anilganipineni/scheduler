@@ -149,23 +149,23 @@ public class Scheduler implements SchedulerClient {
     }
 
     
-    public <T> void schedule(ScheduledTasks taskInstance, Instant executionTime) {
-        this.delegate.schedule(taskInstance, executionTime);
+    public <T> void schedule(ScheduledTasks taskId, Instant executionTime) {
+        this.delegate.schedule(taskId, executionTime);
     }
 
     
-    public void reschedule(ScheduledTasks taskInstanceId, Instant newExecutionTime) {
-        this.delegate.reschedule(taskInstanceId, newExecutionTime);
+    public void reschedule(ScheduledTasks task, Instant newExecutionTime) {
+        this.delegate.reschedule(task, newExecutionTime);
     }
 
     
-    public void reschedule(ScheduledTasks taskInstanceId, Instant newExecutionTime, Map<String, Object> newData) {
-        this.delegate.reschedule(taskInstanceId, newExecutionTime, newData);
+    public void reschedule(ScheduledTasks task, Instant newExecutionTime, Map<String, Object> newData) {
+        this.delegate.reschedule(task, newExecutionTime, newData);
     }
 
     
-    public void cancel(ScheduledTasks taskInstanceId) {
-        this.delegate.cancel(taskInstanceId);
+    public void cancel(ScheduledTasks task) {
+        this.delegate.cancel(task);
     }
 
     
@@ -179,8 +179,8 @@ public class Scheduler implements SchedulerClient {
     }
 
     
-    public Optional<ScheduledExecution<Object>> getScheduledExecution(ScheduledTasks taskInstanceId) {
-        return this.delegate.getScheduledExecution(taskInstanceId);
+    public Optional<ScheduledExecution<Object>> getScheduledExecution(ScheduledTasks task) {
+        return this.delegate.getScheduledExecution(task);
     }
 
     /**
@@ -308,7 +308,7 @@ public class Scheduler implements SchedulerClient {
         
         public void run() {
             if (schedulerState.isShuttingDown()) {
-                LOG.info("Scheduler has been shutdown. Skipping fetched due execution: " + candidate.getTaskAndInstance());
+                LOG.info("Scheduler has been shutdown. Skipping fetched due execution: " + candidate.getTaskName() + "_" + candidate.getTaskId());
                 return;
             }
 

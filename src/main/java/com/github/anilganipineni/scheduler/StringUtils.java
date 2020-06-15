@@ -65,6 +65,9 @@ public final class StringUtils {
 	 * @return
 	 */
 	public static String convertMap2String(Map<String, Object> map) {
+		if(map == null) {
+			return EMPTY;
+		}
 	    return map.entrySet().stream().map(e -> e.getKey() + ":" + format(e.getValue())).collect(Collectors.joining(",", "{", "}"));
 	}
 	/**

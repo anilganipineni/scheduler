@@ -15,6 +15,8 @@
  */
 package com.github.anilganipineni.scheduler.task;
 
+import java.util.Map;
+
 import com.github.anilganipineni.scheduler.schedule.Schedule;
 import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler;
 import com.github.anilganipineni.scheduler.task.handler.FailureHandler;
@@ -36,7 +38,7 @@ public abstract class CustomTask extends Task {
 	 * @param instance
 	 * @param data
 	 */
-	public CustomTask(String name, FailureHandler failureHandler, DeadExecutionHandler deadExecutionHandler, Schedule schedule, String instance, Object data) {
+	public CustomTask(String name, FailureHandler failureHandler, DeadExecutionHandler deadExecutionHandler, Schedule schedule, String instance, Map<String, Object> data) {
 		super(name, failureHandler, deadExecutionHandler, schedule, instance, data);
 	}
 }

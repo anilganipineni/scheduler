@@ -25,52 +25,58 @@ import java.util.Objects;
 public final class ScheduledTasks {
 	public static final String TABLE_NAME	= "scheduled_tasks";
     private String taskName;
-    private String id;
-    private Object taskData;
-    public  Instant executionTime;
-    public  boolean picked;
-    public  String pickedBy;
-    public int consecutiveFailures;
-    public  Instant lastHeartbeat;
-    public  long version;
-    public  Instant lastFailure;
-    public  Instant lastSuccess;
+    private String taskId;
+    private int consecutiveFailures;
+    private  Instant executionTime;
+    private  Instant lastFailure;
+    private  Instant lastHeartbeat;
+    private  Instant lastSuccess;
+    private  boolean picked;
+    private  String pickedBy;
+    private String taskData;
+    private  int version;
+    /**
+	 * Default constructor
+	 */
+	public ScheduledTasks() {
+		/* NO-OP */
+	}
     /**
 	 * @param taskName
-	 * @param id
+	 * @param taskId
 	 */
-	public ScheduledTasks(String taskName, String id) {
+	public ScheduledTasks(String taskName, String taskId) {
 		this.taskName = taskName;
-		this.id = id;
+		this.taskId = taskId;
 	}
     /**
 	 * @param executionTime
 	 * @param taskName
-	 * @param id
+	 * @param taskId
 	 */
-	public ScheduledTasks(Instant executionTime, String taskName, String id) {
+	public ScheduledTasks(Instant executionTime, String taskName, String taskId) {
 		this.executionTime = executionTime;
 		this.taskName = taskName;
-		this.id = id;
+		this.taskId = taskId;
 	}
     /**
 	 * @param executionTime
 	 * @param taskName
-	 * @param id
+	 * @param taskId
 	 * @param taskData
 	 */
-	public ScheduledTasks(Instant executionTime, String taskName, String id, Object taskData) {
+	public ScheduledTasks(Instant executionTime, String taskName, String taskId, String taskData) {
 		this.executionTime = executionTime;
 		this.taskName = taskName;
-		this.id = id;
+		this.taskId = taskId;
 		this.taskData = taskData;
 	}
 
-	public ScheduledTasks(Instant executionTime, String taskName, String id, Object taskData, boolean picked, String pickedBy,
-                     Instant lastSuccess, Instant lastFailure, int consecutiveFailures, Instant lastHeartbeat, long version) {
+	public ScheduledTasks(Instant executionTime, String taskName, String taskId, String taskData, boolean picked, String pickedBy,
+                     Instant lastSuccess, Instant lastFailure, int consecutiveFailures, Instant lastHeartbeat, int version) {
 		this.executionTime = executionTime;
 		this.taskName = taskName;
-		this.id = id;
+		this.taskId = taskId;
 		this.taskData = taskData;
         this.picked = picked;
         this.pickedBy = pickedBy;
@@ -83,6 +89,7 @@ public final class ScheduledTasks {
 	/**
 	 * @return the taskName
 	 */
+	@com.datastax.driver.mapping.annotations.Column(name = "task_name")
 	public String getTaskName() {
 		return taskName;
 	}
@@ -93,48 +100,135 @@ public final class ScheduledTasks {
 		this.taskName = taskName;
 	}
 	/**
-	 * @return the id
+	 * @return the taskId
 	 */
-	public String getId() {
-		return id;
+	@com.datastax.driver.mapping.annotations.Column(name = "task_id")
+	public String getTaskId() {
+		return taskId;
 	}
 	/**
-	 * @param id the id to set
+	 * @param taskId the taskId to set
 	 */
-	public void setId(String id) {
-		this.id = id;
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
+	}
+	/**
+	 * @return the consecutiveFailures
+	 */
+	@com.datastax.driver.mapping.annotations.Column(name = "consecutive_failures")
+	public int getConsecutiveFailures() {
+		return consecutiveFailures;
+	}
+	/**
+	 * @param consecutiveFailures the consecutiveFailures to set
+	 */
+	public void setConsecutiveFailures(int consecutiveFailures) {
+		this.consecutiveFailures = consecutiveFailures;
+	}
+	/**
+	 * @return the executionTime
+	 */
+	@com.datastax.driver.mapping.annotations.Column(name = "execution_time")
+	public Instant getExecutionTime() {
+		return executionTime;
+	}
+	/**
+	 * @param executionTime the executionTime to set
+	 */
+	public void setExecutionTime(Instant executionTime) {
+		this.executionTime = executionTime;
+	}
+	/**
+	 * @return the lastFailure
+	 */
+	@com.datastax.driver.mapping.annotations.Column(name = "last_failure")
+	public Instant getLastFailure() {
+		return lastFailure;
+	}
+	/**
+	 * @param lastFailure the lastFailure to set
+	 */
+	public void setLastFailure(Instant lastFailure) {
+		this.lastFailure = lastFailure;
+	}
+	/**
+	 * @return the lastHeartbeat
+	 */
+	@com.datastax.driver.mapping.annotations.Column(name = "last_heartbeat")
+	public Instant getLastHeartbeat() {
+		return lastHeartbeat;
+	}
+	/**
+	 * @param lastHeartbeat the lastHeartbeat to set
+	 */
+	public void setLastHeartbeat(Instant lastHeartbeat) {
+		this.lastHeartbeat = lastHeartbeat;
+	}
+	/**
+	 * @return the lastSuccess
+	 */
+	@com.datastax.driver.mapping.annotations.Column(name = "last_success")
+	public Instant getLastSuccess() {
+		return lastSuccess;
+	}
+	/**
+	 * @return the picked
+	 */
+	@com.datastax.driver.mapping.annotations.Column(name = "picked")
+	public boolean isPicked() {
+		return picked;
+	}
+	/**
+	 * @param picked the picked to set
+	 */
+	public void setPicked(boolean picked) {
+		this.picked = picked;
+	}
+	/**
+	 * @return the pickedBy
+	 */
+	@com.datastax.driver.mapping.annotations.Column(name = "picked_by")
+	public String getPickedBy() {
+		return pickedBy;
+	}
+	/**
+	 * @param pickedBy the pickedBy to set
+	 */
+	public void setPickedBy(String pickedBy) {
+		this.pickedBy = pickedBy;
+	}
+	/**
+	 * @param lastSuccess the lastSuccess to set
+	 */
+	public void setLastSuccess(Instant lastSuccess) {
+		this.lastSuccess = lastSuccess;
 	}
 	/**
 	 * @return the taskData
 	 */
-	public Object getTaskData() {
+	@com.datastax.driver.mapping.annotations.Column(name = "task_data")
+	public String getTaskData() {
 		return taskData;
 	}
 	/**
 	 * @param taskData the taskData to set
 	 */
-	public void setTaskData(Object taskData) {
+	public void setTaskData(String taskData) {
 		this.taskData = taskData;
 	}
 	/**
-	 * @return
+	 * @return the version
 	 */
-	public String getTaskAndInstance() {
-        return taskName + "_" + id;
-    }
+	@com.datastax.driver.mapping.annotations.Column(name = "version")
+	public int getVersion() {
+		return version;
+	}
 	/**
-	 * @return
+	 * @param version the version to set
 	 */
-	@com.datastax.driver.mapping.annotations.Column(name = "id")
-	public Instant getExecutionTime() {
-        return executionTime;
-    }
-    /**
-     * @return
-     */
-    public boolean isPicked() {
-        return picked;
-    }
+	public void setVersion(int version) {
+		this.version = version;
+	}
     /**
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
@@ -146,7 +240,7 @@ public final class ScheduledTasks {
         
         ScheduledTasks execution = (ScheduledTasks) o;
         
-        return Objects.equals(executionTime, execution.executionTime) && Objects.equals(taskName, execution.taskName) && Objects.equals(id, execution.id);
+        return Objects.equals(executionTime, execution.executionTime) && Objects.equals(taskName, execution.taskName) && Objects.equals(taskId, execution.taskId);
 	}
     /**
      * @see java.lang.Object#hashCode()
@@ -154,7 +248,7 @@ public final class ScheduledTasks {
     @Override
     public int hashCode() {
         int result = taskName.hashCode();
-        result = 31 * result + id.hashCode();
+        result = 31 * result + taskId.hashCode();
         return Objects.hash(executionTime, result);
     }
     /**
@@ -164,7 +258,7 @@ public final class ScheduledTasks {
     public String toString() {
         return "ScheduledTasks: " +
                 "task=" + taskName +
-                ", id=" + id +
+                ", taskId=" + taskId +
                 ", executionTime=" + executionTime +
                 ", picked=" + picked +
                 ", pickedBy=" + pickedBy +

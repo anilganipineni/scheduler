@@ -15,6 +15,8 @@
  */
 package com.github.anilganipineni.scheduler.task;
 
+import java.util.Map;
+
 import com.github.anilganipineni.scheduler.ExecutionContext;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.schedule.Schedule;
@@ -47,7 +49,7 @@ public abstract class RecurringTask extends Task {
      * @param schedule
      * @param initialData
      */
-    public RecurringTask(String name, Schedule schedule, Object initialData) {
+    public RecurringTask(String name, Schedule schedule, Map<String, Object> initialData) {
     	this(name, new OnFailureReschedule(schedule), new ReviveDeadExecution(), schedule, INSTANCE, initialData);
     }
     /**
@@ -67,7 +69,7 @@ public abstract class RecurringTask extends Task {
 	 * @param instance
 	 * @param data
 	 */
-	public RecurringTask(String name, FailureHandler failureHandler, DeadExecutionHandler deadExecutionHandler, Schedule schedule, String instance, Object data) {
+	public RecurringTask(String name, FailureHandler failureHandler, DeadExecutionHandler deadExecutionHandler, Schedule schedule, String instance, Map<String, Object> data) {
 		super(name, failureHandler, deadExecutionHandler, schedule, instance, data);
 	}
 	/**

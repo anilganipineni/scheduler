@@ -15,8 +15,11 @@
  */
 package com.github.anilganipineni.scheduler.task;
 
+import java.util.Map;
+
 import com.github.anilganipineni.scheduler.Clock;
 import com.github.anilganipineni.scheduler.Scheduler;
+import com.github.anilganipineni.scheduler.StringUtils;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.schedule.Schedule;
 import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler;
@@ -33,7 +36,7 @@ public abstract class Task implements ExecutionHandler {
     
     private Schedule schedule;
     private String instance;
-    private Object data;
+    private Map<String, Object> data;
     /**
      * @param name
      * @param failureHandler
@@ -52,7 +55,7 @@ public abstract class Task implements ExecutionHandler {
      * @param instance
      * @param data
      */
-    public Task(String name, FailureHandler failureHandler, DeadExecutionHandler deadExecutionHandler, Schedule schedule, String instance, Object data) {
+    public Task(String name, FailureHandler failureHandler, DeadExecutionHandler deadExecutionHandler, Schedule schedule, String instance, Map<String, Object> data) {
         this.name = name;
         this.failureHandler = failureHandler;
         this.deadExecutionHandler = deadExecutionHandler;
@@ -109,7 +112,15 @@ public abstract class Task implements ExecutionHandler {
 	 * @param data
 	 * @return
 	 */
-	public ScheduledTasks instance(String id, Object data) {
+	public ScheduledTasks instance(String id, Map<String, Object> data) {
+        return new ScheduledTasks(null, this.name, id, StringUtils.convertMap2String(data));
+    }
+	/**
+	 * @param id
+	 * @param data
+	 * @return
+	 */
+	public ScheduledTasks instance(String id, String data) {
         return new ScheduledTasks(null, this.name, id, data);
     }
 	/**
@@ -126,7 +137,7 @@ public abstract class Task implements ExecutionHandler {
 	@Override
 	public void onStartup(Scheduler scheduler, Clock clock) {
     	if(schedule != null) {
-    		scheduler.schedule(instance(instance, this.data), schedule.getInitialExecutionTime(clock.now()));
+    		scheduler.schedule(instance(instance, StringUtils.convertMap2String(this.data)), schedule.getInitialExecutionTime(clock.now()));
     	}
     }
 }

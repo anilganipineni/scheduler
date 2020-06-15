@@ -7,12 +7,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.task.Task;
 
@@ -25,19 +23,16 @@ public class ScheduledTasksMapper implements ResultSetMapper<List<ScheduledTasks
      */
 	private static final Logger logger = LogManager.getLogger(ScheduledTasksMapper.class);
     private final TaskResolver taskResolver;
-    private final Serializer serializer;
 	/**
 	 * @param taskResolver
 	 * @param serializer
 	 */
-	public ScheduledTasksMapper(TaskResolver taskResolver, Serializer serializer) {
+	public ScheduledTasksMapper(TaskResolver taskResolver) {
 		this.taskResolver = taskResolver;
-		this.serializer = serializer;
 	}
 	/**
 	 * @see com.github.anilganipineni.scheduler.dao.ResultSetMapper#map(java.sql.ResultSet)
 	 */
-	@SuppressWarnings("rawtypes") // FIXME --> @SuppressWarnings("rawtypes")
 	@Override
     public List<ScheduledTasks> map(ResultSet rs) throws SQLException {
 		ScheduledTasks task = null;
@@ -54,7 +49,7 @@ public class ScheduledTasksMapper implements ResultSetMapper<List<ScheduledTasks
                 continue;
             }
 
-            String instanceId 			= rs.getString("task_instance");
+            String instanceId 			= rs.getString("task_id");
             Instant executionTime		= rs.getTimestamp("execution_time").toInstant();
             boolean picked				= rs.getBoolean("picked");
             String pickedBy				= rs.getString("picked_by");
@@ -62,33 +57,14 @@ public class ScheduledTasksMapper implements ResultSetMapper<List<ScheduledTasks
             Instant lastSuccess			= Optional.ofNullable(rs.getTimestamp("last_success")).map(Timestamp::toInstant).orElse(null);
             Instant lastFailure			= Optional.ofNullable(rs.getTimestamp("last_failure")).map(Timestamp::toInstant).orElse(null);
             Instant lastHeartbeat		= Optional.ofNullable(rs.getTimestamp("last_heartbeat")).map(Timestamp::toInstant).orElse(null);
-            long version				= rs.getLong("version");
+            int version				= rs.getInt("version");
             
-            byte[] data					= rs.getBytes("task_data");
-            Supplier dataSupplier = memoize(() -> serializer.deserialize(Object.class, data));
-            task = new ScheduledTasks(executionTime, taskName, instanceId, dataSupplier, picked, pickedBy, lastSuccess, lastFailure, consecutiveFailures, lastHeartbeat, version);
+            String data					= rs.getString("task_data");
+            // Supplier dataSupplier = memoize(() -> serializer.deserialize(Object.class, data));
+            task = new ScheduledTasks(executionTime, taskName, instanceId, data, picked, pickedBy, lastSuccess, lastFailure, consecutiveFailures, lastHeartbeat, version);
             tasks.add(task);
         }
 
         return tasks;
     }
-
-    private static <T> Supplier<T> memoize(Supplier<T> original) {
-        return new Supplier<T>() {
-            Supplier<T> delegate = this::firstTime;
-            boolean initialized;
-            public T get() {
-                return delegate.get();
-            }
-            private synchronized T firstTime() {
-                if(!initialized) {
-                    T value = original.get();
-                    delegate = () -> value;
-                    initialized = true;
-                }
-                return delegate.get();
-            }
-        };
-    }
-
 }

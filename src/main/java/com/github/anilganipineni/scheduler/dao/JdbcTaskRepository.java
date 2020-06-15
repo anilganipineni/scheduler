@@ -32,7 +32,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.github.anilganipineni.scheduler.SchedulerName;
-import com.github.anilganipineni.scheduler.Serializer;
 import com.github.anilganipineni.scheduler.StringUtils;
 import com.github.anilganipineni.scheduler.TaskResolver;
 import com.github.anilganipineni.scheduler.UnresolvedTask;
@@ -49,26 +48,15 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     private final TaskResolver taskResolver;
     private final SchedulerName schedulerName;
     private final JdbcRunner jdbcRunner;
-    private final Serializer serializer;
     /**
      * @param dataSource
      * @param taskResolver
      * @param schedulerName
      */
     public JdbcTaskRepository(DataSource dataSource, TaskResolver taskResolver, SchedulerName schedulerName) {
-        this(dataSource, taskResolver, schedulerName, Serializer.DEFAULT_JAVA_SERIALIZER);
-    }
-    /**
-     * @param dataSource
-     * @param taskResolver
-     * @param schedulerName
-     * @param serializer
-     */
-    public JdbcTaskRepository(DataSource dataSource, TaskResolver taskResolver, SchedulerName schedulerName, Serializer serializer) {
         this.taskResolver = taskResolver;
         this.schedulerName = schedulerName;
         this.jdbcRunner = new JdbcRunner(dataSource);
-        this.serializer = serializer;
     }
     /**
      * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#createIfNotExists(java.lang.Object)
@@ -78,17 +66,17 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
         try {
             Optional<ScheduledTasks> existingExecution = getExecution(execution);
             if (existingExecution.isPresent()) {
-                logger.debug("ScheduledTasks not created, it already exists. Due: {}", existingExecution.get().executionTime);
+                logger.debug("ScheduledTasks not created, it already exists. Due: {}", existingExecution.get().getExecutionTime());
                 return false;
             }
 
             jdbcRunner.execute(
-                    "insert into " + TABLE_NAME + "(task_name, task_instance, task_data, execution_time, picked, version) values(?, ?, ?, ?, ?, ?)",
+                    "insert into " + TABLE_NAME + "(task_name, task_id, task_data, execution_time, picked, version) values(?, ?, ?, ?, ?, ?)",
                     (PreparedStatement p) -> {
                         p.setString(1, execution.getTaskName());
-                        p.setString(2, execution.getId());
-                        p.setObject(3, serializer.serialize(execution.getTaskData()));
-                        p.setTimestamp(4, Timestamp.from(execution.executionTime));
+                        p.setString(2, execution.getTaskId());
+                        p.setObject(3, execution.getTaskData());
+                        p.setTimestamp(4, Timestamp.from(execution.getExecutionTime()));
                         p.setBoolean(5, false);
                         p.setLong(6, 1L);
                     });
@@ -117,7 +105,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     p.setBoolean(index++, false);
                     unresolvedFilter.setParameters(p, index);
                 },
-                new ScheduledTasksMapper(taskResolver, serializer)
+                new ScheduledTasksMapper(taskResolver)
         );
     	for(ScheduledTasks t : tasks) {
     		consumer.accept(t);
@@ -135,7 +123,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     p.setBoolean(1, false);
                     p.setString(2, taskName);
                 },
-                new ScheduledTasksMapper(taskResolver, serializer)
+                new ScheduledTasksMapper(taskResolver)
         );
     	for(ScheduledTasks t : tasks) {
     		consumer.accept(t);
@@ -155,18 +143,18 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     unresolvedFilter.setParameters(p, index);
                     p.setMaxRows(limit);
                 },
-                new ScheduledTasksMapper(taskResolver, serializer)
+                new ScheduledTasksMapper(taskResolver)
         );
     }
 
     @Override
     public void remove(ScheduledTasks execution) {
 
-        final int removed = jdbcRunner.execute("delete from " + TABLE_NAME + " where task_name = ? and task_instance = ? and version = ?",
+        final int removed = jdbcRunner.execute("delete from " + TABLE_NAME + " where task_name = ? and task_id = ? and version = ?",
                 ps -> {
                     ps.setString(1, execution.getTaskName());
-                    ps.setString(2, execution.getId());
-                    ps.setLong(3, execution.version);
+                    ps.setString(2, execution.getTaskId());
+                    ps.setLong(3, execution.getVersion());
                 }
         );
 
@@ -213,7 +201,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                         (data != null ? "task_data = ?, " : "") +
                         "version = version + 1 " +
                         "where task_name = ? " +
-                        "and task_instance = ? " +
+                        "and task_id = ? " +
                         "and version = ?",
                 ps -> {
                     int index = 1;
@@ -226,11 +214,11 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     ps.setTimestamp(index++, Timestamp.from(nextExecutionTime));
                     if (data != null) {
                         // may cause datbase-specific problems, might have to use setNull instead
-                        ps.setObject(index++, serializer.serialize(data));
+                        ps.setObject(index++, StringUtils.convertMap2String(data));
                     }
                     ps.setString(index++, execution.getTaskName());
-                    ps.setString(index++, execution.getId());
-                    ps.setLong(index++, execution.version);
+                    ps.setString(index++, execution.getTaskId());
+                    ps.setLong(index++, execution.getVersion());
                 });
 
         if (updated != 1) {
@@ -245,7 +233,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                 "update " + TABLE_NAME + " set picked = ?, picked_by = ?, last_heartbeat = ?, version = version + 1 " +
                         "where picked = ? " +
                         "and task_name = ? " +
-                        "and task_instance = ? " +
+                        "and task_id = ? " +
                         "and version = ?",
                 ps -> {
                     ps.setBoolean(1, true);
@@ -253,8 +241,8 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     ps.setTimestamp(3, Timestamp.from(timePicked));
                     ps.setBoolean(4, false);
                     ps.setString(5, e.getTaskName());
-                    ps.setString(6, e.getId());
-                    ps.setLong(7, e.version);
+                    ps.setString(6, e.getTaskId());
+                    ps.setLong(7, e.getVersion());
                 });
 
         if (updated == 0) {
@@ -284,7 +272,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     p.setTimestamp(index++, Timestamp.from(olderThan));
                     unresolvedFilter.setParameters(p, index);
                 },
-                new ScheduledTasksMapper(taskResolver, serializer)
+                new ScheduledTasksMapper(taskResolver)
         );
     }
 
@@ -294,13 +282,13 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
         final int updated = jdbcRunner.execute(
                 "update " + TABLE_NAME + " set last_heartbeat = ? " +
                         "where task_name = ? " +
-                        "and task_instance = ? " +
+                        "and task_id = ? " +
                         "and version = ?",
                 ps -> {
                     ps.setTimestamp(1, Timestamp.from(newHeartbeat));
                     ps.setString(2, e.getTaskName());
-                    ps.setString(3, e.getId());
-                    ps.setLong(4, e.version);
+                    ps.setString(3, e.getTaskId());
+                    ps.setLong(4, e.getVersion());
                 });
 
         if (updated == 0) {
@@ -326,7 +314,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                     p.setTimestamp(index++, Timestamp.from(Instant.now().minus(interval)));
                     unresolvedFilter.setParameters(p, index);
                 },
-                new ScheduledTasksMapper(taskResolver, serializer)
+                new ScheduledTasksMapper(taskResolver)
         );
     }
 
@@ -338,21 +326,21 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
             });
     }
 
-    public Optional<ScheduledTasks> getExecution(ScheduledTasks taskInstance) {
-        return getExecution(taskInstance.getTaskName(), taskInstance.getId());
+    public Optional<ScheduledTasks> getExecution(ScheduledTasks taskId) {
+        return getExecution(taskId.getTaskName(), taskId.getTaskId());
     }
 
-    public Optional<ScheduledTasks> getExecution(String taskName, String taskInstanceId) {
-        final List<ScheduledTasks> executions = jdbcRunner.execute("select * from " + TABLE_NAME + " where task_name = ? and task_instance = ?",
+    public Optional<ScheduledTasks> getExecution(String taskName, String taskIdId) {
+        final List<ScheduledTasks> executions = jdbcRunner.execute("select * from " + TABLE_NAME + " where task_name = ? and task_id = ?",
                 (PreparedStatement p) -> {
                     p.setString(1, taskName);
-                    p.setString(2, taskInstanceId);
+                    p.setString(2, taskIdId);
                 },
-                new ScheduledTasksMapper(taskResolver, serializer)
+                new ScheduledTasksMapper(taskResolver)
         );
         
         if (executions.size() > 1) {
-            throw new RuntimeException(String.format("Found more than one matching execution for task name/id combination: '%s'/'%s'", taskName, taskInstanceId));
+            throw new RuntimeException(String.format("Found more than one matching execution for task name/id combination: '%s'/'%s'", taskName, taskIdId));
         }
 
         return executions.size() == 1 ? Optional.ofNullable(executions.get(0)) : Optional.empty();
