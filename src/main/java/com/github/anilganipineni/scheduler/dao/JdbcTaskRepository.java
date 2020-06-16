@@ -133,9 +133,8 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
     @Override
     public List<ScheduledTasks> getDue(Instant now, int limit) {
         final UnresolvedFilter unresolvedFilter = new UnresolvedFilter(taskResolver.getUnresolved());
-
-        return jdbcRunner.execute(
-                "select * from " + TABLE_NAME + " where picked = ? and execution_time <= ? " + unresolvedFilter.andCondition() + " order by execution_time asc",
+        String sql = "select * from " + TABLE_NAME + " where picked = ? and execution_time <= ? " + unresolvedFilter.andCondition() + " order by execution_time asc";
+        return jdbcRunner.execute(sql,
                 (PreparedStatement p) -> {
                     int index = 1;
                     p.setBoolean(index++, false);
@@ -248,6 +247,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
         if (updated == 0) {
             logger.trace("Failed to pick execution. It must have been picked by another scheduler.", e);
             return Optional.empty();
+            
         } else if (updated == 1) {
             final Optional<ScheduledTasks> pickedExecution = getExecution(e);
             if (!pickedExecution.isPresent()) {
@@ -256,6 +256,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
                 throw new IllegalStateException("Picked execution does not have expected state in database: " + pickedExecution.get());
             }
             return pickedExecution;
+            
         } else {
             throw new IllegalStateException("Updated multiple rows when picking single execution. Should never happen since name and id is primary key. ScheduledTasks: " + e);
         }

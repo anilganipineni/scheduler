@@ -31,8 +31,8 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.github.anilganipineni.scheduler.SchedulerState.SettableSchedulerState;
 import com.github.anilganipineni.scheduler.StatsRegistry.SchedulerStatsEvent;
@@ -49,7 +49,11 @@ public class Scheduler implements SchedulerClient {
     public static final double TRIGGER_NEXT_BATCH_WHEN_AVAILABLE_THREADS_RATIO = 0.5;
     public static final String THREAD_PREFIX = "db-scheduler";
     public static final Duration SHUTDOWN_WAIT = Duration.ofMinutes(30);
-    private static final Logger LOG = LoggerFactory.getLogger(Scheduler.class);
+    // private static final Logger LOG = LoggerFactory.getLogger(Scheduler.class);
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger LOG = LogManager.getLogger(Scheduler.class);
     private final SchedulerClient delegate;
     private final Clock clock;
     private final SchedulerRepository<ScheduledTasks> taskRepository;
@@ -209,8 +213,8 @@ public class Scheduler implements SchedulerClient {
 	        int thisGenerationNumber = this.currentGenerationNumber + 1;
 	        DueExecutionsBatch newDueBatch = new DueExecutionsBatch(Scheduler.this.threadpoolSize, thisGenerationNumber, dueExecutions.size(), pollingLimit == dueExecutions.size());
 
-	        for (ScheduledTasks e : dueExecutions) {
-	            executorService.execute(new PickAndExecute(e, newDueBatch));
+	        for (ScheduledTasks task : dueExecutions) {
+	            executorService.execute(new PickAndExecute(task, newDueBatch));
 	        }
 	        this.currentGenerationNumber = thisGenerationNumber;
 	        statsRegistry.register(SchedulerStatsEvent.RAN_EXECUTE_DUE);
@@ -307,7 +311,7 @@ public class Scheduler implements SchedulerClient {
 
         
         public void run() {
-            if (schedulerState.isShuttingDown()) {
+            if(schedulerState.isShuttingDown()) {
                 LOG.info("Scheduler has been shutdown. Skipping fetched due execution: " + candidate.getTaskName() + "_" + candidate.getTaskId());
                 return;
             }
@@ -320,7 +324,12 @@ public class Scheduler implements SchedulerClient {
                 return;
             }
 
-            final Optional<ScheduledTasks> pickedExecution = taskRepository.pick(candidate, clock.now());
+            Optional<ScheduledTasks> pickedExecution;
+			try {
+				pickedExecution = taskRepository.pick(candidate, clock.now());
+			} catch (SchedulerException ex) {
+				throw new IllegalStateException(ex.getMessage(), ex);
+			}
 
             if (!pickedExecution.isPresent()) {
                 // someone else picked id

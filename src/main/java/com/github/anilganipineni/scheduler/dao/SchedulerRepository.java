@@ -39,11 +39,11 @@ public interface SchedulerRepository<T> {
     boolean reschedule(T execution, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures);
     boolean reschedule(T execution, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures, Map<String, Object> newData);
 
-    Optional<T> pick(T e, Instant timePicked);
+    Optional<T> pick(T e, Instant timePicked) throws SchedulerException;
 
     List<T> getDeadExecutions(Instant olderThan) throws SchedulerException;
 
-    void updateHeartbeat(T execution, Instant heartbeatTime);
+    void updateHeartbeat(T execution, Instant heartbeatTime) throws SchedulerException;
 
     List<T> getExecutionsFailingLongerThan(Duration interval) throws SchedulerException;
 

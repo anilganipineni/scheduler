@@ -15,7 +15,6 @@
  */
 package com.github.anilganipineni.scheduler.dao;
 
-import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -53,9 +52,9 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
      */
 	private static final Logger logger = LogManager.getLogger(CassandraTaskRepository.class);
 	private static final String SELECT 				= " select * from " + TABLE_NAME;
-	private static final String UPDATE				= " update " + TABLE_NAME;
 	private static final String WHERE_PK_CK			= " where task_name = ?  and task_id = ? ";
 	private static final String LIMIT				= " LIMIT 2000 ";
+	public static final String DELETE				= "DELETE FROM "+ TABLE_NAME + WHERE_PK_CK;
 	/**
 	 * The preparedStatementCache for GSP application
 	 */
@@ -82,14 +81,6 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 			 throw new IllegalStateException("Failed to create Mapping Manager!");
 		}
 		logger.info("Created Cassandra Mapping Manager successfully.........................");
-	}
-	/**
-	 * @param query
-	 * @param params
-	 */
-	private ResultSet execute(String query, Object... params) {
-		ResultSet rs = dataSource.getSession().execute(query, params);
-		return rs;
 	}
 	/**
 	 * @param entityType
@@ -172,11 +163,11 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 		return entity;
 	}
 	/**
-	 * @param entity
-	 * @param entityType
+	 * @param query
+	 * @param params
 	 */
-	private <E> void delete(E entity, Class<E> entityType) {
-		getMapper(entityType).delete(entity);
+	private ResultSet execute(String query, Object... params) {
+		return dataSource.getSession().execute(query, params);
 	}
 	/**
 	 * @param bs
@@ -250,7 +241,12 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	 */
 	@Override
 	public boolean reschedule(ScheduledTasks task, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures, Map<String, Object> newData) {
-		return rescheduleInternal(task, nextExecutionTime, lastSuccess, lastFailure, consecutiveFailures, newData);
+		try {
+			return rescheduleInternal(task, nextExecutionTime, lastSuccess, lastFailure, consecutiveFailures, newData);
+		} catch (SchedulerException ex) {
+			// TODO Auto-generated catch block
+			throw new RuntimeException(ex.getMessage(), ex);
+		}
 	}
 	/**
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#getDue(java.time.Instant, int)
@@ -267,6 +263,7 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 		List<ScheduledTasks> dues = new ArrayList<ScheduledTasks>();
 		for(ScheduledTasks t : all) {
 			if(!t.isPicked() && !taskNames.contains(t.getTaskName()) && t.getExecutionTime().isBefore(now)) {
+				logger.info("Selected for Due --> Name : {} and ID : {}", t.getTaskName(), t.getTaskId());
 				dues.add(t);
 			}
 		}
@@ -333,12 +330,9 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 			int removed = 0;
 			String cql = SELECT + WHERE_PK_CK;
 			List<ScheduledTasks> tasks = getResultList(cql, ScheduledTasks.class, task.getTaskName(), task.getTaskId());
-			if(tasks == null || tasks.isEmpty()) {
-	            throw new RuntimeException("Expected one execution to be removed, but zero found. Indicates a bug.");
-			}
-			removed = tasks.size();
 			for(ScheduledTasks t : tasks) {
-				delete(t, ScheduledTasks.class);
+				execute(DELETE, t.getTaskName(), t.getTaskId());
+				removed++;
 			}
 
 	        if (removed != 1) {
@@ -357,44 +351,49 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 		String cql = SELECT + " where task_name = ?";
 		List<ScheduledTasks> tasks = getResultList(cql, ScheduledTasks.class, taskName);
 		for(ScheduledTasks t : tasks) {
-			delete(t, ScheduledTasks.class);
+			execute(DELETE, t.getTaskName(), t.getTaskId());
 			removed++;
 		}
 		
 		return removed;
 	}
 	/**
+	 * @throws SchedulerException 
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#pick(java.lang.Object, java.time.Instant)
 	 */
 	@Override
-	public Optional<ScheduledTasks> pick(ScheduledTasks e, Instant timePicked) {
+	public Optional<ScheduledTasks> pick(ScheduledTasks task, Instant timePicked) throws SchedulerException {
 		int updated = 0;
-		String cql = UPDATE + " set picked = ?, picked_by = ?, last_heartbeat = ?, version = ? " + WHERE_PK_CK; /*" + and picked = ? "*/;
-		
-		ResultSet rs = execute(cql, true, StringUtils.truncate(schedulerName.getName(), 50), Timestamp.from(timePicked), e.getVersion() + 1, e.getTaskName(), e.getTaskId());
-		updated = rs.getAvailableWithoutFetching();
-
-        if (updated == 0) {
-            logger.trace("Failed to pick execution. It must have been picked by another scheduler.", e);
+		List<ScheduledTasks> tasks = getResultList(SELECT + WHERE_PK_CK, ScheduledTasks.class, task.getTaskName(), task.getTaskId());
+		if(tasks == null || tasks.isEmpty()) {
+			updated = 0;
+            logger.trace("Failed to pick execution. It must have been picked by another scheduler.", task);
             return Optional.empty();
-            
-        } else if (updated == 1) {
-        	ScheduledTasks pickedTask = null;
-			try {
-				pickedTask = getSingleResult(SELECT + WHERE_PK_CK, ScheduledTasks.class, e.getTaskName(), e.getTaskId());
-			} catch (SchedulerException ex) {
-				pickedTask = null;
-			}
-            if (pickedTask == null) {
+		}
+		
+		for(ScheduledTasks t : tasks) {
+			t.setPicked(true);
+			t.setPickedBy(StringUtils.truncate(schedulerName.getName(), 50));
+			t.setLastHeartbeat(timePicked);
+			t.setVersion(task.getVersion() + 1);
+			update(t, ScheduledTasks.class);
+			updated++;
+		}
+
+        if(updated == 1) {
+        	// Query again
+        	ScheduledTasks pickedTask = getSingleResult(SELECT + WHERE_PK_CK, ScheduledTasks.class, task.getTaskName(), task.getTaskId());
+            if(pickedTask == null) {
             	throw new IllegalStateException("Unable to find picked execution. Must have been deleted by another thread. Indicates a bug.");
             	
             } else if (!pickedTask.isPicked()) {
             	throw new IllegalStateException("Picked execution does not have expected state in database: " + pickedTask);
+            	
             }
             return Optional.ofNullable(pickedTask);
             
         } else {
-            throw new IllegalStateException("Updated multiple rows when picking single execution. Should never happen since name and id is primary key. ScheduledTasks: " + e);
+            throw new IllegalStateException("Updated multiple rows when picking single execution. Should never happen since name and id is primary key. ScheduledTasks: " + task);
         }
 	}
 	/**
@@ -421,15 +420,20 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 		return dues;
 	}
 	/**
+	 * @throws SchedulerException 
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#updateHeartbeat(java.lang.Object, java.time.Instant)
 	 */
 	@Override
-	public void updateHeartbeat(ScheduledTasks e, Instant heartbeatTime) {
-		String cql = UPDATE + " set last_heartbeat = ?" + WHERE_PK_CK;
-
+	public void updateHeartbeat(ScheduledTasks e, Instant heartbeatTime) throws SchedulerException {
 		int updated = 0;
-		ResultSet rs = execute(cql, Timestamp.from(heartbeatTime), e.getTaskName(), e.getTaskId());
-		updated = rs.getAvailableWithoutFetching();
+    	List<ScheduledTasks> tasks = getResultList(SELECT + WHERE_PK_CK, ScheduledTasks.class, e.getTaskName(), e.getTaskId());
+		
+		for(ScheduledTasks t : tasks) {
+			t.setLastHeartbeat(heartbeatTime);
+			
+			update(t, ScheduledTasks.class);
+			updated++;
+		}
 
         if (updated == 0) {
             logger.trace("Did not update heartbeat. ScheduledTasks must have been removed or rescheduled.", e);
@@ -485,27 +489,28 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
      * @param lastFailure
      * @param consecutiveFailures
      * @return
+     * @throws SchedulerException 
      */
-    private boolean rescheduleInternal(ScheduledTasks task, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures, Map<String, Object> data) {
+    private boolean rescheduleInternal(ScheduledTasks task, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures, Map<String, Object> data) throws SchedulerException {
     	int updated = 0;
-    	String cql	= UPDATE + " set picked = ?, picked_by = ?, last_heartbeat = ?, last_success = ?, last_failure = ?, "
-    				+ "consecutive_failures = ?, execution_time = ?, task_data = ?, version = ? " + WHERE_PK_CK;
-    	
-    	ResultSet rs = execute(cql, false,
-				null,
-				null, 
-				Optional.ofNullable(lastSuccess).map(Timestamp::from).orElse(null),
-				Optional.ofNullable(lastFailure).map(Timestamp::from).orElse(null), 
-				consecutiveFailures,
-				Timestamp.from(nextExecutionTime),
-				StringUtils.convertMap2String(data),
-				task.getVersion() + 1,
-				task.getTaskName(),
-				task.getTaskId());
-		updated = rs.getAvailableWithoutFetching();
+    	List<ScheduledTasks> tasks = getResultList(SELECT + WHERE_PK_CK, ScheduledTasks.class, task.getTaskName(), task.getTaskId());
+		
+		for(ScheduledTasks t : tasks) {
+			t.setPicked(false);
+			t.setPickedBy(null);
+			t.setLastHeartbeat(null);
+			t.setLastSuccess(lastSuccess);
+			t.setLastFailure(lastFailure);
+			t.setConsecutiveFailures(consecutiveFailures);
+			t.setExecutionTime(nextExecutionTime);
+			t.setTaskData(StringUtils.convertMap2String(data));
+			t.setVersion(task.getVersion() + 1);
+			update(t, ScheduledTasks.class);
+			updated++;
+		}
 
 
-        if (updated != 1) {
+        if(updated != 1) {
             throw new RuntimeException("Expected one execution to be updated, but updated " + updated + ". Indicates a bug.");
         }
         return updated > 0;
