@@ -40,6 +40,7 @@ import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
 import com.github.anilganipineni.scheduler.exception.SchedulerException;
+import com.github.anilganipineni.scheduler.schedule.Clock;
 import com.github.anilganipineni.scheduler.task.Task;
 import com.github.anilganipineni.scheduler.task.handler.CompletionHandler;
 import com.github.anilganipineni.scheduler.task.handler.FailureHandler;

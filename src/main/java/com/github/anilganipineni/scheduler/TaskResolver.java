@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.anilganipineni.scheduler.schedule.Clock;
+import com.github.anilganipineni.scheduler.schedule.SystemClock;
 import com.github.anilganipineni.scheduler.task.Task;
 
 /**

@@ -15,56 +15,77 @@
  */
 package com.github.anilganipineni.scheduler;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.time.Duration;
 import java.time.Instant;
 
-public class Waiter {
-    private static final Logger LOG = LoggerFactory.getLogger(Waiter.class);
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import com.github.anilganipineni.scheduler.dao.CassandraTaskRepository;
+import com.github.anilganipineni.scheduler.schedule.Clock;
+import com.github.anilganipineni.scheduler.schedule.SystemClock;
+
+/**
+ * @author akganipineni
+ */
+public class Waiter {
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(CassandraTaskRepository.class);
     private Object lock;
     private boolean woken = false;
     private final Duration duration;
     private Clock clock;
     private boolean isWaiting = false;
-
+    /**
+     * @param duration
+     */
     public Waiter(Duration duration) {
         this(duration, new SystemClock());
     }
-
+    /**
+     * @param duration
+     * @param clock
+     */
     public Waiter(Duration duration, Clock clock) {
         this(duration, clock, new Object());
     }
-
+    /**
+     * @param duration
+     * @param clock
+     * @param lock
+     */
     public Waiter(Duration duration, Clock clock, Object lock) {
         this.duration = duration;
         this.clock = clock;
         this.lock = lock;
     }
-
+    /**
+     * @throws InterruptedException
+     */
     public void doWait() throws InterruptedException {
         final long millis = duration.toMillis();
         if (millis > 0) {
             Instant waitUntil = clock.now().plusMillis(millis);
-
-            while (clock.now().isBefore(waitUntil)) {
+            while(clock.now().isBefore(waitUntil)) {
                 synchronized (lock) {
                     woken = false;
-                    LOG.debug("Waiter start wait.");
+                    logger.debug("Waiter start wait.");
                     this.isWaiting = true;
                     lock.wait(millis);
                     this.isWaiting = false;
                     if (woken) {
-                        LOG.debug("Waiter woken, it had {}ms left to wait.", (waitUntil.toEpochMilli() - clock.now().toEpochMilli()));
+                        logger.debug("Waiter woken, it had {}ms left to wait.", (waitUntil.toEpochMilli() - clock.now().toEpochMilli()));
                         break;
                     }
                 }
             }
         }
     }
-
+    /**
+     * @return
+     */
     public boolean wake() {
         synchronized (lock) {
             if (!isWaiting) {
@@ -76,7 +97,9 @@ public class Waiter {
             }
         }
     }
-
+    /**
+     * @return
+     */
     public Duration getWaitDuration() {
         return duration;
     }

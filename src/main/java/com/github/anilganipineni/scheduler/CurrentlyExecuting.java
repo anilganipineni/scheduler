@@ -18,6 +18,8 @@ package com.github.anilganipineni.scheduler;
 import java.time.Duration;
 import java.time.Instant;
 
+import com.github.anilganipineni.scheduler.schedule.Clock;
+
 /**
  * @author akganipineni
  */

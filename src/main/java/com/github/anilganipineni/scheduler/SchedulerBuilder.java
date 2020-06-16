@@ -33,6 +33,8 @@ import com.github.anilganipineni.scheduler.dao.DbUtils;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
 import com.github.anilganipineni.scheduler.dao.SchedulerRepository;
+import com.github.anilganipineni.scheduler.schedule.Clock;
+import com.github.anilganipineni.scheduler.schedule.SystemClock;
 import com.github.anilganipineni.scheduler.task.Task;
 
 public class SchedulerBuilder {
@@ -53,7 +55,6 @@ public class SchedulerBuilder {
     protected boolean useDefaultPollingLimit;
     protected StatsRegistry statsRegistry = StatsRegistry.NOOP;
     protected Duration heartbeatInterval = Duration.ofMinutes(5);
-    protected Serializer serializer = Serializer.DEFAULT_JAVA_SERIALIZER;
     protected boolean enableImmediateExecution = false;
     protected ExecutorService executorService;
     protected Duration deleteUnresolvedAfter = Duration.ofDays(14);
@@ -131,14 +132,6 @@ public class SchedulerBuilder {
      */
     public SchedulerBuilder schedulerName(SchedulerName schedulerName) {
         this.schedulerName = schedulerName;
-        return this;
-    }
-    /**
-     * @param serializer
-     * @return
-     */
-    public SchedulerBuilder serializer(Serializer serializer) {
-        this.serializer = serializer;
         return this;
     }
     /**

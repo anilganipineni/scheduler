@@ -1,7 +1,6 @@
 CREATE TABLE scheduled_tasks (
     task_name text,
-    task_instance text,
-    version int,
+    task_id text,
     consecutive_failures int,
     execution_time timestamp,
     last_failure timestamp,
@@ -10,7 +9,8 @@ CREATE TABLE scheduled_tasks (
     picked boolean,
     picked_by text,
     task_data text,
-    PRIMARY KEY (task_name, task_instance, version)
+    version int,
+    PRIMARY KEY (task_name, task_id)
 ) WITH read_repair_chance = 0.0
    AND dclocal_read_repair_chance = 0.1
    AND gc_grace_seconds = 864000

@@ -17,10 +17,10 @@ package com.github.anilganipineni.scheduler.task;
 
 import java.util.Map;
 
-import com.github.anilganipineni.scheduler.Clock;
 import com.github.anilganipineni.scheduler.Scheduler;
 import com.github.anilganipineni.scheduler.StringUtils;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
+import com.github.anilganipineni.scheduler.schedule.Clock;
 import com.github.anilganipineni.scheduler.schedule.Schedule;
 import com.github.anilganipineni.scheduler.task.handler.DeadExecutionHandler;
 import com.github.anilganipineni.scheduler.task.handler.ExecutionHandler;
@@ -132,7 +132,7 @@ public abstract class Task implements ExecutionHandler {
     }
 	/**
 	 * @see com.github.anilganipineni.scheduler.task.handler.ExecutionHandler#onStartup(com.github.anilganipineni.scheduler.Scheduler,
-	 *      com.github.anilganipineni.scheduler.Clock)
+	 *      com.github.anilganipineni.scheduler.schedule.Clock)
 	 */
 	@Override
 	public void onStartup(Scheduler scheduler, Clock clock) {
