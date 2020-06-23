@@ -16,7 +16,6 @@
 package com.github.anilganipineni.scheduler;
 
 import java.time.Instant;
-import java.util.Objects;
 
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.exception.SchedulerException;
@@ -24,11 +23,7 @@ import com.github.anilganipineni.scheduler.exception.SchedulerException;
 /**
  * @author akganipineni
  */
-public class ScheduledExecution<T> {
-    /**
-     * the data class
-     */
-    private final Class<T> dataClass;
+public class ScheduledExecution {
     /**
      * 
      */
@@ -37,8 +32,7 @@ public class ScheduledExecution<T> {
      * @param dataClass
      * @param execution
      */
-    public ScheduledExecution(Class<T> dataClass, ScheduledTasks execution) {
-        this.dataClass = dataClass;
+    public ScheduledExecution(ScheduledTasks execution) {
         this.execution = execution;
     }
     /**
@@ -51,22 +45,7 @@ public class ScheduledExecution<T> {
      * @return
      * @throws SchedulerException
      */
-    @SuppressWarnings("unchecked")
-	public T getData() throws SchedulerException {
-        if (dataClass.isInstance(this.execution.getTaskData())) {
-            return (T) this.execution.getTaskData();
-        }
-        throw new SchedulerException();
-    }
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ScheduledExecution<?> that = (ScheduledExecution<?>) o;
-        return Objects.equals(execution, that.execution);
-    }
-    @Override
-    public int hashCode() {
-        return Objects.hash(execution);
+	public String getData() {
+		return this.execution.getTaskData();
     }
 }

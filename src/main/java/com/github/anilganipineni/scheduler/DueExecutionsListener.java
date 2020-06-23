@@ -17,42 +17,53 @@ package com.github.anilganipineni.scheduler;
 
 import java.time.Instant;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.github.anilganipineni.scheduler.schedule.Clock;
 
-class TriggerCheckForDueExecutions implements SchedulerClientEventListener {
-    private static final Logger LOG = LoggerFactory.getLogger(TriggerCheckForDueExecutions.class);
+/**
+ * @author akganipineni
+ */
+class DueExecutionsListener implements SchedulerEventListener {
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(DueExecutionsListener.class);
     private SchedulerState schedulerState;
     private Clock clock;
     private Waiter executeDueWaiter;
-
-    public TriggerCheckForDueExecutions(SchedulerState schedulerState, Clock clock, Waiter executeDueWaiter) {
-        this.schedulerState = schedulerState;
+    /**
+     * @param state
+     * @param clock
+     * @param waiter
+     */
+    public DueExecutionsListener(SchedulerState state, Clock clock, Waiter waiter) {
+        this.schedulerState = state;
         this.clock = clock;
-        this.executeDueWaiter = executeDueWaiter;
+        this.executeDueWaiter = waiter;
     }
-
-    @Override
-    public void newEvent(ClientEvent event) {
-        ClientEvent.ClientEventContext ctx = event.getContext();
-        ClientEvent.EventType eventType = ctx.getEventType();
+	/**
+	 * @see com.github.anilganipineni.scheduler.SchedulerEventListener#newEvent(com.github.anilganipineni.scheduler.EventContext)
+	 */
+	@Override
+	public void newEvent(EventContext ctx) {
+        EventType eventType = ctx.getEventType();
 
         if (!schedulerState.isStarted() || schedulerState.isShuttingDown()) {
-            LOG.debug("Will not act on scheduling event for execution (task: '{}', id: '{}') as scheduler is starting or shutting down.",
+            logger.debug("Will not act on scheduling event for execution (task: '{}', id: '{}') as scheduler is starting or shutting down.",
                     ctx.getTaskName(), ctx.getId());
             return;
         }
 
-        if (eventType == ClientEvent.EventType.SCHEDULE || eventType == ClientEvent.EventType.RESCHEDULE) {
+        if (eventType == EventType.SCHEDULE || eventType == EventType.RESCHEDULE) {
 
             Instant scheduledToExecutionTime = ctx.getExecutionTime();
             if (scheduledToExecutionTime.toEpochMilli() <= clock.now().toEpochMilli()) {
-                LOG.info("Task-instance scheduled to run directly, triggering check for due exections (unless it is already running). Task: {}, instance: {}",
+                logger.info("Task-instance scheduled to run directly, triggering check for due exections (unless it is already running). Task: {}, instance: {}",
                         ctx.getTaskName(), ctx.getId());
                 executeDueWaiter.wake();
             }
         }
-    }
+	}
 }

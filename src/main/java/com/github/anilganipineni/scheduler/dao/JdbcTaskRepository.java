@@ -62,9 +62,9 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
      * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#createIfNotExists(java.lang.Object)
      */
     @Override
-    public boolean createIfNotExists(ScheduledTasks execution) {
+    public boolean createIfNotExists(ScheduledTasks task) {
         try {
-            Optional<ScheduledTasks> existingExecution = getExecution(execution);
+            Optional<ScheduledTasks> existingExecution = getExecution(task);
             if (existingExecution.isPresent()) {
                 logger.debug("ScheduledTasks not created, it already exists. Due: {}", existingExecution.get().getExecutionTime());
                 return false;
@@ -73,10 +73,10 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
             jdbcRunner.execute(
                     "insert into " + TABLE_NAME + "(task_name, task_id, task_data, execution_time, picked, version) values(?, ?, ?, ?, ?, ?)",
                     (PreparedStatement p) -> {
-                        p.setString(1, execution.getTaskName());
-                        p.setString(2, execution.getTaskId());
-                        p.setObject(3, execution.getTaskData());
-                        p.setTimestamp(4, Timestamp.from(execution.getExecutionTime()));
+                        p.setString(1, task.getTaskName());
+                        p.setString(2, task.getTaskId());
+                        p.setObject(3, task.getTaskData());
+                        p.setTimestamp(4, Timestamp.from(task.getExecutionTime()));
                         p.setBoolean(5, false);
                         p.setLong(6, 1L);
                     });
@@ -84,7 +84,7 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
 
         } catch (SQLRuntimeException e) {
             logger.debug("Exception when inserting execution. Assuming it to be a constraint violation.", e);
-            Optional<ScheduledTasks> existingExecution = getExecution(execution);
+            Optional<ScheduledTasks> existingExecution = getExecution(task);
             if (!existingExecution.isPresent()) {
                 throw new RuntimeException("Failed to add new execution.", e);
             }
@@ -165,10 +165,10 @@ public class JdbcTaskRepository implements SchedulerRepository<ScheduledTasks> {
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#reschedule(java.lang.Object,
 	 *      java.time.Instant, java.time.Instant, java.time.Instant, int)
 	 */
-    @Override
+    /*@Override
     public boolean reschedule(ScheduledTasks execution, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures) {
         return reschedule(execution, nextExecutionTime, lastSuccess, lastFailure, consecutiveFailures, null);
-    }
+    }*/
 	/**
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#reschedule(java.lang.Object,
 	 *      java.time.Instant, java.time.Instant, java.time.Instant, int,

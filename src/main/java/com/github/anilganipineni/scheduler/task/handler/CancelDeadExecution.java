@@ -1,7 +1,7 @@
 package com.github.anilganipineni.scheduler.task.handler;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.github.anilganipineni.scheduler.ExecutionOperations;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
@@ -10,11 +10,14 @@ import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
  * @author akganipineni
  */
 public class CancelDeadExecution implements DeadExecutionHandler {
-    private static final Logger LOG = LoggerFactory.getLogger(ReviveDeadExecution.class);
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(CancelDeadExecution.class);
 
     @Override
     public void deadExecution(ScheduledTasks execution, ExecutionOperations executionOperations) {
-        LOG.warn("Cancelling dead execution: " + execution);
+        logger.warn("Cancelling dead execution: " + execution);
         executionOperations.stop();
     }
 

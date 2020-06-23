@@ -15,41 +15,66 @@
  */
 package com.github.anilganipineni.scheduler;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+/**
+ * @author akganipineni
+ */
 public class RunUntilShutdown implements Runnable {
-    private static final Logger LOG = LoggerFactory.getLogger(RunUntilShutdown.class);
-    private final Runnable toRun;
-    private final Waiter waitBetweenRuns;
-    private final SchedulerState schedulerState;
-    private final StatsRegistry statsRegistry;
-
-    public RunUntilShutdown(Runnable toRun, Waiter waitBetweenRuns, SchedulerState schedulerState, StatsRegistry statsRegistry) {
-        this.toRun = toRun;
-        this.waitBetweenRuns = waitBetweenRuns;
-        this.schedulerState = schedulerState;
-        this.statsRegistry = statsRegistry;
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(RunUntilShutdown.class);
+    /**
+     * The actual {@link Runnable} instance which supposed to run every time
+     */
+    private final Runnable actual;
+    /**
+     * The {@link Waiter} which decides the waits between each run of this {@link Runnable}
+     */
+    private final Waiter waiter;
+    /**
+     * The {@link SchedulerState}
+     */
+    private final SchedulerState state;
+    /**
+     * The {@link StatsRegistry}
+     */
+    private final StatsRegistry registry;
+    /**
+     * @param actual
+     * @param waiter
+     * @param state
+     * @param registry
+     */
+    public RunUntilShutdown(Runnable actual, Waiter waiter, SchedulerState state, StatsRegistry registry) {
+        this.actual = actual;
+        this.waiter = waiter;
+        this.state = state;
+        this.registry = registry;
     }
-
+    /**
+     * @see java.lang.Runnable#run()
+     */
     @Override
     public void run() {
-        while (!schedulerState.isShuttingDown()) {
+        while (!state.isShuttingDown()) {
             try {
-                toRun.run();
+                actual.run();
             } catch (Throwable e) {
-                LOG.error("Unhandled exception. Will keep running.", e);
-                statsRegistry.register(StatsRegistry.SchedulerStatsEvent.UNEXPECTED_ERROR);
+                logger.error("Unhandled exception. Will keep running.", e);
+                registry.register(StatsRegistry.SchedulerStatsEvent.UNEXPECTED_ERROR);
             }
 
             try {
-                waitBetweenRuns.doWait();
+                waiter.doWait();
             } catch (InterruptedException interruptedException) {
-                if (schedulerState.isShuttingDown()) {
-                    LOG.debug("Thread '{}' interrupted due to shutdown.", Thread.currentThread().getName());
+                if (state.isShuttingDown()) {
+                    logger.debug("Thread '{}' interrupted due to shutdown.", Thread.currentThread().getName());
                 } else {
-                    LOG.error("Unexpected interruption of thread. Will keep running.", interruptedException);
-                    statsRegistry.register(StatsRegistry.SchedulerStatsEvent.UNEXPECTED_ERROR);
+                    logger.error("Unexpected interruption of thread. Will keep running.", interruptedException);
+                    registry.register(StatsRegistry.SchedulerStatsEvent.UNEXPECTED_ERROR);
                 }
             }
         }

@@ -17,7 +17,7 @@ package com.github.anilganipineni.scheduler.task;
 
 import java.util.Map;
 
-import com.github.anilganipineni.scheduler.Scheduler;
+import com.github.anilganipineni.scheduler.SchedulerImpl;
 import com.github.anilganipineni.scheduler.StringUtils;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.schedule.Clock;
@@ -131,11 +131,11 @@ public abstract class Task implements ExecutionHandler {
         return "Task = " + getName();
     }
 	/**
-	 * @see com.github.anilganipineni.scheduler.task.handler.ExecutionHandler#onStartup(com.github.anilganipineni.scheduler.Scheduler,
+	 * @see com.github.anilganipineni.scheduler.task.handler.ExecutionHandler#onStartup(com.github.anilganipineni.scheduler.SchedulerImpl,
 	 *      com.github.anilganipineni.scheduler.schedule.Clock)
 	 */
 	@Override
-	public void onStartup(Scheduler scheduler, Clock clock) {
+	public void onStartup(SchedulerImpl scheduler, Clock clock) {
     	if(schedule != null) {
     		scheduler.schedule(instance(instance, StringUtils.convertMap2String(this.data)), schedule.getInitialExecutionTime(clock.now()));
     	}

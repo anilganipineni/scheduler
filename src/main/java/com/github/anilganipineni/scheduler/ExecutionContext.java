@@ -21,9 +21,9 @@ public class ExecutionContext {
 
     private final SchedulerState schedulerState;
     private final ScheduledTasks execution;
-    private final SchedulerClient schedulerClient;
+    private final Scheduler schedulerClient;
 
-    public ExecutionContext(SchedulerState schedulerState, ScheduledTasks execution, SchedulerClient schedulerClient) {
+    public ExecutionContext(SchedulerState schedulerState, ScheduledTasks execution, Scheduler schedulerClient) {
         this.schedulerState = schedulerState;
         this.execution = execution;
         this.schedulerClient = schedulerClient;
@@ -36,7 +36,7 @@ public class ExecutionContext {
     /**
      * Primarily enables ExecutionHandlers to schedule new tasks. Can not be used to modify the "current" execution.
      */
-    public SchedulerClient getSchedulerClient() {
+    public Scheduler getSchedulerClient() {
         return schedulerClient;
     }
 

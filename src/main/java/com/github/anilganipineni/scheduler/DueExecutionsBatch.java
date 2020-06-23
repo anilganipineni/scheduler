@@ -15,15 +15,17 @@
  */
 package com.github.anilganipineni.scheduler;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
-public class DueExecutionsBatch {
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-    private static final Logger LOG = LoggerFactory.getLogger(DueExecutionsBatch.class);
+public class DueExecutionsBatch {
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(DueExecutionsBatch.class);
     private final int generationNumber;
     private final AtomicInteger executionsLeftInBatch;
     private int threadpoolSize;
@@ -49,12 +51,12 @@ public class DueExecutionsBatch {
     public void oneExecutionDone(Supplier<Boolean> triggerCheckForNewBatch) {
         executionsLeftInBatch.decrementAndGet();
 
-        LOG.trace("Batch state: stale:{}, triggeredExecuteDue:{}, possiblyMoreExecutionsInDb:{}, executionsLeftInBatch:{}, ratio-trigger:{}",
-                stale, triggeredExecuteDue, possiblyMoreExecutionsInDb, executionsLeftInBatch.get(), (threadpoolSize * Scheduler.TRIGGER_NEXT_BATCH_WHEN_AVAILABLE_THREADS_RATIO));
+        logger.trace("Batch state: stale:{}, triggeredExecuteDue:{}, possiblyMoreExecutionsInDb:{}, executionsLeftInBatch:{}, ratio-trigger:{}",
+                stale, triggeredExecuteDue, possiblyMoreExecutionsInDb, executionsLeftInBatch.get(), (threadpoolSize * SchedulerImpl.TRIGGER_NEXT_BATCH_WHEN_AVAILABLE_THREADS_RATIO));
         if (!stale
                 && !triggeredExecuteDue
                 && possiblyMoreExecutionsInDb
-                && executionsLeftInBatch.get() <= (threadpoolSize * Scheduler.TRIGGER_NEXT_BATCH_WHEN_AVAILABLE_THREADS_RATIO)) {
+                && executionsLeftInBatch.get() <= (threadpoolSize * SchedulerImpl.TRIGGER_NEXT_BATCH_WHEN_AVAILABLE_THREADS_RATIO)) {
             triggeredExecuteDue = triggerCheckForNewBatch.get();
         }
     }

@@ -36,7 +36,7 @@ public interface SchedulerRepository<T> {
     void getScheduledExecutions(String taskName, Consumer<T> consumer) throws SchedulerException;
 
     void remove(T execution);
-    boolean reschedule(T execution, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures);
+    // boolean reschedule(T execution, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures);
     boolean reschedule(T execution, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures, Map<String, Object> newData);
 
     Optional<T> pick(T e, Instant timePicked) throws SchedulerException;

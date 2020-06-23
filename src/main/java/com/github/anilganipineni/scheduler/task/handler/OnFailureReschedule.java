@@ -17,8 +17,8 @@ package com.github.anilganipineni.scheduler.task.handler;
 
 import java.time.Instant;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.github.anilganipineni.scheduler.ExecutionComplete;
 import com.github.anilganipineni.scheduler.ExecutionOperations;
@@ -28,8 +28,10 @@ import com.github.anilganipineni.scheduler.schedule.Schedule;
  * @author akganipineni
  */
 public class OnFailureReschedule implements FailureHandler {
-
-    private static final Logger LOG = LoggerFactory.getLogger(FailureHandler.class);
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(OnFailureReschedule.class);
     /**
      * 
      */
@@ -47,7 +49,7 @@ public class OnFailureReschedule implements FailureHandler {
     @Override
     public void onFailure(ExecutionComplete executionComplete, ExecutionOperations executionOperations) {
         Instant nextExecution = schedule.getNextExecutionTime(executionComplete);
-        LOG.debug("ScheduledTasks failed. Rescheduling task {} to {}", executionComplete.getExecution(), nextExecution);
+        logger.debug("ScheduledTasks failed. Rescheduling task {} to {}", executionComplete.getExecution(), nextExecution);
         executionOperations.reschedule(executionComplete, nextExecution);
     }
 }

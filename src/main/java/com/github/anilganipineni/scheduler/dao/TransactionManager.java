@@ -15,18 +15,24 @@
  */
 package com.github.anilganipineni.scheduler.dao;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.github.anilganipineni.scheduler.exception.SQLRuntimeException;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public class TransactionManager {
+import javax.sql.DataSource;
 
-	private static final Logger LOG = LoggerFactory.getLogger(TransactionManager.class);
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.github.anilganipineni.scheduler.exception.SQLRuntimeException;
+
+/**
+ * @author akganipineni
+ */
+public class TransactionManager {
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(TransactionManager.class);
 
 	ThreadLocal<Connection> currentTransaction = new ThreadLocal<>();
 	private final DataSource dataSource;
@@ -91,10 +97,10 @@ public class TransactionManager {
 		try {
 			connection.rollback();
 		} catch (SQLException rollbackException) {
-			LOG.error("Original application exception overridden by rollback-exception. Throwing rollback-exception. Original application exception: ", originalException);
+			logger.error("Original application exception overridden by rollback-exception. Throwing rollback-exception. Original application exception: ", originalException);
 			throw new SQLRuntimeException(rollbackException);
 		} catch (RuntimeException rollbackException) {
-			LOG.error("Original application exception overridden by rollback-exception. Throwing rollback-exception. Original application exception: ", originalException);
+			logger.error("Original application exception overridden by rollback-exception. Throwing rollback-exception. Original application exception: ", originalException);
 			throw rollbackException;
 		}
 	}

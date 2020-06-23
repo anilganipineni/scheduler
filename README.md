@@ -35,7 +35,7 @@ import com.datastax.driver.core.CodecRegistry;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SocketOptions;
 import com.datastax.driver.extras.codecs.jdk8.InstantCodec;
-import com.github.anilganipineni.scheduler.Scheduler;
+import com.github.anilganipineni.scheduler.SchedulerImpl;
 import com.github.anilganipineni.scheduler.SchedulerBuilder;
 import com.github.anilganipineni.scheduler.dao.CassandraDataSource;
 import com.github.anilganipineni.scheduler.dao.DataSourceType;

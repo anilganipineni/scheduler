@@ -16,7 +16,7 @@
 package com.github.anilganipineni.scheduler.task.handler;
 
 import com.github.anilganipineni.scheduler.ExecutionContext;
-import com.github.anilganipineni.scheduler.Scheduler;
+import com.github.anilganipineni.scheduler.SchedulerImpl;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.schedule.Clock;
 
@@ -28,7 +28,7 @@ public interface ExecutionHandler {
 	 * @param scheduler
 	 * @param clock
 	 */
-	public void onStartup(Scheduler scheduler, Clock clock);
+	public void onStartup(SchedulerImpl scheduler, Clock clock);
     /**
      * @param task
      * @param context

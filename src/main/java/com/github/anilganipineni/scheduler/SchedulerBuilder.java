@@ -15,8 +15,7 @@
  */
 package com.github.anilganipineni.scheduler;
 
-import static com.github.anilganipineni.scheduler.ExecutorUtils.defaultThreadFactoryWithPrefix;
-import static com.github.anilganipineni.scheduler.Scheduler.THREAD_PREFIX;
+import static com.github.anilganipineni.scheduler.SchedulerImpl.THREAD_PREFIX;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -158,7 +157,7 @@ public class SchedulerBuilder {
     /**
      * @return
      */
-    public Scheduler build() {
+    public SchedulerImpl build() {
         if(pollingLimit < executorThreads) {
             logger.warn("Polling-limit is less than number of threads. Should be equal or higher.");
         }
@@ -168,14 +167,14 @@ public class SchedulerBuilder {
 
         ExecutorService candidateExecutorService = executorService;
         if (candidateExecutorService == null) {
-            candidateExecutorService = Executors.newFixedThreadPool(executorThreads, defaultThreadFactoryWithPrefix(THREAD_PREFIX + "-"));
+            candidateExecutorService = Executors.newFixedThreadPool(executorThreads, ExecutorUtils.getThreadFactory(THREAD_PREFIX + "-"));
         }
 		logger.info(
 				"Creating scheduler with configuration: threads={}, pollInterval={}s, heartbeat={}s enable-immediate-execution={}, name={}",
 				executorThreads, waiter.getWaitDuration().getSeconds(), heartbeatInterval.getSeconds(),
 				enableImmediateExecution, schedulerName.getName());
         
-		return new Scheduler(clock,
+		return new SchedulerImpl(clock,
 							 taskRepository,
 							 taskResolver,
 							 executorThreads,
@@ -221,4 +220,10 @@ public class SchedulerBuilder {
     public static SchedulerBuilder create(SchedulerDataSource dataSource, List<Task> knownTasks) {
         return new SchedulerBuilder(dataSource, knownTasks);
     }
+    /*public static SchedulerBuilder create(SchedulerDataSource dataSource, Task ... knownTasks) {
+        return create(dataSource, Arrays.asList(knownTasks));
+    }
+    public static SchedulerBuilder create(SchedulerDataSource dataSource, List<Task> knownTasks) {
+        return new SchedulerBuilder(dataSource, knownTasks);
+    }*/
 }

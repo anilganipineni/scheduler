@@ -18,8 +18,8 @@ package com.github.anilganipineni.scheduler.task.handler;
 import java.time.Duration;
 import java.time.Instant;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.github.anilganipineni.scheduler.ExecutionComplete;
 import com.github.anilganipineni.scheduler.ExecutionOperations;
@@ -30,8 +30,10 @@ import com.github.anilganipineni.scheduler.ExecutionOperations;
  * @author akganipineni
  */
 public class OnFailureRetryLater implements FailureHandler {
-
-    private static final Logger LOG = LoggerFactory.getLogger(FailureHandler.class);
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(OnFailureRetryLater.class);
     private final Duration sleepDuration;
 
     public OnFailureRetryLater(Duration sleepDuration) {
@@ -41,7 +43,7 @@ public class OnFailureRetryLater implements FailureHandler {
     @Override
     public void onFailure(ExecutionComplete executionComplete, ExecutionOperations executionOperations) {
         Instant nextTry = Instant.now().plus(sleepDuration);
-        LOG.debug("ScheduledTasks failed. Retrying task {} at {}", executionComplete.getExecution(), nextTry);
+        logger.debug("ScheduledTasks failed. Retrying task {} at {}", executionComplete.getExecution(), nextTry);
         executionOperations.reschedule(executionComplete, nextTry);
     }
 

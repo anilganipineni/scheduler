@@ -50,7 +50,7 @@ public class SchedulerClientBuilder {
     /**
      * @return
      */
-    public SchedulerClient build() {
+    public Scheduler build() {
         return new StandardSchedulerClient(DbUtils.getRepository(dataSource, taskResolver, schedulerName));
     }
 }

@@ -15,6 +15,15 @@
  */
 package com.github.anilganipineni.scheduler.schedule;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.cronutils.model.Cron;
 import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
@@ -22,21 +31,16 @@ import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.parser.CronParser;
 import com.github.anilganipineni.scheduler.ExecutionComplete;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Optional;
-
 /**
  * Spring-style cron-pattern schedule
+ * 
+ * @author akganipineni
  */
 public class CronSchedule implements Schedule {
-
-    private static final Logger LOG = LoggerFactory.getLogger(CronSchedule.class);
+    /**
+     * The <code>Logger</code> instance for this class.
+     */
+	private static final Logger logger = LogManager.getLogger(CronSchedule.class);
     private final ExecutionTime cronExecutionTime;
     private final ZoneId zoneId;
 
@@ -62,7 +66,7 @@ public class CronSchedule implements Schedule {
         // context of the desired time zone
         Optional<ZonedDateTime> nextTime = cronExecutionTime.nextExecution(lastDone);
         if (!nextTime.isPresent()) {
-            LOG.error("Cron-pattern did not return any further execution-times. This behavior is currently not supported by the scheduler. Setting next execution-time to far-future.");
+            logger.error("Cron-pattern did not return any further execution-times. This behavior is currently not supported by the scheduler. Setting next execution-time to far-future.");
             return Instant.now().plus(1000, ChronoUnit.YEARS);
         }
         return nextTime.get().toInstant();

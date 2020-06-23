@@ -230,10 +230,10 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#reschedule(java.lang.Object,
 	 *      java.time.Instant, java.time.Instant, java.time.Instant, int)
 	 */
-	@Override
+	/*@Override
 	public boolean reschedule(ScheduledTasks task, Instant nextExecutionTime, Instant lastSuccess, Instant lastFailure, int consecutiveFailures) {
 		return reschedule(task, nextExecutionTime, lastSuccess, lastFailure, consecutiveFailures, null);
-	}
+	}*/
 	/**
 	 * @see com.github.anilganipineni.scheduler.dao.SchedulerRepository#reschedule(java.lang.Object,
 	 *      java.time.Instant, java.time.Instant, java.time.Instant, int,

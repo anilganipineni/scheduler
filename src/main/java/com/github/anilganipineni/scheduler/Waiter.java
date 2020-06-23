@@ -21,7 +21,6 @@ import java.time.Instant;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.github.anilganipineni.scheduler.dao.CassandraTaskRepository;
 import com.github.anilganipineni.scheduler.schedule.Clock;
 import com.github.anilganipineni.scheduler.schedule.SystemClock;
 
@@ -32,7 +31,7 @@ public class Waiter {
     /**
      * The <code>Logger</code> instance for this class.
      */
-	private static final Logger logger = LogManager.getLogger(CassandraTaskRepository.class);
+	private static final Logger logger = LogManager.getLogger(Waiter.class);
     private Object lock;
     private boolean woken = false;
     private final Duration duration;

@@ -15,15 +15,24 @@
  */
 package com.github.anilganipineni.scheduler;
 
-public interface SchedulerClientEventListener {
-
-    void newEvent(ClientEvent event);
-
-
-    SchedulerClientEventListener NOOP = new SchedulerClientEventListener() {
-
-        @Override
-        public void newEvent(ClientEvent event) {
-        }
+/**
+ * @author akganipineni
+ */
+public interface SchedulerEventListener {
+    /**
+     * @param event
+     */
+    public void newEvent(EventContext ctx);
+    /**
+     * The default NO-OP Listener
+     */
+    SchedulerEventListener NOOP = new SchedulerEventListener() {
+		/**
+		 * @see com.github.anilganipineni.scheduler.SchedulerEventListener#newEvent(com.github.anilganipineni.scheduler.EventContext)
+		 */
+		@Override
+		public void newEvent(EventContext ctx) {
+        	/* NO-OP */
+		}
     };
 }

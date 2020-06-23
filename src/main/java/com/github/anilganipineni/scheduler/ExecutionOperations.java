@@ -37,9 +37,9 @@ public class ExecutionOperations {
 
     public void reschedule(ExecutionComplete completed, Instant nextExecutionTime) {
         if (completed.getResult() == ExecutionComplete.Result.OK) {
-            taskRepository.reschedule(execution, nextExecutionTime, completed.getTimeDone(), execution.getLastFailure(), 0);
+            taskRepository.reschedule(execution, nextExecutionTime, completed.getTimeDone(), execution.getLastFailure(), 0, null);
         } else {
-            taskRepository.reschedule(execution, nextExecutionTime, execution.getLastSuccess(), completed.getTimeDone(), execution.getConsecutiveFailures() + 1);
+            taskRepository.reschedule(execution, nextExecutionTime, execution.getLastSuccess(), completed.getTimeDone(), execution.getConsecutiveFailures() + 1, null);
         }
 
     }
