@@ -132,7 +132,18 @@ public class SchedulerImpl implements Scheduler {
     public void start() {
         logger.info("Starting scheduler................");
         
-        // Execute all initial tasks
+        executeInitialTasks();
+
+        taskExecutor.submit(new RunUntilShutdown(this::executeDue, executeDueWaiter, schedulerState, statsRegistry));
+        deadTaskDetector.submit(new RunUntilShutdown(this::detectDeadExecutions, detectDeadWaiter, schedulerState, statsRegistry));
+        eartbeatUpdator.submit(new RunUntilShutdown(this::updateHeartbeats, heartbeatWaiter, schedulerState, statsRegistry));
+
+        schedulerState.setStarted();
+    }
+    /**
+     * Execute all initial tasks
+     */
+    protected void executeInitialTasks() {
         initialTasks.forEach(initialTask -> {
             try {
                 initialTask.onStartup(this, this.clock);
@@ -141,12 +152,6 @@ public class SchedulerImpl implements Scheduler {
                 statsRegistry.register(SchedulerStatsEvent.UNEXPECTED_ERROR);
             }
         });
-
-        taskExecutor.submit(new RunUntilShutdown(this::executeDue, executeDueWaiter, schedulerState, statsRegistry));
-        deadTaskDetector.submit(new RunUntilShutdown(this::detectDeadExecutions, detectDeadWaiter, schedulerState, statsRegistry));
-        eartbeatUpdator.submit(new RunUntilShutdown(this::updateHeartbeats, heartbeatWaiter, schedulerState, statsRegistry));
-
-        schedulerState.setStarted();
     }
     /**
      * @see com.github.anilganipineni.scheduler.Scheduler#stop()
