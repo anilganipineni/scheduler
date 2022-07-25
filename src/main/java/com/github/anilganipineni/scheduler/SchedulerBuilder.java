@@ -28,6 +28,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.github.anilganipineni.scheduler.dao.CassandraTaskRepository;
+import com.github.anilganipineni.scheduler.dao.DataSourceType;
 import com.github.anilganipineni.scheduler.dao.DbUtils;
 import com.github.anilganipineni.scheduler.dao.ScheduledTasks;
 import com.github.anilganipineni.scheduler.dao.SchedulerDataSource;
@@ -65,6 +66,22 @@ public class SchedulerBuilder {
      * @param knownTasks
      */
     public SchedulerBuilder(SchedulerDataSource dataSource, List<Task> knownTasks) {
+    	if(dataSource == null) {
+    		throw new IllegalArgumentException("data source cannot be null!");
+    	}
+    	
+    	if(dataSource.dataSourceType() == null) {
+    		throw new IllegalArgumentException("data source type in data source cannot be null!");
+    	}
+    	
+    	if(DataSourceType.RDBMS.equals(dataSource.dataSourceType()) && dataSource.rdbmsDataSource() == null) {
+    		throw new IllegalArgumentException("RDBMS data source cannot be null if data source type is RDBMS!");
+    	}
+    	
+    	if(DataSourceType.CASSANDRA.equals(dataSource.dataSourceType()) && dataSource.cassandraDataSource() == null) {
+    		throw new IllegalArgumentException("CASSANDRA data source cannot be null if data source type is CASSANDRA!");
+    	}
+    	
         this.dataSource = dataSource;
         this.knownTasks.addAll(knownTasks);
         this.pollingLimit = calculatePollingLimit();

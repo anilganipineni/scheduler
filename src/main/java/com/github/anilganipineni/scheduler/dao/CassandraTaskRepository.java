@@ -263,7 +263,6 @@ public class CassandraTaskRepository implements SchedulerRepository<ScheduledTas
 		List<ScheduledTasks> dues = new ArrayList<ScheduledTasks>();
 		for(ScheduledTasks t : all) {
 			if(!t.isPicked() && !taskNames.contains(t.getTaskName()) && t.getExecutionTime().isBefore(now)) {
-				logger.info("Selected for Due --> Name : {} and ID : {}", t.getTaskName(), t.getTaskId());
 				dues.add(t);
 			}
 		}
